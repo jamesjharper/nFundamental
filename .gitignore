@@ -1,0 +1,25 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+# nuget packages
+packages/
+
+# dotnet core related
+*.lock.json
+*.nuget.props
+*.nuget.targets
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# build output
+**/Debug/
+**/Release/
+
+
+# visual studio generated files
+.vs/
