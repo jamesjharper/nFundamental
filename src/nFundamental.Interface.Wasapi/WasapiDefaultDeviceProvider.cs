@@ -38,7 +38,7 @@ namespace Fundamental.Interface.Wasapi
         public WasapiDeviceToken GetDefaultDevice(DeviceType type, DeviceRole deviceRole)
         {
             var dataFlow = type.ConvertToWasapiDataFlow();
-            var role = deviceRole.ConvertToWasapiDataFlow();
+            var role = deviceRole.ConvertToWasapiDeviceRole();
 
             IMMDevice immDevice;
             _deviceEnumerator.GetDefaultAudioEndpoint(dataFlow, role, out immDevice).ThrowIfFailed();

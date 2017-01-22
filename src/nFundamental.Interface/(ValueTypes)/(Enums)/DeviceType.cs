@@ -2,7 +2,7 @@
 {
     public enum DeviceType
     {
-        Capature,
+        Capture,
         Render
     }
 }

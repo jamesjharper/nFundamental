@@ -139,7 +139,7 @@ namespace nFundamental.Interface.Wasapi.Tests
                     });
 
             // -> ACT
-            var result = fixture.GetDevices(DeviceType.Capature);
+            var result = fixture.GetDevices(DeviceType.Capture);
 
             // -> ASSERT
             Assert.IsEmpty(result);
@@ -223,7 +223,7 @@ namespace nFundamental.Interface.Wasapi.Tests
                     });
 
             // -> ACT
-            var result = fixture.GetDevices(DeviceType.Capature, DeviceState.Available, DeviceState.Unplugged);
+            var result = fixture.GetDevices(DeviceType.Capture, DeviceState.Available, DeviceState.Unplugged);
 
             // -> ASSERT
             Assert.IsEmpty(result);
@@ -271,7 +271,7 @@ namespace nFundamental.Interface.Wasapi.Tests
                     });
 
             // -> ACT
-            var result = fixture.GetDevices(new [] { DeviceType.Capature, DeviceType.Render}, 
+            var result = fixture.GetDevices(new [] { DeviceType.Capture, DeviceType.Render}, 
                                             new [] { DeviceState.Available, DeviceState.Unplugged});
 
             // -> ASSERT

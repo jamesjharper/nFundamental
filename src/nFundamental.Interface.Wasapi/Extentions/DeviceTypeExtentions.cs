@@ -16,7 +16,7 @@ namespace Fundamental.Interface.Wasapi.Extentions
         {
             switch (deviceType)
             {
-                case DeviceType.Capature:
+                case DeviceType.Capture:
                     return DataFlow.Capture;
                 case DeviceType.Render:
                     return DataFlow.Render;
@@ -33,7 +33,7 @@ namespace Fundamental.Interface.Wasapi.Extentions
         public static DataFlow ConvertToWasapiDeviceState(this DeviceType[] deviceType)
         {
             var hasRender = deviceType.Contains(DeviceType.Render);
-            var hasCapature = deviceType.Contains(DeviceType.Capature);
+            var hasCapature = deviceType.Contains(DeviceType.Capture);
 
             if (hasRender && hasCapature)
                 return DataFlow.All;
@@ -45,6 +45,23 @@ namespace Fundamental.Interface.Wasapi.Extentions
                 return DataFlow.Capture;
 
             throw new ArgumentException("No recognized device types given", nameof(deviceType));
+        }
+
+        /// <summary>
+        /// Converts a WASAPI data flow to fundamental device type.
+        /// </summary>
+        /// <param name="deviceType">Type of the device.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentOutOfRangeException">deviceType - null</exception>
+        public static DeviceType ConvertToFundamentalDeviceState(this DataFlow deviceType)
+        {
+            if ((deviceType & DataFlow.Capture) != 0)
+                return DeviceType.Capture;
+
+            if ((deviceType & DataFlow.Render)!= 0)
+                return DeviceType.Render;
+
+            throw new ArgumentOutOfRangeException(nameof(deviceType), deviceType, null);
         }
     }
 }

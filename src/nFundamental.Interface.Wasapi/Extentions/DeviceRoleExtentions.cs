@@ -11,7 +11,7 @@ namespace Fundamental.Interface.Wasapi.Extentions
         /// <param name="deviceRole">The device role.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException">deviceRole - null</exception>
-        public static Role ConvertToWasapiDataFlow(this DeviceRole deviceRole)
+        public static Role ConvertToWasapiDeviceRole(this DeviceRole deviceRole)
         {
             switch (deviceRole)
             {
@@ -25,6 +25,30 @@ namespace Fundamental.Interface.Wasapi.Extentions
                     return Role.Communications;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(deviceRole), deviceRole, null);
+            }
+        }
+
+
+        /// <summary>
+        /// Converts WASAPI Role enum to fundamental device role.
+        /// </summary>
+        /// <param name="role">The role.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentOutOfRangeException">role - null</exception>
+        public static DeviceRole ConvertToFundamentalDeviceRole(this Role role)
+        {
+            switch (role)
+            {
+                case Role.Console:
+                    return DeviceRole.Console;
+
+                case Role.Multimedia:
+                    return DeviceRole.Multimedia;
+
+                case Role.Communications:
+                    return DeviceRole.Communications;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(role), role, null);
             }
         }
     }

@@ -42,5 +42,29 @@ namespace Fundamental.Interface.Wasapi.Extentions
             return stateMask.Select(x => x.ConvertToWasapiDeviceState())
                             .Aggregate((a, b) => a | b); // Or the list together to create flagged enum
         }
+
+
+        /// <summary>
+        /// Converts a WASAPI state of to fundamental device state.
+        /// </summary>
+        /// <param name="deviceState">State of the device.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentOutOfRangeException">deviceState - null</exception>
+        public static DeviceState ConvertToFundamentalDeviceState(this Interop.DeviceState deviceState)
+        {
+            if ((deviceState & Interop.DeviceState.Active) != 0)
+                return DeviceState.Available;
+
+            if ((deviceState & Interop.DeviceState.Disabled) != 0)
+                return DeviceState.Disabled;
+
+            if ((deviceState & Interop.DeviceState.NotPresent) != 0)
+                return DeviceState.NotPresent;
+
+            if ((deviceState & Interop.DeviceState.Unplugged) != 0)
+                return DeviceState.Unplugged;
+
+            throw new ArgumentOutOfRangeException(nameof(deviceState), deviceState, null);
+        }
     }
 }

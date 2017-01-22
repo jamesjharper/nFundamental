@@ -3,6 +3,7 @@ namespace Fundamental.Interface
 {
     public class DeviceStatusChangedEvent
     {
+
         /// <summary>
         /// Gets the device token.
         /// </summary>

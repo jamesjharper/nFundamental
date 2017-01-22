@@ -54,7 +54,7 @@ namespace nFundamental.Interface.Wasapi.Tests
 
 
             // -> ACT:
-            var handle = fixture.GetDefaultDevice(DeviceType.Capature, DeviceRole.Console);
+            var handle = fixture.GetDefaultDevice(DeviceType.Capture, DeviceRole.Console);
 
             // -> ASSERT
             Assert.AreEqual(expectedToken , handle);
