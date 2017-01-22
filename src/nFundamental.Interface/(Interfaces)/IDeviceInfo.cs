@@ -18,6 +18,14 @@ namespace Fundamental.Interface
         IDeviceToken DeviceToken { get; }
 
         /// <summary>
+        /// Gets the state of the device.
+        /// </summary>
+        /// <value>
+        /// The state of the device.
+        /// </value>
+        DeviceState DeviceState { get; }
+
+        /// <summary>
         /// Gets the Device properties.
         /// </summary>
         /// <value>

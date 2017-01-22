@@ -11,7 +11,7 @@ namespace Fundamental.Interface
         /// <value>
         /// The property key.
         /// </value>
-        public string  PropertyKey { get; }
+        public string PropertyKey { get; }
 
         /// <summary>
         /// Gets the device information.
