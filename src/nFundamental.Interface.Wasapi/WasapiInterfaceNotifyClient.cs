@@ -9,9 +9,7 @@ namespace Fundamental.Interface.Wasapi
     [Guid("DDE8D8D4-055B-4FB1-BE59-6889F70EF9D1")]
     public class WasapiInterfaceNotifyClient :
        IMMNotificationClient,
-       IDeviceStatusNotifier,
-       IDefaultDeviceStatusNotifier,
-       IDeviceAvailabilityNotifier
+       IWasapiInterfaceNotifyClient
     {
 
         /// <summary>
@@ -50,7 +48,6 @@ namespace Fundamental.Interface.Wasapi
         public event EventHandler<DeviceRemovedEventArgs> DeviceRemoved;
 
         #endregion
-
 
         /// <summary>
         /// Occurs when [device property changed].

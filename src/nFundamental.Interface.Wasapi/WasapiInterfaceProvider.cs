@@ -9,7 +9,7 @@ namespace Fundamental.Interface.Wasapi
         ISupportsInterface<IDefaultDeviceStatusNotifier>,
         ISupportsInterface<IDeviceAvailabilityNotifier>,
         ISupportsInterface<IDeviceEnumerator>,
-        ISupportsInterface<IDeviceInfoRepository>,
+        ISupportsInterface<IDeviceInfoFactory>,
         ISupportsInterface<IDeviceStatusNotifier>
 
     {
@@ -70,16 +70,13 @@ namespace Fundamental.Interface.Wasapi
 
         #endregion
 
-
         /// <summary>
-        /// Gets the audio interface for finding system default devices.
+        /// Gets the audio interface used for finding system default devices.
         /// </summary>
         /// <returns></returns>
-        IDefaultDeviceProvider ISupportsInterface<IDefaultDeviceProvider>.GetAudioInterface()
-        {
-            return new WasapiDefaultDeviceProvider(WasapiDeviceEnumerator, DeviceTokenFactory);
-        }
-
+        IDefaultDeviceProvider ISupportsInterface<IDefaultDeviceProvider>.GetAudioInterface() 
+            => new WasapiDefaultDeviceProvider(WasapiDeviceEnumerator, DeviceTokenFactory);
+        
         /// <summary>
         /// Gets the audio interface for finding all system devices.
         /// </summary>
@@ -93,7 +90,6 @@ namespace Fundamental.Interface.Wasapi
         /// <returns></returns>
         IDefaultDeviceStatusNotifier ISupportsInterface<IDefaultDeviceStatusNotifier>.GetAudioInterface() 
             => WasapiInterfaceNotifyClient;
-
 
         /// <summary>
         /// Gets the device availability notifier
@@ -110,11 +106,12 @@ namespace Fundamental.Interface.Wasapi
             => WasapiInterfaceNotifyClient;
 
 
-        IDeviceInfoRepository ISupportsInterface<IDeviceInfoRepository>.GetAudioInterface()
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <summary>
+        /// Gets the audio interface used for finding details about devices 
+        /// </summary>
+        /// <returns></returns>
+        IDeviceInfoFactory ISupportsInterface<IDeviceInfoFactory>.GetAudioInterface() 
+            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiDeviceEnumerator);
 
     }
 }

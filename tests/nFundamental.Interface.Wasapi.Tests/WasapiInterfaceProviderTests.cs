@@ -183,5 +183,35 @@ namespace nFundamental.Interface.Wasapi.Tests
         }
 
         #endregion
+
+        #region IDeviceInfoFactory support
+
+        [Test]
+        public void CanFactoryKnowsItSupportsIDeviceInfoFactory()
+        {
+            // -> ARRANGE:
+            var factory = GetTestFixture();
+
+            // -> ACT:
+            var isSupported = factory.IsAudioInterfaceSupported<IDeviceInfoFactory>();
+
+            // -> ASSET:
+            Assert.IsTrue(isSupported);
+        }
+
+        [Test]
+        public void CanFactoryIDeviceInfoFactory()
+        {
+            // -> ARRANGE:
+            var factory = GetTestFixture();
+
+            // -> ACT:
+            var interfaceInstance = factory.GetAudioInterface<IDeviceInfoFactory>();
+
+            // -> ASSERT:
+            Assert.IsNotNull(interfaceInstance);
+        }
+
+        #endregion
     }
 }
