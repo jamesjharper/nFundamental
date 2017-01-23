@@ -1,6 +1,6 @@
 ﻿using Fundamental.Interface.Wasapi.Interop;
 
-namespace Fundamental.Interface.Wasapi
+namespace Fundamental.Interface.Wasapi.Internal
 {
     public class DevicePropertyChangedEventArgs
     {

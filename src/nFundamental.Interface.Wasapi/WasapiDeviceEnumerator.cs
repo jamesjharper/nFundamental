@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Fundamental.Interface.Wasapi.Extentions;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 
@@ -143,14 +144,14 @@ namespace Fundamental.Interface.Wasapi
         {
             IMMDeviceCollection result;
             _deviceEnumerator.EnumAudioEndpoints(dataFlow, stateMask, out result).ThrowIfFailed();
-
             return GetTokenEnumerable(result);
         }
 
         private IEnumerable<WasapiDeviceToken> GetTokenEnumerable(IMMDeviceCollection deviceCollection)
         {
-            return deviceCollection.GetEnumerable()
-                                   .Select(device => _wasapiDeviceTokenFactory.GetToken(device));
+            return deviceCollection
+                .GetEnumerable()
+                .Select(device => _wasapiDeviceTokenFactory.GetToken(device));
         }
     }
 }

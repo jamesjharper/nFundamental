@@ -1,5 +1,6 @@
 ﻿using Fundamental.Interface;
 using Fundamental.Interface.Wasapi;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using NSubstitute;
 using NUnit.Framework;
@@ -26,7 +27,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var expectedDeviceId = "B36C8273-EB04-4131-9EE0-EF5E2FE51BC8";
-            var exepectedToken = new WasapiDeviceToken(expectedDeviceId);
+            var exepectedToken = new WasapiDeviceToken(expectedDeviceId, Substitute.For<IMMDevice>());
 
             DeviceStatusChangedEvent resultAgs = null;
             fixture.DeviceStatusChanged += (sender, args) => { resultAgs = args;  };
@@ -35,7 +36,6 @@ namespace nFundamental.Interface.Wasapi.Tests
             WasapiDeviceTokenFactoryTestFixture
                 .GetToken(expectedDeviceId)
                 .Returns(exepectedToken);
-
 
             // -> ACT
             ((IMMNotificationClient) fixture)
@@ -52,7 +52,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var expectedDeviceId = "115977BC-AB6A-4892-9CD6-CE2C6B287109";
-            var exepectedToken = new WasapiDeviceToken(expectedDeviceId);
+            var exepectedToken = new WasapiDeviceToken(expectedDeviceId, Substitute.For<IMMDevice>());
 
             DefaultDeviceChangedEventArgs resultAgs = null;
             fixture.DefaultDeviceChanged += (sender, args) => { resultAgs = args; };
@@ -79,7 +79,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var expectedDeviceId = "115977BC-AB6A-4892-9CD6-CE2C6B287109";
-            var exepectedToken = new WasapiDeviceToken(expectedDeviceId);
+            var exepectedToken = new WasapiDeviceToken(expectedDeviceId, Substitute.For<IMMDevice>());
 
             DeviceAddedEventArgs resultAgs = null;
             fixture.DeviceAdded += (sender, args) => { resultAgs = args; };
@@ -103,7 +103,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var expectedDeviceId = "115977BC-AB6A-4892-9CD6-CE2C6B287109";
-            var exepectedToken = new WasapiDeviceToken(expectedDeviceId);
+            var exepectedToken = new WasapiDeviceToken(expectedDeviceId, Substitute.For<IMMDevice>());
 
             DeviceRemovedEventArgs resultAgs = null;
             fixture.DeviceRemoved += (sender, args) => { resultAgs = args; };

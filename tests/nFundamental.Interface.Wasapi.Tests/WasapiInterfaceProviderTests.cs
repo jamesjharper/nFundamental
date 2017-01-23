@@ -1,5 +1,6 @@
 ﻿using Fundamental.Interface;
 using Fundamental.Interface.Wasapi;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using NSubstitute;
 using NUnit.Framework;

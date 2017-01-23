@@ -1,6 +1,6 @@
 ﻿using System;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
-using Fundamental.Interface.Wasapi.Win32;
 
 namespace Fundamental.Interface.Wasapi
 {
@@ -12,20 +12,20 @@ namespace Fundamental.Interface.Wasapi
         private readonly IWasapiInterfaceNotifyClient _wasapiInterfaceNotifyClient;
 
         /// <summary>
-        /// The device enumerator
+        /// The WASAPI property name translator
         /// </summary>
-        private readonly IMMDeviceEnumerator _deviceEnumerator;
+        private readonly IWasapiPropertyNameTranslator _wasapiPropertyNameTranslator;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiDeviceInfoFactory"/> class.
+        /// Initializes a new instance of the <see cref="WasapiDeviceInfoFactory" /> class.
         /// </summary>
         /// <param name="wasapiInterfaceNotifyClient">The WASAPI interface notify client.</param>
-        /// <param name="deviceEnumerator"></param>
+        /// <param name="wasapiPropertyNameTranslator">The WASAPI property name translator.</param>
         public WasapiDeviceInfoFactory(IWasapiInterfaceNotifyClient wasapiInterfaceNotifyClient,
-                                       IMMDeviceEnumerator deviceEnumerator)
+                                       IWasapiPropertyNameTranslator wasapiPropertyNameTranslator)
         {
             _wasapiInterfaceNotifyClient = wasapiInterfaceNotifyClient;
-            _deviceEnumerator = deviceEnumerator;
+            _wasapiPropertyNameTranslator = wasapiPropertyNameTranslator;
         }
 
         /// <summary>
@@ -35,9 +35,7 @@ namespace Fundamental.Interface.Wasapi
         /// <returns></returns>
         public WasapiDeviceInfo GetInfoDevice(WasapiDeviceToken deviceToken)
         {
-            IMMDevice mmdevice;
-           _deviceEnumerator.GetDevice(deviceToken.Id, out mmdevice).ThrowIfFailed();
-            return new WasapiDeviceInfo(_wasapiInterfaceNotifyClient, deviceToken, mmdevice);
+            return new WasapiDeviceInfo(_wasapiInterfaceNotifyClient, _wasapiPropertyNameTranslator, deviceToken);
         }
 
         /// <summary>
@@ -49,7 +47,7 @@ namespace Fundamental.Interface.Wasapi
         IDeviceInfo IDeviceInfoFactory.GetInfoDevice(IDeviceToken deviceToken)
         {
             if(!(deviceToken is WasapiDeviceToken))
-                throw new InvalidOperationException("WasapiDeviceInfoFactory can only except tokens of type WasapiDeviceToken");
+                throw new InvalidOperationException($"{nameof(WasapiDeviceInfoFactory)} can only except tokens of type {nameof(WasapiDeviceToken)}");
             return GetInfoDevice((WasapiDeviceToken)deviceToken);
         }
     }

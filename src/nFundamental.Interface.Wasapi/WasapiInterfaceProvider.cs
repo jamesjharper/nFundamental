@@ -1,4 +1,5 @@
 ﻿using System;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 
@@ -45,7 +46,7 @@ namespace Fundamental.Interface.Wasapi
         protected virtual IWasapiDeviceTokenFactory FactoryDeviceTokenFactory()
         {
             // Test Code seam for injecting Mock instance
-            return new WasapiDeviceTokenFactory();
+            return new WasapiDeviceTokenFactory(WasapiDeviceEnumerator);
         }
 
         #endregion
@@ -67,6 +68,12 @@ namespace Fundamental.Interface.Wasapi
             WasapiDeviceEnumerator.RegisterEndpointNotificationCallback(_wasapiInterfaceNotifyClient);
             return _wasapiInterfaceNotifyClient;
         }
+
+        #endregion
+
+
+        #region IWasapiPropertyNameTranslator Dependency
+        private IWasapiPropertyNameTranslator WasapiPropertyNameTranslator => new WasapiPropertyNameTranslator();
 
         #endregion
 
@@ -111,7 +118,7 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <returns></returns>
         IDeviceInfoFactory ISupportsInterface<IDeviceInfoFactory>.GetAudioInterface() 
-            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiDeviceEnumerator);
+            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslator);
 
     }
 }

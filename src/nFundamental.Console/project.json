@@ -5,6 +5,7 @@
     },
 
     "dependencies": {
+        "nFundamental.Interface": "1.0.0-*"
     },
 
     "frameworks": {

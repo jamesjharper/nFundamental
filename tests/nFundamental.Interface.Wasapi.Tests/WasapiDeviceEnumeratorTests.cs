@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Fundamental.Interface;
 using Fundamental.Interface.Wasapi;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 using NSubstitute;
@@ -231,7 +232,6 @@ namespace nFundamental.Interface.Wasapi.Tests
         }
 
 
-
         [Test]
         public void CanGetAEmptyListOfActiveOrUnpluggedCapatureAndRenderDevices()
         {
@@ -279,7 +279,6 @@ namespace nFundamental.Interface.Wasapi.Tests
 
         }
 
-
         [Test]
         public void CanGetListOfaSingleDevice()
         {
@@ -292,7 +291,7 @@ namespace nFundamental.Interface.Wasapi.Tests
 
 
             // The Token for device 1
-            var device1Token = new WasapiDeviceToken("E5E0D331-50A1-4020-AD36-491F554B92FF");
+            var device1Token = new WasapiDeviceToken("E5E0D331-50A1-4020-AD36-491F554B92FF", Substitute.For<IMMDevice>());
 
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
@@ -353,8 +352,8 @@ namespace nFundamental.Interface.Wasapi.Tests
             var immDevice2 = Substitute.For<IMMDevice>();
      
             // The Token for device 1
-            var device1Token = new WasapiDeviceToken("E5E0D331-50A1-4020-AD36-491F554B92FF");
-            var device2Token = new WasapiDeviceToken("E5E0D331-50A1-4020-AD36-491F554B92FF");
+            var device1Token = new WasapiDeviceToken("E5E0D331-50A1-4020-AD36-491F554B92FF", Substitute.For<IMMDevice>());
+            var device2Token = new WasapiDeviceToken("E5E0D331-50A1-4020-AD36-491F554B92FF", Substitute.For<IMMDevice>());
 
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;

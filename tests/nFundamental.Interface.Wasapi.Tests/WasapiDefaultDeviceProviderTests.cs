@@ -1,5 +1,6 @@
 ﻿using Fundamental.Interface;
 using Fundamental.Interface.Wasapi;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 using NSubstitute;
@@ -30,11 +31,11 @@ namespace nFundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
 
-            // The expected token to be returned from the token factory
-            var expectedToken =  new WasapiDeviceToken("A3923E50-80C1-420B-BC33-7B8427E448B7");
-
             // The device returned from the COM interface
             var immDevice = Substitute.For<IMMDevice>();
+
+            // The expected token to be returned from the token factory
+            var expectedToken = new WasapiDeviceToken("A3923E50-80C1-420B-BC33-7B8427E448B7", immDevice);
 
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDevice outImmDevice;
@@ -66,11 +67,12 @@ namespace nFundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
 
-            // The expected token to be returned from the token factory
-            var expectedToken = new WasapiDeviceToken("A3923E50-80C1-420B-BC33-7B8427E448B7");
 
             // The device returned from the COM interface
             var immDevice = Substitute.For<IMMDevice>();
+
+            // The expected token to be returned from the token factory
+            var expectedToken = new WasapiDeviceToken("A3923E50-80C1-420B-BC33-7B8427E448B7", immDevice);
 
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDevice outImmDevice;

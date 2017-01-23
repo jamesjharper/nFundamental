@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Fundamental.Interface.Wasapi;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 using NSubstitute;
@@ -17,20 +15,25 @@ namespace nFundamental.Interface.Wasapi.Tests
 
         public IWasapiInterfaceNotifyClient WasapiInterfaceNotifyClient { get; set; }
 
-        public Fundamental.Interface.Wasapi.Interop.IMMDevice ImmDevice { get; set; }
+        public IMMDevice ImmDevice { get; set; }
 
-        public WasapiDeviceToken WasapiDeviceToken { get; } =
-            new WasapiDeviceToken("A63439A9-5928-4BEC-99EC-F39B0414278B");
+        public IWasapiPropertyNameTranslator WasapiPropertyNameTranslatorTestFixture { get; set; }
+
+        public WasapiDeviceToken WasapiDeviceToken { get; set; }
+
 
         [SetUp]
         public void SetUp()
         {
-            ImmDevice = Substitute.For<Fundamental.Interface.Wasapi.Interop.IMMDevice>();
+            ImmDevice = Substitute.For<IMMDevice>();
+            WasapiDeviceToken = new WasapiDeviceToken("A63439A9-5928-4BEC-99EC-F39B0414278B", ImmDevice);
             WasapiInterfaceNotifyClient = Substitute.For<IWasapiInterfaceNotifyClient>();
+            WasapiPropertyNameTranslatorTestFixture = Substitute.For<IWasapiPropertyNameTranslator>();
+
         }
 
         private WasapiDeviceInfo GetTestFixture()
-            => new WasapiDeviceInfo(WasapiInterfaceNotifyClient, WasapiDeviceToken, ImmDevice);
+            => new WasapiDeviceInfo(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslatorTestFixture, WasapiDeviceToken);
 
 
         [Test]
@@ -92,6 +95,60 @@ namespace nFundamental.Interface.Wasapi.Tests
 
             // -> ASSERT
             Assert.AreEqual(propertyStoreFixture, properties.PropertyStore);
+        }
+
+
+        [Test]
+        public void CanRaisePropertyChangedEventForOwnDeivce()
+        {
+            // -> ARRANGE:
+            var fixture = GetTestFixture();
+
+            var keyRaisedInEvent = new PropertyKey(new Guid("A838D5FC-6880-4F15-BEFF-FB760CEE3857"), 2);
+            var tokenRaisedInEvent = WasapiDeviceToken;
+           
+            bool eventWasCalled = false;
+            fixture.PropertyValueChangedEvent += (sender, args) =>
+                {
+                    eventWasCalled = true;
+                    Assert.AreEqual("Key2", args.PropertyKey);
+                    Assert.AreEqual(fixture, args.DeviceInfo);
+                };
+
+
+            WasapiPropertyNameTranslatorTestFixture
+                .ResolvePropertyName(keyRaisedInEvent)
+                .Returns("Key2");
+
+            // -> ACT
+            WasapiInterfaceNotifyClient.DevicePropertyChanged 
+                += Raise.Event< EventHandler<DevicePropertyChangedEventArgs>>(this, new DevicePropertyChangedEventArgs(tokenRaisedInEvent, keyRaisedInEvent));
+
+            // -> ASSERT
+            Assert.That(eventWasCalled);
+        }
+
+        [Test]
+        public void ShouldNotRaisePropertyChangedEventForOtherDevice()
+        {
+            // -> ARRANGE:
+            var fixture = GetTestFixture();
+            
+            var keyRaisedInEvent = new PropertyKey(new Guid("A838D5FC-6880-4F15-BEFF-FB760CEE3857"), 2);
+            var tokenRaisedInEvent = new WasapiDeviceToken("5ED59CEA-0E93-4731-A32D-5E43F77D6E30", Substitute.For<IMMDevice>());
+
+            var wasNotCalled = true;
+            fixture.PropertyValueChangedEvent += (sender, args) =>
+                {
+                    wasNotCalled = false;
+                };
+
+            // -> ACT
+            WasapiInterfaceNotifyClient.DevicePropertyChanged
+                += Raise.Event<EventHandler<DevicePropertyChangedEventArgs>>(this, new DevicePropertyChangedEventArgs(tokenRaisedInEvent, keyRaisedInEvent));
+
+            // -> ASSERT
+            Assert.That(wasNotCalled);
         }
     }
 }

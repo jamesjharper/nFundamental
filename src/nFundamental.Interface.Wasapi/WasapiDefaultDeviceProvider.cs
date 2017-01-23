@@ -1,4 +1,5 @@
 ﻿using Fundamental.Interface.Wasapi.Extentions;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 

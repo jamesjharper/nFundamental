@@ -1,5 +1,6 @@
 ﻿using System;
 using Fundamental.Interface.Wasapi.Extentions;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 
@@ -8,14 +9,9 @@ namespace Fundamental.Interface.Wasapi
     public class WasapiDeviceInfo : IDeviceInfo
     {
         /// <summary>
-        /// The WASAPI interface notify client
+        /// The WSAPI property name translator
         /// </summary>
-        private IWasapiInterfaceNotifyClient _wasapiInterfaceNotifyClient;
-
-        /// <summary>
-        /// The device
-        /// </summary>
-        private readonly IMMDevice _immDevice;
+        private readonly IWasapiPropertyNameTranslator _wasapiPropertyNameTranslator;
 
         /// <summary>
         /// The device property bag
@@ -23,24 +19,25 @@ namespace Fundamental.Interface.Wasapi
         private WasapiDevicePropertyBag _devicePropertyBag;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiDeviceInfo"/> class.
+        /// Initializes a new instance of the <see cref="WasapiDeviceInfo" /> class.
         /// </summary>
         /// <param name="wasapiInterfaceNotifyClient">The WASAPI interface notify client.</param>
+        /// <param name="wasapiPropertyNameTranslator">The WASAPI property name translator.</param>
         /// <param name="deviceToken">The device token.</param>
-        /// <param name="immDevice">The device.</param>
         public WasapiDeviceInfo(IWasapiInterfaceNotifyClient wasapiInterfaceNotifyClient,
-                                WasapiDeviceToken deviceToken,
-                                IMMDevice immDevice )
+                                IWasapiPropertyNameTranslator wasapiPropertyNameTranslator,
+                                WasapiDeviceToken deviceToken)
         {
-            _wasapiInterfaceNotifyClient = wasapiInterfaceNotifyClient;
-            _immDevice = immDevice;
+            _wasapiPropertyNameTranslator = wasapiPropertyNameTranslator;
             DeviceToken = deviceToken;
+
+            wasapiInterfaceNotifyClient.DevicePropertyChanged += OnDevicePropertyChanged;
         }
 
         /// <summary>
         /// Occurs when a property value in the bag changes.
         /// </summary>
-        public event EventHandler<Interface.DevicePropertyChangedEventArgs> PropertyValueChangedEvent;
+        public event EventHandler<DevicePropertyChangedEventArgs> PropertyValueChangedEvent;
 
         /// <summary>
         /// Gets the device handle.
@@ -84,23 +81,34 @@ namespace Fundamental.Interface.Wasapi
 
         // Private Methods
 
-        /// <summary>
-        /// Creates the property bag.
-        /// </summary>
-        /// <returns></returns>
         private WasapiDevicePropertyBag CreatePropertyBag()
         {
             IPropertyStore propertyStore;
-            _immDevice.OpenPropertyStore(StorageAccess.Read, out propertyStore);
-
-            return new WasapiDevicePropertyBag(propertyStore);
+            DeviceToken.MmDevice.OpenPropertyStore(StorageAccess.Read, out propertyStore);
+            return new WasapiDevicePropertyBag(propertyStore, _wasapiPropertyNameTranslator);
         }
 
         private DeviceState GetState()
         {
             Interop.DeviceState deviceState;
-            _immDevice.GetState(out deviceState).ThrowIfFailed();
+            DeviceToken.MmDevice.GetState(out deviceState).ThrowIfFailed();
             return deviceState.ConvertToFundamentalDeviceState();
+        }
+
+        private void OnDevicePropertyChanged(object sender, Internal.DevicePropertyChangedEventArgs args)
+        {
+
+            // only do the work is anyone is listing
+            var handler = PropertyValueChangedEvent;
+            if (handler == null)
+                return;
+
+            // We will receive events for all devices, we want to ignore all but those destined for this device
+            if (!Equals(args.DeviceToken, DeviceToken))
+                return;
+
+            var propertyName = _wasapiPropertyNameTranslator.ResolvePropertyName(args.PropertyKey);
+            handler.Invoke(this, new DevicePropertyChangedEventArgs(this, propertyName));
         }
     }
 }

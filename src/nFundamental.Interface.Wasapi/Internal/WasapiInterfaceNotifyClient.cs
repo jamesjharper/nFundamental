@@ -4,7 +4,7 @@ using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 
-namespace Fundamental.Interface.Wasapi
+namespace Fundamental.Interface.Wasapi.Internal
 {
     [Guid("DDE8D8D4-055B-4FB1-BE59-6889F70EF9D1")]
     public class WasapiInterfaceNotifyClient :
@@ -155,7 +155,7 @@ namespace Fundamental.Interface.Wasapi
         HResult IMMNotificationClient.OnPropertyValueChanged(string deviceId, PropertyKey key)
         {
             var token = _wasapiDeviceTokenFactory.GetToken(deviceId);
-            DevicePropertyChanged?.Invoke(this, new DevicePropertyChangedEventArgs(token, key));
+            DevicePropertyChanged?.Invoke(this, new Internal.DevicePropertyChangedEventArgs(token, key));
             return HResult.S_OK;
         }
 

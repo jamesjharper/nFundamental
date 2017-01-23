@@ -69,6 +69,10 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// Returns S_OK or INPLACE_S_TRUNCATED if successful, or an error value otherwise.
         /// INPLACE_S_TRUNCATED is returned to indicate that the returned PROPVARIANT was coerced to a more canonical form, for instance to trim 
         /// leading or trailing spaces from a string value.Most code should use the SUCCEEDED macro to check the return value, which treats INPLACE_S_TRUNCATED as a success code.
+        /// 
+        /// Remarks:
+        /// If the PROPERTYKEY referenced in key is not present in the property store, this method returns S_OK and the vt member of the structure 
+        /// pointed to by pv is set to VT_EMPTY.
         /// </returns>
         HResult GetValue([In] ref PropertyKey key, [Out] out PropVariant value);
 
