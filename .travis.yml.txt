@@ -1,0 +1,7 @@
+language: csharp
+solution: nFundamental.sln
+install:
+  - nuget restore nFundamental.sln
+  - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner
+script:
+  - xbuild /p:Configuration=Release nFundamental.sln
