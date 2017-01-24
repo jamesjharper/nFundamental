@@ -123,6 +123,8 @@ namespace Fundamental.Interface.Wasapi
             foreach (var keyValuePair in GetPropertyKeyValueEnumerable())
             {
                 var propName = _wasapiPropertyNameTranslator.ResolvePropertyName(keyValuePair.Key);
+
+                // Filter out properties who's names we couldn't resolve
                 if(Equals(propName, string.Empty))
                     continue;
                 yield return new KeyValuePair<string, object>(propName, keyValuePair.Value);

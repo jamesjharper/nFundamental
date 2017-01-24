@@ -33,7 +33,7 @@ namespace Fundamental.Interface.Wasapi.Extentions
         }
 
         /// <summary>
-        /// Converts the state of to wasapi device.
+        /// Converts the state of to WASAPI device.
         /// </summary>
         /// <param name="stateMask">The state mask.</param>
         /// <returns></returns>

@@ -10,7 +10,7 @@ namespace Fundamental.Interface.Wasapi.Interop
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IMMDeviceEnumerator
     {
-        HResult EnumAudioEndpoints([In] DataFlow dataFlow, [In] Wasapi.Interop.DeviceState stateMask, [Out] out IMMDeviceCollection deviceCollection);
+        HResult EnumAudioEndpoints([In] DataFlow dataFlow, [In] DeviceState stateMask, [Out] out IMMDeviceCollection deviceCollection);
 
         HResult GetDefaultAudioEndpoint([In] DataFlow dataFlow, [In]Role role, [Out] out IMMDevice device);
 

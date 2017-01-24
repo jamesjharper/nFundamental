@@ -149,9 +149,21 @@ namespace Fundamental.Interface.Wasapi
 
         private IEnumerable<WasapiDeviceToken> GetTokenEnumerable(IMMDeviceCollection deviceCollection)
         {
-            return deviceCollection
-                .GetEnumerable()
+            return GetDeviceEnumerable(deviceCollection)
                 .Select(device => _wasapiDeviceTokenFactory.GetToken(device));
+        }
+
+        private IEnumerable<IMMDevice> GetDeviceEnumerable(IMMDeviceCollection deviceCollection)
+        {
+            int count;
+            deviceCollection.GetCount(out count).ThrowIfFailed();
+
+            for (var i = 0; i < count; i++)
+            {
+                IMMDevice mmDevice;
+                deviceCollection.Item(i, out mmDevice).ThrowIfFailed();
+                yield return mmDevice;
+            }
         }
     }
 }

@@ -5,6 +5,12 @@ namespace Fundamental.Interface.Wasapi.Interop
 
     public struct PropertyKey
     {
+
+        /// <summary>
+        /// The null key
+        /// </summary>
+        public static PropertyKey NullKey = new PropertyKey(Guid.Empty, 0);
+
         public Guid FormatId;
         public int PropertyId;
 

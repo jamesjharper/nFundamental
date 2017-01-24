@@ -13,6 +13,9 @@ namespace Fundamental.Interface.Wasapi.Win32
     [StructLayout(LayoutKind.Explicit)]
     public struct PropVariant
     {
+        public static PropVariant Empty = FromObject(null);
+
+
         [FieldOffset(0)] private ushort varType;
         [FieldOffset(2)] private ushort wReserved1;
         [FieldOffset(4)] private ushort wReserved2;
@@ -35,6 +38,9 @@ namespace Fundamental.Interface.Wasapi.Win32
         [FieldOffset(8)] private IntPtr punkVal; //this is for punkVal (interface pointer)
         [FieldOffset(8)] private PropArray ca;
         [FieldOffset(8)] private System.Runtime.InteropServices.ComTypes.FILETIME filetime;
+
+
+
 
         /// <summary>
         /// Gets the type of the value.
@@ -159,6 +165,18 @@ namespace Fundamental.Interface.Wasapi.Win32
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Creates a prop variant from a given object.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static PropVariant FromObject(object source)
+        {
+            var propVariant = new PropVariant();
+            propVariant.Init(source);
+            return propVariant;
         }
 
         /// <summary>
@@ -364,6 +382,309 @@ namespace Fundamental.Interface.Wasapi.Win32
             }
 
             throw new System.NotSupportedException();
+        }
+
+
+
+        /// <SecurityNote>
+        /// Critical -Accesses unmanaged code and structure is overlapping in memory
+        /// TreatAsSafe - inputs are verified or safe
+        /// </SecurityNote>
+        private void Init(object value)
+        {
+            if (value == null)
+            {
+                varType = (ushort)VarEnum.VT_EMPTY;
+            }
+            else if (value is Array)
+            {
+                Type type = value.GetType();
+
+                if (type == typeof(sbyte[]))
+                {
+                    InitVector(value as Array, typeof(sbyte), VarEnum.VT_I1);
+                }
+                else if (type == typeof(byte[]))
+                {
+                    InitVector(value as Array, typeof(byte), VarEnum.VT_UI1);
+                }
+                else if (value is char[])
+                {
+                    varType = (ushort)VarEnum.VT_LPSTR;
+                    pszVal = Marshal.StringToCoTaskMemAnsi(new String(value as char[]));
+                }
+                else if (value is char[][])
+                {
+                    char[][] charArray = value as char[][];
+
+                    String[] strArray = new String[charArray.GetLength(0)];
+
+                    for (int i = 0; i < charArray.Length; i++)
+                    {
+                        strArray[i] = new String(charArray[i] as char[]);
+                    }
+
+                    Init(strArray, true);
+                }
+                else if (type == typeof(short[]))
+                {
+                    InitVector(value as Array, typeof(short), VarEnum.VT_I2);
+                }
+                else if (type == typeof(ushort[]))
+                {
+                    InitVector(value as Array, typeof(ushort), VarEnum.VT_UI2);
+                }
+                else if (type == typeof(int[]))
+                {
+                    InitVector(value as Array, typeof(int), VarEnum.VT_I4);
+                }
+                else if (type == typeof(uint[]))
+                {
+                    InitVector(value as Array, typeof(uint), VarEnum.VT_UI4);
+                }
+                else if (type == typeof(Int64[]))
+                {
+                    InitVector(value as Array, typeof(Int64), VarEnum.VT_I8);
+                }
+                else if (type == typeof(UInt64[]))
+                {
+                    InitVector(value as Array, typeof(UInt64), VarEnum.VT_UI8);
+                }
+                else if (value is float[])
+                {
+                    InitVector(value as Array, typeof(float), VarEnum.VT_R4);
+                }
+                else if (value is double[])
+                {
+                    InitVector(value as Array, typeof(double), VarEnum.VT_R8);
+                }
+                else if (value is Guid[])
+                {
+                    InitVector(value as Array, typeof(Guid), VarEnum.VT_CLSID);
+                }
+                else if (value is String[])
+                {
+                    Init(value as String[], false);
+                }
+                else if (value is bool[])
+                {
+                    bool[] boolArray = value as bool[];
+                    short[] array = new short[boolArray.Length];
+
+                    for (int i = 0; i < boolArray.Length; i++)
+                    {
+                        array[i] = (short)(boolArray[i] ? -1 : 0);
+                    }
+
+                    InitVector(array, typeof(short), VarEnum.VT_BOOL);
+                }
+                else
+                {
+                    throw new System.NotSupportedException();
+                }
+            }
+            else
+            {
+                Type type = value.GetType();
+
+                if (value is String)
+                {
+                    varType = (ushort)VarEnum.VT_LPWSTR;
+                    pwszVal = Marshal.StringToCoTaskMemUni(value as String);
+                }
+                else if (type == typeof(sbyte))
+                {
+                    varType = (ushort)VarEnum.VT_I1;
+                    cVal = (sbyte)value;
+                }
+                else if (type == typeof(byte))
+                {
+                    varType = (ushort)VarEnum.VT_UI1;
+                    bVal = (byte)value;
+                }
+                else if (type == typeof(System.Runtime.InteropServices.ComTypes.FILETIME))
+                {
+                    varType = (ushort)VarEnum.VT_FILETIME;
+                    filetime = (System.Runtime.InteropServices.ComTypes.FILETIME)value;
+                }
+                else if (value is char)
+                {
+                    varType = (ushort)VarEnum.VT_LPSTR;
+                    pszVal = Marshal.StringToCoTaskMemAnsi(new String(new char[] { (char)value }));
+                }
+                else if (type == typeof(short))
+                {
+                    varType = (ushort)VarEnum.VT_I2;
+                    iVal = (short)value;
+                }
+                else if (type == typeof(ushort))
+                {
+                    varType = (ushort)VarEnum.VT_UI2;
+                    uiVal = (ushort)value;
+                }
+                else if (type == typeof(int))
+                {
+                    varType = (ushort)VarEnum.VT_I4;
+                    intVal = (int)value;
+                }
+                else if (type == typeof(uint))
+                {
+                    varType = (ushort)VarEnum.VT_UI4;
+                    uintVal = (uint)value;
+                }
+                else if (type == typeof(Int64))
+                {
+                    varType = (ushort)VarEnum.VT_I8;
+                    lVal = (Int64)value;
+                }
+                else if (type == typeof(UInt64))
+                {
+                    varType = (ushort)VarEnum.VT_UI8;
+                    ulVal = (UInt64)value;
+                }
+                else if (value is float)
+                {
+                    varType = (ushort)VarEnum.VT_R4;
+                    fltVal = (float)value;
+                }
+                else if (value is double)
+                {
+                    varType = (ushort)VarEnum.VT_R8;
+                    dblVal = (double)value;
+                }
+                else if (value is Guid)
+                {
+                    byte[] guid = ((Guid)value).ToByteArray();
+                    varType = (ushort)VarEnum.VT_CLSID;
+                    pclsidVal = Marshal.AllocCoTaskMem(guid.Length);
+                    Marshal.Copy(guid, 0, pclsidVal, guid.Length);
+                }
+                else if (value is bool)
+                {
+                    varType = (ushort)VarEnum.VT_BOOL;
+                    boolVal = (short)(((bool)value) ? -1 : 0);
+                }
+                else
+                {
+                    throw new System.NotSupportedException();
+                }
+            }
+        }
+
+        internal void InitVector(Array array, Type type, VarEnum varEnum)
+        {
+            Init(array, type, varEnum | VarEnum.VT_VECTOR);
+        }
+
+        /// <SecurityNote>
+        /// Critical -Accesses unmanaged code and structure is overlapping in memory
+        /// TreatAsSafe - inputs are verified or safe
+        /// </SecurityNote>
+        internal void Init(Array array, Type type, VarEnum vt)
+        {
+            varType = (ushort)vt;
+            ca.cElems = 0;
+            ca.pElems = IntPtr.Zero;
+
+            int length = array.Length;
+
+            if (length > 0)
+            {
+                long size = Marshal.SizeOf(type) * length;
+
+                IntPtr destPtr = IntPtr.Zero;
+                GCHandle handle = new GCHandle();
+
+                try
+                {
+                    destPtr = Marshal.AllocCoTaskMem((int)size);
+                    handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+
+                    // TODO: Fix copy to not use unsafe
+                    throw new NotImplementedException();
+                    //Marshal.Copy();
+                    //unsafe
+                    //{
+                    //    CopyBytes((byte*)destPtr, (int)size, (byte*)handle.AddrOfPinnedObject(), (int)size);
+                    //}
+
+                    ca.cElems = (uint)length;
+                    ca.pElems = destPtr;
+
+                    destPtr = IntPtr.Zero;
+                }
+                finally
+                {
+                    if (handle.IsAllocated)
+                    {
+                        handle.Free();
+                    }
+
+                    if (destPtr != IntPtr.Zero)
+                    {
+                        Marshal.FreeCoTaskMem(destPtr);
+                    }
+                }
+            }
+        }
+
+        /// <SecurityNote>
+        /// Critical -Accesses unmanaged code and structure is overlapping in memory
+        /// TreatAsSafe - inputs are verified or safe
+        /// </SecurityNote>
+        private void Init(string[] value, bool fAscii)
+        {
+            varType = (ushort)(fAscii ? VarEnum.VT_LPSTR : VarEnum.VT_LPWSTR);
+            varType |= (ushort)VarEnum.VT_VECTOR;
+            ca.cElems = 0;
+            ca.pElems = IntPtr.Zero;
+
+            int length = value.Length;
+
+            if (length > 0)
+            {
+                IntPtr destPtr = IntPtr.Zero;
+                int sizeIntPtr = IntPtr.Size;
+                long size = sizeIntPtr * length;
+                int index = 0;
+
+                try
+                {
+                    IntPtr pString = IntPtr.Zero;
+
+                    destPtr = Marshal.AllocCoTaskMem((int)size);
+
+                    for (index = 0; index < length; index++)
+                    {
+                        if (fAscii)
+                        {
+                            pString = Marshal.StringToCoTaskMemAnsi(value[index]);
+                        }
+                        else
+                        {
+                            pString = Marshal.StringToCoTaskMemUni(value[index]);
+                        }
+                        Marshal.WriteIntPtr(destPtr, (int)index * sizeIntPtr, pString);
+                    }
+
+                    ca.cElems = (uint)length;
+                    ca.pElems = destPtr;
+                    destPtr = IntPtr.Zero;
+                }
+                finally
+                {
+                    if (destPtr != IntPtr.Zero)
+                    {
+                        for (int i = 0; i < index; i++)
+                        {
+                            IntPtr pString = Marshal.ReadIntPtr(destPtr, i * sizeIntPtr);
+                            Marshal.FreeCoTaskMem(pString);
+                        }
+
+                        Marshal.FreeCoTaskMem(destPtr);
+                    }
+                }
+            }
         }
     }
 }

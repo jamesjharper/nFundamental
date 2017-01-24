@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Fundamental.Interface.Wasapi.Win32;
 
 namespace Fundamental.Interface.Wasapi.Interop

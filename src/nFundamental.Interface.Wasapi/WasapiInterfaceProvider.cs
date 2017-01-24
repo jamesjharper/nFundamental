@@ -28,7 +28,7 @@ namespace Fundamental.Interface.Wasapi
         protected virtual IMMDeviceEnumerator FactoryWasapiDeviceEnumerator()
         {
             // Test Code seam for injecting Mock instance
-            return ComObject.CreateInstance<IMMDeviceEnumerator>(ClsIds.MMDeviceEnumeratorClsId);
+            return ComObject.CreateInstance<IMMDeviceEnumerator>(ClsIds.MmDeviceEnumeratorClsId);
         }
 
         #endregion

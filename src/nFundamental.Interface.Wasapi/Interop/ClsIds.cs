@@ -7,7 +7,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <summary>
         /// The device enumerator COM Class Identifier
         /// </summary>
-        public static Guid MMDeviceEnumeratorClsId = new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E");
+        public static Guid MmDeviceEnumeratorClsId = new Guid("BCDE0395-E52F-467C-8E3D-C4579291692E");
 
     }
 }
