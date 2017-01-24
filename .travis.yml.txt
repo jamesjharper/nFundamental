@@ -1,2 +1,7 @@
 language: csharp
-solution: nFundamental.sln
+dist: trusty
+sudo: required
+mono: none
+dotnet: 1.0.0-preview2-003121
+script:
+  - ./build.sh --quiet verify
