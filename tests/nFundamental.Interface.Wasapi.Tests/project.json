@@ -1,9 +1,8 @@
-﻿{
+{
     "version": "1.0.0-*",
-
     "dependencies": {
         "NUnit": "3.5.*",
-        "NSubstitute": "1.10.*",
+        "NSubstitute": "2.0.1-rc",
         "nFundamental.Interface.Wasapi": "1.0.0-*",
         "dotnet-test-nunit": "3.4.0-beta-3"
     },
@@ -11,6 +10,9 @@
     "testRunner": "nunit",
 
     "frameworks": {
+        "netcoreapp1.0": {
+            "imports": "dnxcore50"
+        },
         "net46": {
 
         }

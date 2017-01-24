@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-dotnet restore && dotnet build nFundamental.sln
+dotnet restore && dotnet build src/**/project.json

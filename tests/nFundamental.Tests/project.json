@@ -9,14 +9,8 @@
     "testRunner": "nunit",
 
     "frameworks": {
-        "netcoreapp1.0": {
-            "imports": "portable-net45+win8",
-            "dependencies": {
-                "Microsoft.NETCore.App": {
-                    "version": "1.0.0-*",
-                    "type": "platform"
-                }
-            }
+        "netstandard1.6": {
+            "imports": "dnxcore50"
         }
     }
 }
