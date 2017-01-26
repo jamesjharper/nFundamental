@@ -3,18 +3,30 @@
     "dependencies": {
         "NUnit": "3.5.*",
         "NSubstitute": "2.0.1-rc",
-        "nFundamental.Interface.Wasapi": "1.0.0-*",
-        "dotnet-test-nunit": "3.4.0-beta-3"
+        "dotnet-test-nunit": "3.4.0-beta-3",
+
+        "nFundamental.Interface.Wasapi": { "target": "project" }
     },
 
-    "testRunner": "nunit",
+    "buildOptions": {
+        "warningsAsErrors": true
+    },
+
+    "runtimes": {
+        "win10-x64": {},
+        "osx.10.10-x64": {},
+        "ubuntu.14.04-x64": {}
+    },
 
     "frameworks": {
         "netcoreapp1.0": {
-            "imports": "dnxcore50"
+            "imports": [
+                "dnxcore50",
+                "portable-net46+win8"
+            ]
         },
-        "net46": {
+        "net46": {}
+    },
 
-        }
-    }
+    "testRunner": "nunit"
 }
