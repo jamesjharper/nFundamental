@@ -83,7 +83,7 @@ namespace Fundamental.Interface.Wasapi
             // If the key isn't found in the property bag then EMPTY is returned
             PropVariant variant;
             PropertyStore.GetValue(propertyKey, out variant).ThrowIfFailed();
-            if (variant.ValueType == VarEnum.VT_EMPTY)
+            if (variant.ValueType == VariantType.VT_EMPTY)
                 return false;
 
             // If we don't know how to read the returned 

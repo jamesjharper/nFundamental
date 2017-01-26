@@ -48,7 +48,7 @@ namespace Fundamental.Interface.Wasapi.Win32
         /// <value>
         /// The type of the value.
         /// </value>
-        public VarEnum ValueType => (VarEnum)varType;
+        public VariantType ValueType => (VariantType)varType;
 
         /// <summary>
         /// Determines whether [is variant type supported].
@@ -56,55 +56,55 @@ namespace Fundamental.Interface.Wasapi.Win32
         /// <returns></returns>
         public bool IsVariantTypeSupported()
         {
-            VarEnum vt = (VarEnum)varType;
+            var vt = (VariantType)varType;
 
-            if ((vt & VarEnum.VT_VECTOR) != 0)
+            if ((vt & VariantType.VT_VECTOR) != 0)
             {
-                switch (vt & (~VarEnum.VT_VECTOR))
+                switch (vt & (~VariantType.VT_VECTOR))
                 {
-                    case VarEnum.VT_EMPTY:
+                    case VariantType.VT_EMPTY:
                         return true;
 
-                    case VarEnum.VT_I1:
+                    case VariantType.VT_I1:
                         return true;
 
-                    case VarEnum.VT_UI1:
+                    case VariantType.VT_UI1:
                         return true;
 
-                    case VarEnum.VT_I2:
+                    case VariantType.VT_I2:
                         return true;
 
-                    case VarEnum.VT_UI2:
+                    case VariantType.VT_UI2:
                         return true;
 
-                    case VarEnum.VT_I4:
+                    case VariantType.VT_I4:
                         return true;
 
-                    case VarEnum.VT_UI4:
+                    case VariantType.VT_UI4:
                         return true;
 
-                    case VarEnum.VT_I8:
+                    case VariantType.VT_I8:
                         return true;
 
-                    case VarEnum.VT_UI8:
+                    case VariantType.VT_UI8:
                         return true;
 
-                    case VarEnum.VT_R4:
+                    case VariantType.VT_R4:
                         return true;
 
-                    case VarEnum.VT_R8:
+                    case VariantType.VT_R8:
                         return true;
 
-                    case VarEnum.VT_BOOL:
+                    case VariantType.VT_BOOL:
                         return true;
 
-                    case VarEnum.VT_CLSID:
+                    case VariantType.VT_CLSID:
                         return true;
 
-                    case VarEnum.VT_LPSTR:
+                    case VariantType.VT_LPSTR:
                         return true;
 
-                    case VarEnum.VT_LPWSTR:
+                    case VariantType.VT_LPWSTR:
                         return true;
                 }
             }
@@ -112,56 +112,59 @@ namespace Fundamental.Interface.Wasapi.Win32
             {
                 switch (vt)
                 {
-                    case VarEnum.VT_EMPTY:
+                    case VariantType.VT_EMPTY:
                         return true;
 
-                    case VarEnum.VT_I1:
+                    case VariantType.VT_I1:
                         return true;
 
-                    case VarEnum.VT_UI1:
+                    case VariantType.VT_UI1:
                         return true;
 
-                    case VarEnum.VT_I2:
+                    case VariantType.VT_I2:
                         return true;
 
-                    case VarEnum.VT_UI2:
+                    case VariantType.VT_UI2:
                         return true;
 
-                    case VarEnum.VT_I4:
+                    case VariantType.VT_I4:
                         return true;
 
-                    case VarEnum.VT_UI4:
+                    case VariantType.VT_UI4:
                         return true;
 
-                    case VarEnum.VT_I8:
+                    case VariantType.VT_I8:
                         return true;
 
-                    case VarEnum.VT_UI8:
+                    case VariantType.VT_UI8:
                         return true;
 
-                    case VarEnum.VT_R4:
+                    case VariantType.VT_R4:
                         return true;
 
-                    case VarEnum.VT_R8:
+                    case VariantType.VT_R8:
                         return true;
 
-                    case VarEnum.VT_FILETIME:
+                    case VariantType.VT_FILETIME:
                         return true;
 
-                    case VarEnum.VT_BOOL:
+                    case VariantType.VT_BOOL:
                         return true;
 
-                    case VarEnum.VT_CLSID:
+                    case VariantType.VT_CLSID:
                         return true;
 
-                    case VarEnum.VT_LPSTR:
+                    case VariantType.VT_LPSTR:
                         return true;
 
-                    case VarEnum.VT_LPWSTR:
+                    case VariantType.VT_LPWSTR:
                         return true;
-
-                    case VarEnum.VT_BLOB:
+                    case VariantType.VT_BLOB:
                         return true;
+                    case VariantType.VT_NULL:
+                        return true;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
             return false;
@@ -186,132 +189,132 @@ namespace Fundamental.Interface.Wasapi.Win32
         /// <exception cref="System.NotSupportedException"></exception>
         public object ToObject()
         {
-            VarEnum vt = (VarEnum)varType;
+            var vt = (VariantType) varType;
 
-            if ((vt & VarEnum.VT_VECTOR) != 0)
+            if ((vt & VariantType.VT_VECTOR) != 0)
             {
-                switch (vt & (~VarEnum.VT_VECTOR))
+                switch (vt & (~VariantType.VT_VECTOR))
                 {
-                    case VarEnum.VT_EMPTY:
+                    case VariantType.VT_EMPTY:
                         return null;
 
-                    case VarEnum.VT_I1:
-                        {
-                            sbyte[] array = new sbyte[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                                array[i] = (sbyte)Marshal.ReadByte(ca.pElems, i);
-                            return array;
-                        }
+                    case VariantType.VT_I1:
+                    {
+                        var array = new sbyte[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
+                            array[i] = (sbyte) Marshal.ReadByte(ca.pElems, i);
+                        return array;
+                    }
 
-                    case VarEnum.VT_UI1:
-                        {
-                            byte[] array = new byte[ca.cElems];
-                            Marshal.Copy(ca.pElems, array, 0, (int)ca.cElems);
-                            return array;
-                        }
+                    case VariantType.VT_UI1:
+                    {
+                        var array = new byte[ca.cElems];
+                        Marshal.Copy(ca.pElems, array, 0, (int) ca.cElems);
+                        return array;
+                    }
 
-                    case VarEnum.VT_I2:
-                        {
-                            short[] array = new short[ca.cElems];
-                            Marshal.Copy(ca.pElems, array, 0, (int)ca.cElems);
-                            return array;
-                        }
+                    case VariantType.VT_I2:
+                    {
+                        var array = new short[ca.cElems];
+                        Marshal.Copy(ca.pElems, array, 0, (int) ca.cElems);
+                        return array;
+                    }
 
-                    case VarEnum.VT_UI2:
-                        {
-                            ushort[] array = new ushort[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                                array[i] = (ushort)Marshal.ReadInt16(ca.pElems, i * sizeof(ushort));
-                            return array;
-                        }
+                    case VariantType.VT_UI2:
+                    {
+                        var array = new ushort[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
+                            array[i] = (ushort) Marshal.ReadInt16(ca.pElems, i*sizeof(ushort));
+                        return array;
+                    }
 
-                    case VarEnum.VT_I4:
-                        {
-                            int[] array = new int[ca.cElems];
-                            Marshal.Copy(ca.pElems, array, 0, (int)ca.cElems);
-                            return array;
-                        }
+                    case VariantType.VT_I4:
+                    {
+                        var array = new int[ca.cElems];
+                        Marshal.Copy(ca.pElems, array, 0, (int) ca.cElems);
+                        return array;
+                    }
 
-                    case VarEnum.VT_UI4:
-                        {
-                            uint[] array = new uint[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                                array[i] = (uint)Marshal.ReadInt32(ca.pElems, i * sizeof(uint));
-                            return array;
-                        }
+                    case VariantType.VT_UI4:
+                    {
+                        var array = new uint[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
+                            array[i] = (uint) Marshal.ReadInt32(ca.pElems, i*sizeof(uint));
+                        return array;
+                    }
 
-                    case VarEnum.VT_I8:
-                        {
-                            Int64[] array = new Int64[ca.cElems];
-                            Marshal.Copy(ca.pElems, array, 0, (int)ca.cElems);
-                            return array;
-                        }
+                    case VariantType.VT_I8:
+                    {
+                        var array = new Int64[ca.cElems];
+                        Marshal.Copy(ca.pElems, array, 0, (int) ca.cElems);
+                        return array;
+                    }
 
-                    case VarEnum.VT_UI8:
-                        {
-                            UInt64[] array = new UInt64[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                                array[i] = (UInt64)Marshal.ReadInt64(ca.pElems, i * sizeof(UInt64));
-                            return array;
-                        }
+                    case VariantType.VT_UI8:
+                    {
+                        var array = new UInt64[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
+                            array[i] = (UInt64) Marshal.ReadInt64(ca.pElems, i*sizeof(UInt64));
+                        return array;
+                    }
 
-                    case VarEnum.VT_R4:
-                        {
-                            float[] array = new float[ca.cElems];
-                            Marshal.Copy(ca.pElems, array, 0, (int)ca.cElems);
-                            return array;
-                        }
+                    case VariantType.VT_R4:
+                    {
+                        var array = new float[ca.cElems];
+                        Marshal.Copy(ca.pElems, array, 0, (int) ca.cElems);
+                        return array;
+                    }
 
-                    case VarEnum.VT_R8:
-                        {
-                            double[] array = new double[ca.cElems];
-                            Marshal.Copy(ca.pElems, array, 0, (int)ca.cElems);
-                            return array;
-                        }
+                    case VariantType.VT_R8:
+                    {
+                        var array = new double[ca.cElems];
+                        Marshal.Copy(ca.pElems, array, 0, (int) ca.cElems);
+                        return array;
+                    }
 
-                    case VarEnum.VT_BOOL:
-                        {
-                            bool[] array = new bool[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                                array[i] = (bool)(Marshal.ReadInt16(ca.pElems, i * sizeof(ushort)) != 0);
-                            return array;
-                        }
+                    case VariantType.VT_BOOL:
+                    {
+                        var array = new bool[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
+                            array[i] = (bool) (Marshal.ReadInt16(ca.pElems, i*sizeof(ushort)) != 0);
+                        return array;
+                    }
 
-                    case VarEnum.VT_CLSID:
+                    case VariantType.VT_CLSID:
+                    {
+                        var array = new Guid[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
                         {
-                            Guid[] array = new Guid[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                            {
-                                byte[] guid = new byte[16];
-                                Marshal.Copy(ca.pElems, guid, i * 16, 16);
-                                array[i] = new Guid(guid);
-                            }
-                            return array;
+                            var guid = new byte[16];
+                            Marshal.Copy(ca.pElems, guid, i*16, 16);
+                            array[i] = new Guid(guid);
                         }
+                        return array;
+                    }
 
-                    case VarEnum.VT_LPSTR:
+                    case VariantType.VT_LPSTR:
+                    {
+                        var array = new string[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
                         {
-                            String[] array = new String[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                            {
-                                IntPtr ptr = Marshal.ReadIntPtr(ca.pElems, i * IntPtr.Size);
-                                array[i] = Marshal.PtrToStringAnsi(ptr);
-                            }
-                            return array;
+                            var ptr = Marshal.ReadIntPtr(ca.pElems, i*IntPtr.Size);
+                            array[i] = Marshal.PtrToStringAnsi(ptr);
                         }
+                        return array;
+                    }
 
-                    case VarEnum.VT_LPWSTR:
+                    case VariantType.VT_LPWSTR:
+                    {
+                        var array = new string[ca.cElems];
+                        for (var i = 0; i < ca.cElems; i++)
                         {
-                            String[] array = new String[ca.cElems];
-                            for (int i = 0; i < ca.cElems; i++)
-                            {
-                                IntPtr ptr = Marshal.ReadIntPtr(ca.pElems, i * IntPtr.Size);
-                                array[i] = Marshal.PtrToStringUni(ptr);
-                            }
-                            return array;
+                            var ptr = Marshal.ReadIntPtr(ca.pElems, i*IntPtr.Size);
+                            array[i] = Marshal.PtrToStringUni(ptr);
                         }
+                        return array;
+                    }
 
-                    case VarEnum.VT_UNKNOWN:
+                    case VariantType.VT_UNKNOWN:
                     default:
                         break;
                 }
@@ -320,70 +323,68 @@ namespace Fundamental.Interface.Wasapi.Win32
             {
                 switch (vt)
                 {
-                    case VarEnum.VT_EMPTY:
+                    case VariantType.VT_EMPTY:
+                        return null;
+                    case VariantType.VT_NULL:
                         return null;
 
-                    case VarEnum.VT_I1:
+                    case VariantType.VT_I1:
                         return cVal;
-
-                    case VarEnum.VT_UI1:
+                    case VariantType.VT_UI1:
                         return bVal;
 
-                    case VarEnum.VT_I2:
+                    case VariantType.VT_I2:
                         return iVal;
 
-                    case VarEnum.VT_UI2:
+                    case VariantType.VT_UI2:
                         return uiVal;
 
-                    case VarEnum.VT_I4:
+                    case VariantType.VT_I4:
                         return intVal;
 
-                    case VarEnum.VT_UI4:
+                    case VariantType.VT_UI4:
                         return uintVal;
 
-                    case VarEnum.VT_I8:
+                    case VariantType.VT_I8:
                         return lVal;
 
-                    case VarEnum.VT_UI8:
+                    case VariantType.VT_UI8:
                         return ulVal;
 
-                    case VarEnum.VT_R4:
+                    case VariantType.VT_R4:
                         return fltVal;
 
-                    case VarEnum.VT_R8:
+                    case VariantType.VT_R8:
                         return dblVal;
 
-                    case VarEnum.VT_FILETIME:
+                    case VariantType.VT_FILETIME:
                         return filetime;
 
-                    case VarEnum.VT_BOOL:
-                        return (bool)(boolVal != 0);
+                    case VariantType.VT_BOOL:
+                        return (bool) (boolVal != 0);
 
-                    case VarEnum.VT_CLSID:
-                        byte[] guid = new byte[16];
+                    case VariantType.VT_CLSID:
+                        var guid = new byte[16];
                         Marshal.Copy(pclsidVal, guid, 0, 16);
                         return new Guid(guid);
 
-                    case VarEnum.VT_LPSTR:
+                    case VariantType.VT_LPSTR:
                         return Marshal.PtrToStringAnsi(pszVal);
 
-                    case VarEnum.VT_LPWSTR:
+                    case VariantType.VT_LPWSTR:
                         return Marshal.PtrToStringUni(pwszVal);
 
-                    case VarEnum.VT_BLOB:
-                        {
-                            byte[] blob = new byte[ca.cElems];
-                            Marshal.Copy(ca.pElems, blob, 0, (int)ca.cElems);
-                            return blob;
-                        }
-
-                   
+                    case VariantType.VT_BLOB:
+                    {
+                        var blob = new byte[ca.cElems];
+                        Marshal.Copy(ca.pElems, blob, 0, (int) ca.cElems);
+                        return blob;
+                    }
                 }
             }
 
             throw new System.NotSupportedException();
         }
-
 
 
         /// <SecurityNote>
@@ -394,89 +395,89 @@ namespace Fundamental.Interface.Wasapi.Win32
         {
             if (value == null)
             {
-                varType = (ushort)VarEnum.VT_EMPTY;
+                varType = (ushort) VariantType.VT_EMPTY;
             }
             else if (value is Array)
             {
-                Type type = value.GetType();
+                var type = value.GetType();
 
                 if (type == typeof(sbyte[]))
                 {
-                    InitVector(value as Array, typeof(sbyte), VarEnum.VT_I1);
+                    InitVector(value as Array, typeof(sbyte), VariantType.VT_I1);
                 }
                 else if (type == typeof(byte[]))
                 {
-                    InitVector(value as Array, typeof(byte), VarEnum.VT_UI1);
+                    InitVector(value as Array, typeof(byte), VariantType.VT_UI1);
                 }
                 else if (value is char[])
                 {
-                    varType = (ushort)VarEnum.VT_LPSTR;
-                    pszVal = Marshal.StringToCoTaskMemAnsi(new String(value as char[]));
+                    varType = (ushort) VariantType.VT_LPSTR;
+                    pszVal = Marshal.StringToCoTaskMemAnsi(new string(value as char[]));
                 }
                 else if (value is char[][])
                 {
-                    char[][] charArray = value as char[][];
+                    var charArray = value as char[][];
 
-                    String[] strArray = new String[charArray.GetLength(0)];
+                    var strArray = new string[charArray.GetLength(0)];
 
-                    for (int i = 0; i < charArray.Length; i++)
+                    for (var i = 0; i < charArray.Length; i++)
                     {
-                        strArray[i] = new String(charArray[i] as char[]);
+                        strArray[i] = new string(charArray[i] as char[]);
                     }
 
                     Init(strArray, true);
                 }
                 else if (type == typeof(short[]))
                 {
-                    InitVector(value as Array, typeof(short), VarEnum.VT_I2);
+                    InitVector(value as Array, typeof(short), VariantType.VT_I2);
                 }
                 else if (type == typeof(ushort[]))
                 {
-                    InitVector(value as Array, typeof(ushort), VarEnum.VT_UI2);
+                    InitVector(value as Array, typeof(ushort), VariantType.VT_UI2);
                 }
                 else if (type == typeof(int[]))
                 {
-                    InitVector(value as Array, typeof(int), VarEnum.VT_I4);
+                    InitVector(value as Array, typeof(int), VariantType.VT_I4);
                 }
                 else if (type == typeof(uint[]))
                 {
-                    InitVector(value as Array, typeof(uint), VarEnum.VT_UI4);
+                    InitVector(value as Array, typeof(uint), VariantType.VT_UI4);
                 }
                 else if (type == typeof(Int64[]))
                 {
-                    InitVector(value as Array, typeof(Int64), VarEnum.VT_I8);
+                    InitVector(value as Array, typeof(Int64), VariantType.VT_I8);
                 }
                 else if (type == typeof(UInt64[]))
                 {
-                    InitVector(value as Array, typeof(UInt64), VarEnum.VT_UI8);
+                    InitVector(value as Array, typeof(UInt64), VariantType.VT_UI8);
                 }
                 else if (value is float[])
                 {
-                    InitVector(value as Array, typeof(float), VarEnum.VT_R4);
+                    InitVector(value as Array, typeof(float), VariantType.VT_R4);
                 }
                 else if (value is double[])
                 {
-                    InitVector(value as Array, typeof(double), VarEnum.VT_R8);
+                    InitVector(value as Array, typeof(double), VariantType.VT_R8);
                 }
                 else if (value is Guid[])
                 {
-                    InitVector(value as Array, typeof(Guid), VarEnum.VT_CLSID);
+                    InitVector(value as Array, typeof(Guid), VariantType.VT_CLSID);
                 }
-                else if (value is String[])
+                else if (value is string[])
                 {
-                    Init(value as String[], false);
+                    Init(value as string[], false);
                 }
                 else if (value is bool[])
                 {
-                    bool[] boolArray = value as bool[];
-                    short[] array = new short[boolArray.Length];
+                    var boolArray = value as bool[];
+                    var array = new short[boolArray.Length];
 
-                    for (int i = 0; i < boolArray.Length; i++)
+                    for (var i = 0; i < boolArray.Length; i++)
                     {
-                        array[i] = (short)(boolArray[i] ? -1 : 0);
+                        array[i] = (short) (boolArray[i] ? -1 : 0);
                     }
 
-                    InitVector(array, typeof(short), VarEnum.VT_BOOL);
+                    InitVector(array, typeof(short), VariantType.VT_BOOL);
                 }
                 else
                 {
@@ -485,84 +486,84 @@ namespace Fundamental.Interface.Wasapi.Win32
             }
             else
             {
-                Type type = value.GetType();
+                var type = value.GetType();
 
-                if (value is String)
+                if (value is string)
                 {
-                    varType = (ushort)VarEnum.VT_LPWSTR;
-                    pwszVal = Marshal.StringToCoTaskMemUni(value as String);
+                    varType = (ushort) VariantType.VT_LPWSTR;
+                    pwszVal = Marshal.StringToCoTaskMemUni(value as string);
                 }
                 else if (type == typeof(sbyte))
                 {
-                    varType = (ushort)VarEnum.VT_I1;
-                    cVal = (sbyte)value;
+                    varType = (ushort) VariantType.VT_I1;
+                    cVal = (sbyte) value;
                 }
                 else if (type == typeof(byte))
                 {
-                    varType = (ushort)VarEnum.VT_UI1;
-                    bVal = (byte)value;
+                    varType = (ushort) VariantType.VT_UI1;
+                    bVal = (byte) value;
                 }
                 else if (type == typeof(System.Runtime.InteropServices.ComTypes.FILETIME))
                 {
-                    varType = (ushort)VarEnum.VT_FILETIME;
-                    filetime = (System.Runtime.InteropServices.ComTypes.FILETIME)value;
+                    varType = (ushort) VariantType.VT_FILETIME;
+                    filetime = (System.Runtime.InteropServices.ComTypes.FILETIME) value;
                 }
                 else if (value is char)
                 {
-                    varType = (ushort)VarEnum.VT_LPSTR;
-                    pszVal = Marshal.StringToCoTaskMemAnsi(new String(new char[] { (char)value }));
+                    varType = (ushort) VariantType.VT_LPSTR;
+                    pszVal = Marshal.StringToCoTaskMemAnsi(new string(new char[] {(char) value}));
                 }
                 else if (type == typeof(short))
                 {
-                    varType = (ushort)VarEnum.VT_I2;
-                    iVal = (short)value;
+                    varType = (ushort) VariantType.VT_I2;
+                    iVal = (short) value;
                 }
                 else if (type == typeof(ushort))
                 {
-                    varType = (ushort)VarEnum.VT_UI2;
-                    uiVal = (ushort)value;
+                    varType = (ushort) VariantType.VT_UI2;
+                    uiVal = (ushort) value;
                 }
                 else if (type == typeof(int))
                 {
-                    varType = (ushort)VarEnum.VT_I4;
-                    intVal = (int)value;
+                    varType = (ushort) VariantType.VT_I4;
+                    intVal = (int) value;
                 }
                 else if (type == typeof(uint))
                 {
-                    varType = (ushort)VarEnum.VT_UI4;
-                    uintVal = (uint)value;
+                    varType = (ushort) VariantType.VT_UI4;
+                    uintVal = (uint) value;
                 }
                 else if (type == typeof(Int64))
                 {
-                    varType = (ushort)VarEnum.VT_I8;
-                    lVal = (Int64)value;
+                    varType = (ushort) VariantType.VT_I8;
+                    lVal = (Int64) value;
                 }
                 else if (type == typeof(UInt64))
                 {
-                    varType = (ushort)VarEnum.VT_UI8;
-                    ulVal = (UInt64)value;
+                    varType = (ushort) VariantType.VT_UI8;
+                    ulVal = (UInt64) value;
                 }
                 else if (value is float)
                 {
-                    varType = (ushort)VarEnum.VT_R4;
-                    fltVal = (float)value;
+                    varType = (ushort) VariantType.VT_R4;
+                    fltVal = (float) value;
                 }
                 else if (value is double)
                 {
-                    varType = (ushort)VarEnum.VT_R8;
-                    dblVal = (double)value;
+                    varType = (ushort) VariantType.VT_R8;
+                    dblVal = (double) value;
                 }
                 else if (value is Guid)
                 {
-                    byte[] guid = ((Guid)value).ToByteArray();
-                    varType = (ushort)VarEnum.VT_CLSID;
+                    var guid = ((Guid) value).ToByteArray();
+                    varType = (ushort) VariantType.VT_CLSID;
                     pclsidVal = Marshal.AllocCoTaskMem(guid.Length);
                     Marshal.Copy(guid, 0, pclsidVal, guid.Length);
                 }
                 else if (value is bool)
                 {
-                    varType = (ushort)VarEnum.VT_BOOL;
-                    boolVal = (short)(((bool)value) ? -1 : 0);
+                    varType = (ushort) VariantType.VT_BOOL;
+                    boolVal = (short) (((bool) value) ? -1 : 0);
                 }
                 else
                 {
@@ -571,60 +572,61 @@ namespace Fundamental.Interface.Wasapi.Win32
             }
         }
 
-        internal void InitVector(Array array, Type type, VarEnum varEnum)
+        internal void InitVector(Array array, Type type, VariantType variantType)
         {
-            Init(array, type, varEnum | VarEnum.VT_VECTOR);
+            Init(array, type, variantType | VariantType.VT_VECTOR);
         }
 
         /// <SecurityNote>
         /// Critical -Accesses unmanaged code and structure is overlapping in memory
         /// TreatAsSafe - inputs are verified or safe
         /// </SecurityNote>
-        internal void Init(Array array, Type type, VarEnum vt)
+        internal void Init(Array array, Type type, VariantType vt)
         {
-            varType = (ushort)vt;
+            varType = (ushort) vt;
             ca.cElems = 0;
             ca.pElems = IntPtr.Zero;
 
-            int length = array.Length;
+            var length = array.Length;
 
             if (length > 0)
             {
-                long size = Marshal.SizeOf(type) * length;
+                throw new NotImplementedException();
+                //long size = Marshal.SizeOf(type) * length;
 
-                IntPtr destPtr = IntPtr.Zero;
-                GCHandle handle = new GCHandle();
+                //var destPtr = IntPtr.Zero;
+                //var handle = new GCHandle();
 
-                try
-                {
-                    destPtr = Marshal.AllocCoTaskMem((int)size);
-                    handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+                //try
+                //{
+                //    destPtr = Marshal.AllocCoTaskMem((int) size);
+                //    handle = GCHandle.Alloc(array, GCHandleType.Pinned);
 
-                    // TODO: Fix copy to not use unsafe
-                    throw new NotImplementedException();
-                    //Marshal.Copy();
-                    //unsafe
-                    //{
-                    //    CopyBytes((byte*)destPtr, (int)size, (byte*)handle.AddrOfPinnedObject(), (int)size);
-                    //}
+                //    // TODO: Fix copy to not use unsafe
+                    
+                //    //Marshal.Copy();
+                //    //unsafe
+                //    //{
+                //    //    CopyBytes((byte*)destPtr, (int)size, (byte*)handle.AddrOfPinnedObject(), (int)size);
+                //    //}
 
-                    ca.cElems = (uint)length;
-                    ca.pElems = destPtr;
+                //    ca.cElems = (uint) length;
+                //    ca.pElems = destPtr;
 
-                    destPtr = IntPtr.Zero;
-                }
-                finally
-                {
-                    if (handle.IsAllocated)
-                    {
-                        handle.Free();
-                    }
+                //    destPtr = IntPtr.Zero;
+                //}
+                //finally
+                //{
+                //    if (handle.IsAllocated)
+                //    {
+                //        handle.Free();
+                //    }
 
-                    if (destPtr != IntPtr.Zero)
-                    {
-                        Marshal.FreeCoTaskMem(destPtr);
-                    }
-                }
+                //    if (destPtr != IntPtr.Zero)
+                //    {
+                //        Marshal.FreeCoTaskMem(destPtr);
+                //    }
+                //}
             }
         }
 
@@ -634,28 +636,27 @@ namespace Fundamental.Interface.Wasapi.Win32
         /// </SecurityNote>
         private void Init(string[] value, bool fAscii)
         {
-            varType = (ushort)(fAscii ? VarEnum.VT_LPSTR : VarEnum.VT_LPWSTR);
-            varType |= (ushort)VarEnum.VT_VECTOR;
+            varType = (ushort) (fAscii ? VariantType.VT_LPSTR : VariantType.VT_LPWSTR);
+            varType |= (ushort) VariantType.VT_VECTOR;
             ca.cElems = 0;
             ca.pElems = IntPtr.Zero;
 
-            int length = value.Length;
+            var length = value.Length;
 
             if (length > 0)
             {
-                IntPtr destPtr = IntPtr.Zero;
-                int sizeIntPtr = IntPtr.Size;
-                long size = sizeIntPtr * length;
-                int index = 0;
+                var destPtr = IntPtr.Zero;
+                var sizeIntPtr = IntPtr.Size;
+                long size = sizeIntPtr*length;
+                var index = 0;
 
                 try
                 {
-                    IntPtr pString = IntPtr.Zero;
-
-                    destPtr = Marshal.AllocCoTaskMem((int)size);
+                    destPtr = Marshal.AllocCoTaskMem((int) size);
 
                     for (index = 0; index < length; index++)
                     {
+                        IntPtr pString;
                         if (fAscii)
                         {
                             pString = Marshal.StringToCoTaskMemAnsi(value[index]);
@@ -664,10 +665,10 @@ namespace Fundamental.Interface.Wasapi.Win32
                         {
                             pString = Marshal.StringToCoTaskMemUni(value[index]);
                         }
-                        Marshal.WriteIntPtr(destPtr, (int)index * sizeIntPtr, pString);
+                        Marshal.WriteIntPtr(destPtr, (int) index*sizeIntPtr, pString);
                     }
 
-                    ca.cElems = (uint)length;
+                    ca.cElems = (uint) length;
                     ca.pElems = destPtr;
                     destPtr = IntPtr.Zero;
                 }
@@ -675,9 +676,9 @@ namespace Fundamental.Interface.Wasapi.Win32
                 {
                     if (destPtr != IntPtr.Zero)
                     {
-                        for (int i = 0; i < index; i++)
+                        for (var i = 0; i < index; i++)
                         {
-                            IntPtr pString = Marshal.ReadIntPtr(destPtr, i * sizeIntPtr);
+                            var pString = Marshal.ReadIntPtr(destPtr, i*sizeIntPtr);
                             Marshal.FreeCoTaskMem(pString);
                         }
 
