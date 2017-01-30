@@ -46,9 +46,12 @@ namespace Fundamental.Interface.Wasapi
         /// <exception cref="System.InvalidOperationException">WasapiDeviceInfoFactory can only except tokens of type WasapiDeviceToken</exception>
         IDeviceInfo IDeviceInfoFactory.GetInfoDevice(IDeviceToken deviceToken)
         {
-            if(!(deviceToken is WasapiDeviceToken))
-                throw new InvalidOperationException($"{nameof(WasapiDeviceInfoFactory)} can only except tokens of type {nameof(WasapiDeviceToken)}");
-            return GetInfoDevice((WasapiDeviceToken)deviceToken);
+            var token = deviceToken as WasapiDeviceToken;
+            if (token != null) 
+                return GetInfoDevice(token);
+
+            var message = $"{nameof(WasapiDeviceInfoFactory)} can only except tokens of type {nameof(WasapiDeviceToken)}";
+            throw new UnsupportedTokenTypeException(message, typeof(WasapiDeviceToken));
         }
     }
 }
