@@ -12,7 +12,7 @@ namespace Fundamental.Interface.Wasapi.Win32
             var obj = Activator.CreateInstance(clsType);
             return QuearyInterface<T>(obj);
             #else
-            throw new NotSupportedException("Only supported in windows enviromnet.");
+            throw new NotSupportedException("Only supported in windows environment.");
             #endif
          
         }
