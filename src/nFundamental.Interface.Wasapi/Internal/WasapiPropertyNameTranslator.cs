@@ -1,10 +1,24 @@
 ﻿using System;
 using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi.Options;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
     public class WasapiPropertyNameTranslator : IWasapiPropertyNameTranslator
     {
+        /// <summary>
+        /// The WASAPI options
+        /// </summary>
+        private readonly IOptions<WasapiOptions> _wasapiOptions;
+
+        /// <summary>
+        /// Gets the options.
+        /// </summary>
+        /// <value>
+        /// The options.
+        /// </value>
+        private WasapiOptions Options => _wasapiOptions.Value;
+
         /// <summary>
         /// The property name to unique identifier map which is used
         /// to translate between property names and their GUIDs 
@@ -131,13 +145,15 @@ namespace Fundamental.Interface.Wasapi.Internal
             {"AudioEngineDeviceFormat",                PropertyKeys.AudioEngineDeviceFormat              },
             {"AudioEngineOemFormat",                   PropertyKeys.AudioEngineOemFormat                 },
         };
-
-        // TODO: move to settings when available
-
+     
         /// <summary>
-        /// The ignore unknown key
-        /// </summary>
-        private static bool IgnoreUnknownKeys = true;
+        /// Initializes a new instance of the <see cref="WasapiPropertyNameTranslator"/> class.
+        /// </summary>C:\Projects\Personal\nFundamental\tests\nFundamental.Interface.Wasapi.Tests\WasapiInterfaceNotifyClientTests.cs
+        /// <param name="wasapiOptions">The WASAPI settings.</param>
+        public WasapiPropertyNameTranslator(IOptions<WasapiOptions> wasapiOptions)
+        {
+            _wasapiOptions = wasapiOptions;
+        }
 
         /// <summary>
         /// Resolves the name of the property.
@@ -150,7 +166,7 @@ namespace Fundamental.Interface.Wasapi.Internal
             if(PropertyKeyLookUpTable.TryGetValue(key, out propertyName))
                 return propertyName;
             
-            return IgnoreUnknownKeys ? string.Empty : key.ToString();
+            return Options.DeviceInfo.OmitUnknownDeviceProperty ? string.Empty : key.ToString();
         }
 
         /// <summary>

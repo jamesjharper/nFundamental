@@ -1,6 +1,6 @@
-﻿using System;
-using Fundamental.Interface.Wasapi.Internal;
+﻿using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi.Options;
 using Fundamental.Interface.Wasapi.Win32;
 
 namespace Fundamental.Interface.Wasapi
@@ -15,6 +15,11 @@ namespace Fundamental.Interface.Wasapi
 
     {
 
+        /// <summary>
+        /// The configuration options for WASAPI audio interface
+        /// </summary>
+        private readonly Options<WasapiOptions> _options = Options<WasapiOptions>.Default;
+
         #region IMMDeviceEnumerator Dependency
 
         private IMMDeviceEnumerator _deviceEnumerator;
@@ -22,7 +27,7 @@ namespace Fundamental.Interface.Wasapi
         private IMMDeviceEnumerator WasapiDeviceEnumerator => _deviceEnumerator ?? (_deviceEnumerator = FactoryWasapiDeviceEnumerator());
 
         /// <summary>
-        /// Factories the wasapi device enumerator.
+        /// Factories the WASAPI device enumerator.
         /// </summary>
         /// <returns></returns>
         protected virtual IMMDeviceEnumerator FactoryWasapiDeviceEnumerator()
@@ -73,7 +78,14 @@ namespace Fundamental.Interface.Wasapi
 
 
         #region IWasapiPropertyNameTranslator Dependency
-        private IWasapiPropertyNameTranslator WasapiPropertyNameTranslator => new WasapiPropertyNameTranslator();
+
+        /// <summary>
+        /// Gets the WASAPI property name translator.
+        /// </summary>
+        /// <value>
+        /// The WASAPI property name translator.
+        /// </value>
+        private IWasapiPropertyNameTranslator WasapiPropertyNameTranslator => new WasapiPropertyNameTranslator(_options);
 
         #endregion
 
