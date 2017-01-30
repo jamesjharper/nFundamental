@@ -21,7 +21,7 @@
                 "portable-net46+win8"
             ]
         },
-        "net46": {}
+       // "net46": {}
 
     },
 
