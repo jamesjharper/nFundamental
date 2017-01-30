@@ -4,13 +4,14 @@
         "NUnit": "3.5.*",
         "NSubstitute": "2.0.1-rc",
         "dotnet-test-nunit": "3.4.0-beta-3",
-
+        "nFundamental": { "target": "project" },
+        "nFundamental.Interface": { "target": "project" },
         "nFundamental.Interface.Wasapi": { "target": "project" }
     },
 
-    "buildOptions": {
-        "warningsAsErrors": true
-    },
+    //"buildOptions": {
+    //    "warningsAsErrors": true
+    //},
 
     "runtimes": {
         "win10-x64": {},
@@ -20,10 +21,13 @@
 
     "frameworks": {
         "netcoreapp1.0": {
-            "imports": [
-                "dnxcore50",
-                "portable-net46+win8"
-            ]
+            "imports": "portable-net45+win8",
+            "dependencies": {
+                "Microsoft.NETCore.App": {
+                    "version": "1.0.0-*",
+                    "type": "platform"
+                }
+            }
         },
         "net46": {}
     },

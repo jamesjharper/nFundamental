@@ -1,14 +1,14 @@
 ﻿using System.Linq;
-using Fundamental.Interface;
-using Fundamental.Interface.Wasapi;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
+using Fundamental.Interface;
+using Fundamental.Interface.Wasapi;
 using NSubstitute;
 using NUnit.Framework;
 using DeviceState = Fundamental.Interface.DeviceState;
 
-namespace nFundamental.Interface.Wasapi.Tests
+namespace Fundamental.Interface.Wasapi.Tests
 {
 
     [TestFixture]
@@ -39,7 +39,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
-                .EnumAudioEndpoints(DataFlow.All, Fundamental.Interface.Wasapi.Interop.DeviceState.All, out outImmDeviceCollection)
+                .EnumAudioEndpoints(DataFlow.All, Interop.DeviceState.All, out outImmDeviceCollection)
                 .Returns(
                     param =>
                     {
@@ -80,7 +80,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
-                .EnumAudioEndpoints(DataFlow.Render, Fundamental.Interface.Wasapi.Interop.DeviceState.All, out outImmDeviceCollection)
+                .EnumAudioEndpoints(DataFlow.Render, Interop.DeviceState.All, out outImmDeviceCollection)
                 .Returns(
                     param =>
                     {
@@ -120,7 +120,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
-                .EnumAudioEndpoints(DataFlow.Capture, Fundamental.Interface.Wasapi.Interop.DeviceState.All, out outImmDeviceCollection)
+                .EnumAudioEndpoints(DataFlow.Capture, Interop.DeviceState.All, out outImmDeviceCollection)
                 .Returns(
                     param =>
                     {
@@ -159,7 +159,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
-                .EnumAudioEndpoints(DataFlow.Render, Fundamental.Interface.Wasapi.Interop.DeviceState.Active, out outImmDeviceCollection)
+                .EnumAudioEndpoints(DataFlow.Render, Interop.DeviceState.Active, out outImmDeviceCollection)
                 .Returns(
                     param =>
                     {
@@ -198,8 +198,8 @@ namespace nFundamental.Interface.Wasapi.Tests
 
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
 
-            var stateMask = Fundamental.Interface.Wasapi.Interop.DeviceState.Active |
-                            Fundamental.Interface.Wasapi.Interop.DeviceState.Unplugged;
+            var stateMask = Interop.DeviceState.Active |
+                            Interop.DeviceState.Unplugged;
 
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
@@ -243,8 +243,8 @@ namespace nFundamental.Interface.Wasapi.Tests
 
 
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
-            var stateMask = Fundamental.Interface.Wasapi.Interop.DeviceState.Active |
-                            Fundamental.Interface.Wasapi.Interop.DeviceState.Unplugged;
+            var stateMask = Interop.DeviceState.Active |
+                            Interop.DeviceState.Unplugged;
 
             var dataFlow = DataFlow.All;
 
@@ -296,7 +296,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
-                .EnumAudioEndpoints(Arg.Any<DataFlow>(), Arg.Any<Fundamental.Interface.Wasapi.Interop.DeviceState>(), out outImmDeviceCollection)
+                .EnumAudioEndpoints(Arg.Any<DataFlow>(), Arg.Any<Interop.DeviceState>(), out outImmDeviceCollection)
                 .Returns(
                     param =>
                     {
@@ -358,7 +358,7 @@ namespace nFundamental.Interface.Wasapi.Tests
             // Call to GetDefaultAudioEndpoint returns mock IMMDevice
             IMMDeviceCollection outImmDeviceCollection;
             ImmDeviceEnumeratorTestFixture
-                .EnumAudioEndpoints(Arg.Any<DataFlow>(), Arg.Any<Fundamental.Interface.Wasapi.Interop.DeviceState>(), out outImmDeviceCollection)
+                .EnumAudioEndpoints(Arg.Any<DataFlow>(), Arg.Any<Interop.DeviceState>(), out outImmDeviceCollection)
                 .Returns(
                     param =>
                     {

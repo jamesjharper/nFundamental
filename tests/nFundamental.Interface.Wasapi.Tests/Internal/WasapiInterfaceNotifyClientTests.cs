@@ -1,12 +1,12 @@
-﻿using Fundamental.Interface;
-using Fundamental.Interface.Wasapi;
-using Fundamental.Interface.Wasapi.Internal;
+﻿using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface;
+using Fundamental.Interface.Wasapi;
 using NSubstitute;
 using NUnit.Framework;
 
 
-namespace nFundamental.Interface.Wasapi.Tests
+namespace Fundamental.Interface.Wasapi.Tests
 {
     [TestFixture]
     public class WasapiInterfaceNotifyClientTests
@@ -39,11 +39,11 @@ namespace nFundamental.Interface.Wasapi.Tests
 
             // -> ACT
             ((IMMNotificationClient) fixture)
-                .OnDeviceStateChanged(expectedDeviceId, Fundamental.Interface.Wasapi.Interop.DeviceState.Disabled);
+                .OnDeviceStateChanged(expectedDeviceId, Interop.DeviceState.Disabled);
 
             // -> ASSERT
             Assert.AreEqual(resultAgs?.DeviceToken, exepectedToken);
-            Assert.AreEqual(resultAgs?.DeviceState, Fundamental.Interface.DeviceState.Disabled);
+            Assert.AreEqual(resultAgs?.DeviceState, DeviceState.Disabled);
         }
 
         [Test]

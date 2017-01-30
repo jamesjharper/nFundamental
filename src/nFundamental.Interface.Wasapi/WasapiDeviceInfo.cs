@@ -1,7 +1,7 @@
 ﻿using System;
-using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Win32;
 
 namespace Fundamental.Interface.Wasapi
@@ -95,7 +95,7 @@ namespace Fundamental.Interface.Wasapi
             return deviceState.ConvertToFundamentalDeviceState();
         }
 
-        private void OnDevicePropertyChanged(object sender, Internal.DevicePropertyChangedEventArgs args)
+        private void OnDevicePropertyChanged(object sender, Internal.WasapiDevicePropertyChangedEventArgs args)
         {
 
             // only do the work is anyone is listing

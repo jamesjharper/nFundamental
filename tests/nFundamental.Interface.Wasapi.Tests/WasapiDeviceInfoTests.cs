@@ -1,13 +1,13 @@
 ﻿using System;
-using Fundamental.Interface.Wasapi;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
+using Fundamental.Interface.Wasapi;
 using NSubstitute;
 using NUnit.Framework;
 using DeviceState = Fundamental.Interface.DeviceState;
 
-namespace nFundamental.Interface.Wasapi.Tests
+namespace Fundamental.Interface.Wasapi.Tests
 {
     [TestFixture]
     public class WasapiDeviceInfoTests
@@ -56,12 +56,12 @@ namespace nFundamental.Interface.Wasapi.Tests
             var fixture = GetTestFixture();
 
             // Expect a call to IMMDevice.GetState
-            Fundamental.Interface.Wasapi.Interop.DeviceState deviceStateOut;
+            Interop.DeviceState deviceStateOut;
             ImmDevice
                 .GetState(out deviceStateOut)
                 .Returns(param =>
                 {
-                    param[0] = Fundamental.Interface.Wasapi.Interop.DeviceState.Disabled;
+                    param[0] = Interop.DeviceState.Disabled;
                     return HResult.S_OK;
                 });
 
@@ -122,7 +122,7 @@ namespace nFundamental.Interface.Wasapi.Tests
 
             // -> ACT
             WasapiInterfaceNotifyClient.DevicePropertyChanged 
-                += Raise.Event< EventHandler<DevicePropertyChangedEventArgs>>(this, new DevicePropertyChangedEventArgs(tokenRaisedInEvent, keyRaisedInEvent));
+                += Raise.Event< EventHandler<WasapiDevicePropertyChangedEventArgs>>(this, new WasapiDevicePropertyChangedEventArgs(tokenRaisedInEvent, keyRaisedInEvent));
 
             // -> ASSERT
             Assert.That(eventWasCalled);
@@ -145,7 +145,7 @@ namespace nFundamental.Interface.Wasapi.Tests
 
             // -> ACT
             WasapiInterfaceNotifyClient.DevicePropertyChanged
-                += Raise.Event<EventHandler<DevicePropertyChangedEventArgs>>(this, new DevicePropertyChangedEventArgs(tokenRaisedInEvent, keyRaisedInEvent));
+                += Raise.Event<EventHandler<WasapiDevicePropertyChangedEventArgs>>(this, new WasapiDevicePropertyChangedEventArgs(tokenRaisedInEvent, keyRaisedInEvent));
 
             // -> ASSERT
             Assert.That(wasNotCalled);

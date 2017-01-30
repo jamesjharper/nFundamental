@@ -5,8 +5,8 @@
     },
 
     "dependencies": {
+        "nFundamental": { "target": "project" },
         "nFundamental.Interface": { "target": "project" }
-
     },
 
     "runtimes": {

@@ -1,11 +1,11 @@
 ﻿using System;
-using Fundamental.Interface.Wasapi;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace nFundamental.Interface.Wasapi.Tests
+namespace Fundamental.Interface.Wasapi.Tests
 {
 
     [TestFixture]

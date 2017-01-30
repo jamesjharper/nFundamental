@@ -1,14 +1,14 @@
-﻿using Fundamental.Interface;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Fundamental.Interface;
 
 #if NET46
 using Fundamental.Interface.Wasapi;
 #endif
 
-namespace nFundamental.Console
+namespace Fundamental.Console
 {
     public class Program
     {
