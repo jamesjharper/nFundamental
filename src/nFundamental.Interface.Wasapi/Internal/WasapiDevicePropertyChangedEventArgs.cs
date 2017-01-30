@@ -2,7 +2,7 @@
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
-    public class DevicePropertyChangedEventArgs
+    public class WasapiDevicePropertyChangedEventArgs
     {
         /// <summary>
         /// Gets the device identifier token.
@@ -21,11 +21,11 @@ namespace Fundamental.Interface.Wasapi.Internal
         public PropertyKey PropertyKey { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DevicePropertyChangedEventArgs"/> class.
+        /// Initializes a new instance of the <see cref="WasapiDevicePropertyChangedEventArgs"/> class.
         /// </summary>
         /// <param name="deviceToken">The device token.</param>
         /// <param name="key">The key.</param>
-        public DevicePropertyChangedEventArgs(IDeviceToken deviceToken, PropertyKey key)
+        public WasapiDevicePropertyChangedEventArgs(IDeviceToken deviceToken, PropertyKey key)
         {
             DeviceToken = deviceToken;
             PropertyKey = key;

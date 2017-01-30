@@ -11,6 +11,6 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <summary>
         /// Occurs when [device property changed].
         /// </summary>
-        event EventHandler<DevicePropertyChangedEventArgs> DevicePropertyChanged;
+        event EventHandler<WasapiDevicePropertyChangedEventArgs> DevicePropertyChanged;
     }
 }

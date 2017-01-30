@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
+using Fundamental.Interface.Wasapi.Extentions;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
@@ -52,7 +52,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <summary>
         /// Occurs when [device property changed].
         /// </summary>
-        public event EventHandler<DevicePropertyChangedEventArgs> DevicePropertyChanged;
+        public event EventHandler<WasapiDevicePropertyChangedEventArgs> DevicePropertyChanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiInterfaceNotifyClient" /> class.
@@ -155,7 +155,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         HResult IMMNotificationClient.OnPropertyValueChanged(string deviceId, PropertyKey key)
         {
             var token = _wasapiDeviceTokenFactory.GetToken(deviceId);
-            DevicePropertyChanged?.Invoke(this, new Internal.DevicePropertyChangedEventArgs(token, key));
+            DevicePropertyChanged?.Invoke(this, new Internal.WasapiDevicePropertyChangedEventArgs(token, key));
             return HResult.S_OK;
         }
 
