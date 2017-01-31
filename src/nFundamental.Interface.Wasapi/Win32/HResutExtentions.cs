@@ -2,7 +2,7 @@
 
 namespace Fundamental.Interface.Wasapi.Win32
 {
-    public static class HResutlExtentions
+    public static class HResutExtentions
     {
         public static void ThrowIfFailed(this HResult hr)
         {
