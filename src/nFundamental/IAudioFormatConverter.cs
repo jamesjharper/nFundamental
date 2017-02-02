@@ -1,7 +1,9 @@
 ﻿namespace Fundamental
 {
-    public interface IAudioFormatConverter<out T>
+    public interface IAudioFormatConverter<T>
     {
         T Convert(IAudioFormat audioFormat);
+
+        IAudioFormat Convert(T audioFormat);
     }
 }
