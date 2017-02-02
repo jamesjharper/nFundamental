@@ -139,7 +139,6 @@ namespace Fundamental.Tests.AudioFormats
 
         #endregion
 
-
         #region Test Extended Formats
 
         [Test]
@@ -203,7 +202,6 @@ namespace Fundamental.Tests.AudioFormats
         }
 
         #endregion
-
 
         // Helper Methods 
 

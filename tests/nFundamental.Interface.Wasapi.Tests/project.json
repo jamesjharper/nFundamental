@@ -9,10 +9,6 @@
         "nFundamental.Interface.Wasapi": { "target": "project" }
     },
 
-    //"buildOptions": {
-    //    "warningsAsErrors": true
-    //},
-
     "runtimes": {
         "win10-x64": {},
         "osx.10.10-x64": {},
@@ -20,6 +16,7 @@
     },
 
     "frameworks": {
+        "net46": {},
         "netcoreapp1.0": {
             "imports": "portable-net45+win8",
             "dependencies": {
@@ -29,7 +26,6 @@
                 }
             }
         }
-       // "net46": {}
     },
 
     "testRunner": "nunit"
