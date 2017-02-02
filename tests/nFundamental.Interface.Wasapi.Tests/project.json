@@ -9,10 +9,6 @@
         "nFundamental.Interface.Wasapi": { "target": "project" }
     },
 
-    //"buildOptions": {
-    //    "warningsAsErrors": true
-    //},
-
     "runtimes": {
         "win10-x64": {},
         "osx.10.10-x64": {},
