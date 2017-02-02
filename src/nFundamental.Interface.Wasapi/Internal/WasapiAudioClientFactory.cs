@@ -23,7 +23,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// Activates a COM object from the specified device.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="immDevice">The imm device.</param>
+        /// <param name="immDevice">The WASAPI device object.</param>
         /// <returns></returns>
         /// <exception cref="Fundamental.Interface.Wasapi.DeviceNotAccessableException"></exception>
         private static T Activate<T>(IMMDevice immDevice) where T : class
