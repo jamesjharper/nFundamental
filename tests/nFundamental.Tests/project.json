@@ -7,6 +7,7 @@
         "nFundamental": { "target": "project" }
     },
 
+    "buildOptions": { "allowUnsafe": true },
 
     "runtimes": {
         "win10-x64": {},
@@ -20,8 +21,8 @@
                 "dnxcore50",
                 "portable-net46+win8"
             ]
-        },
-       // "net46": {}
+        }
+        // "net46": {}
 
     },
 
