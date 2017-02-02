@@ -1,4 +1,5 @@
-﻿using Fundamental.Interface.Wasapi.Internal;
+﻿using System;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Options;
 using Fundamental.Interface.Wasapi.Win32;
@@ -6,19 +7,31 @@ using Fundamental.Interface.Wasapi.Win32;
 namespace Fundamental.Interface.Wasapi
 {
     public class WasapiInterfaceProvider : InterfaceProvider,
-        ISupportsInterface<IDefaultDeviceProvider>,
-        ISupportsInterface<IDefaultDeviceStatusNotifier>,
-        ISupportsInterface<IDeviceAvailabilityNotifier>,
-        ISupportsInterface<IDeviceEnumerator>,
-        ISupportsInterface<IDeviceInfoFactory>,
-        ISupportsInterface<IDeviceStatusNotifier>
+            IInterfaceOptions<WasapiOptions>,
+            ISupportsInterface<WasapiDefaultDeviceProvider>,
+            ISupportsInterface<WasapiInterfaceNotifyClient>,
+            ISupportsInterface<WasapiDeviceEnumerator>,
+            ISupportsInterface<WasapiDeviceInfoFactory>
 
     {
+
+        #region WASAPI Options
 
         /// <summary>
         /// The configuration options for WASAPI audio interface
         /// </summary>
         private readonly Options<WasapiOptions> _options = Options<WasapiOptions>.Default;
+
+        /// <summary>
+        /// Configures the specified configure.
+        /// </summary>
+        /// <param name="configure">The configure.</param>
+        public void Configure(Action<WasapiOptions> configure)
+        {
+            _options?.Configure(configure);
+        }
+
+        #endregion
 
         #region IMMDeviceEnumerator Dependency
 
@@ -33,7 +46,7 @@ namespace Fundamental.Interface.Wasapi
         protected virtual IMMDeviceEnumerator FactoryWasapiDeviceEnumerator()
         {
             // Test Code seam for injecting Mock instance
-            return ComObject.CreateInstance<IMMDeviceEnumerator>(ClsIds.MmDeviceEnumeratorClsId);
+            return ComObject.CreateInstance<IMMDeviceEnumerator>(ClsIds.MmDeviceEnumeratorGuid);
         }
 
         #endregion
@@ -76,7 +89,6 @@ namespace Fundamental.Interface.Wasapi
 
         #endregion
 
-
         #region IWasapiPropertyNameTranslator Dependency
 
         /// <summary>
@@ -93,43 +105,29 @@ namespace Fundamental.Interface.Wasapi
         /// Gets the audio interface used for finding system default devices.
         /// </summary>
         /// <returns></returns>
-        IDefaultDeviceProvider ISupportsInterface<IDefaultDeviceProvider>.GetAudioInterface() 
+        WasapiDefaultDeviceProvider ISupportsInterface<WasapiDefaultDeviceProvider>.GetAudioInterface() 
             => new WasapiDefaultDeviceProvider(WasapiDeviceEnumerator, DeviceTokenFactory);
-        
+
         /// <summary>
         /// Gets the audio interface for finding all system devices.
         /// </summary>
         /// <returns></returns>
-        IDeviceEnumerator ISupportsInterface<IDeviceEnumerator>.GetAudioInterface() => 
+        WasapiDeviceEnumerator ISupportsInterface<WasapiDeviceEnumerator>.GetAudioInterface() => 
             new WasapiDeviceEnumerator(WasapiDeviceEnumerator, DeviceTokenFactory);
 
         /// <summary>
-        /// Gets the default device status notifier interface.
+        /// Gets the WASAPI Interface notification client. Typically this endpoint is used for getting the
+        /// Interfaces IDeviceStatusNotifier, IDefaultDeviceStatusNotifier and IDeviceAvailabilityNotifier
         /// </summary>
         /// <returns></returns>
-        IDefaultDeviceStatusNotifier ISupportsInterface<IDefaultDeviceStatusNotifier>.GetAudioInterface() 
-            => WasapiInterfaceNotifyClient;
-
-        /// <summary>
-        /// Gets the device availability notifier
-        /// </summary>
-        /// <returns></returns>
-        IDeviceAvailabilityNotifier ISupportsInterface<IDeviceAvailabilityNotifier>.GetAudioInterface()
-            => WasapiInterfaceNotifyClient;
-
-        /// <summary>
-        /// Gets the device status notifier
-        /// </summary>
-        /// <returns></returns>
-        IDeviceStatusNotifier ISupportsInterface<IDeviceStatusNotifier>.GetAudioInterface()
-            => WasapiInterfaceNotifyClient;
-
+        WasapiInterfaceNotifyClient ISupportsInterface<WasapiInterfaceNotifyClient>.GetAudioInterface()
+              => WasapiInterfaceNotifyClient;
 
         /// <summary>
         /// Gets the audio interface used for finding details about devices 
         /// </summary>
         /// <returns></returns>
-        IDeviceInfoFactory ISupportsInterface<IDeviceInfoFactory>.GetAudioInterface() 
+        WasapiDeviceInfoFactory ISupportsInterface<WasapiDeviceInfoFactory>.GetAudioInterface() 
             => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslator);
 
     }

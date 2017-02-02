@@ -5,7 +5,7 @@ using Fundamental.Interface.Wasapi.Win32;
 namespace Fundamental.Interface.Wasapi.Interop
 {
     [ComImport]
-    [Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2")]
+    [Guid(IIds.IAudioClient)]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IAudioClient
     {

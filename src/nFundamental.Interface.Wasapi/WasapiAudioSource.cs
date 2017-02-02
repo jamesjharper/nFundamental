@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
-using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Options;
-using Fundamental.Interface.Wasapi.Win32;
 
 namespace Fundamental.Interface.Wasapi
 {
@@ -13,6 +11,11 @@ namespace Fundamental.Interface.Wasapi
         /// The WASAPI device token
         /// </summary>
         private readonly WasapiDeviceToken _wasapiDeviceToken;
+
+        /// <summary>
+        /// The WASAPI audio client factory
+        /// </summary>
+        private readonly IWasapiAudioClientFactory _wasapiAudioClientFactory;
 
         /// <summary>
         /// The WASAPI options
@@ -32,46 +35,44 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <param name="wasapiOptions"></param>
         /// <param name="wasapiDeviceToken">The WASAPI device token.</param>
-        public WasapiAudioSource(IOptions<WasapiOptions> wasapiOptions, WasapiDeviceToken wasapiDeviceToken)
+        /// <param name="wasapiAudioClientFactory"></param>
+        public WasapiAudioSource(IOptions<WasapiOptions> wasapiOptions, 
+                                 WasapiDeviceToken wasapiDeviceToken, 
+                                 IWasapiAudioClientFactory wasapiAudioClientFactory)
         {
             _wasapiOptions = wasapiOptions;
             _wasapiDeviceToken = wasapiDeviceToken;
+            _wasapiAudioClientFactory = wasapiAudioClientFactory;
         }
 
 
-        public Task Handshake(IFormatNegotiator formatNegotiator)
-        {
-            
-            return Task.CompletedTask;
-        }
-
-        public Task Start()
+        public void SetFormat(IAudioFormat audioFormat)
         {
             throw new NotImplementedException();
         }
 
-        public Task Stop()
+        public IAudioFormat GetFormat()
         {
             throw new NotImplementedException();
         }
+
+        public void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Stop()
+        {
+            throw new NotImplementedException();
+        }
+
 
         public event EventHandler<EventArgs> Started;
         public event EventHandler<EventArgs> Stopped;
+        public event EventHandler<EventArgs> FormatChanged;
         public event EventHandler<SourceDataReceivedEventArgs> DataRecived;
 
         // Private methods
-
-        private IAudioClient ConntectToDevice(WasapiDeviceToken wasapiDeviceToken)
-        {
-            var immDevice = wasapiDeviceToken.MmDevice;
-
-            object audioClient;
-            var type = typeof(IAudioClient).GetTypeInfo().GUID;
-            immDevice.Activate(type, ClsCtx.LocalServer, IntPtr.Zero,  out audioClient).ThrowIfFailed();
-            // Throw exceptions
-            
-            return audioClient as IAudioClient;
-        }
 
         protected virtual void OnStarted()
         {
@@ -86,6 +87,11 @@ namespace Fundamental.Interface.Wasapi
         protected virtual void OnDataRecived(SourceDataReceivedEventArgs e)
         {
             DataRecived?.Invoke(this, e);
+        }
+
+        protected virtual void OnFormatChanged()
+        {
+            FormatChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

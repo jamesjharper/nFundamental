@@ -11,8 +11,6 @@ namespace Fundamental.Interface.Wasapi.Tests
     [TestFixture]
     public class WasapiDeviceTokenFactoryTests
     {
-
-
         private WasapiDeviceTokenFactory GetTestFixture() => new WasapiDeviceTokenFactory(ImmDeviceEnumerator);
 
         private IMMDevice ImmDevice { get; set; }
