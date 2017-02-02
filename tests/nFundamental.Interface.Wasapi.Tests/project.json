@@ -20,7 +20,7 @@
     },
 
     "frameworks": {
-        //"net46": {},
+        "net46": {},
         "netcoreapp1.0": {
             "imports": "portable-net45+win8",
             "dependencies": {
