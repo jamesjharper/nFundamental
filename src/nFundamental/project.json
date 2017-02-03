@@ -1,20 +1,22 @@
 ﻿{
-  "version": "1.0.0-*",
+    "version": "1.0.0-*",
 
     "dependencies": {
         "NETStandard.Library": "1.6.0",
-        "JTForks.MiscUtil": "1.*"
+        "nFundamental.Core": { "target": "project" }
     },
 
-  "frameworks": {
+    "frameworks": {
+        "net46": {
+            "dependencies": {
+                "nFundamental.Interface.Wasapi": { "target": "project" }
+            }
+        },
         "netstandard1.6": {
             "imports": [
                 "dnxcore50",
                 "portable-net46+win7"
             ]
-        },
-        "net46": {
-
         }
     }
 }
