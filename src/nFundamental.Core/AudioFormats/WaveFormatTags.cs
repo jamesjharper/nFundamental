@@ -1,4 +1,4 @@
-﻿namespace Fundamental.AudioFormats
+﻿namespace Fundamental.Core.AudioFormats
 {
     /// <summary>
     /// Wave format tags 

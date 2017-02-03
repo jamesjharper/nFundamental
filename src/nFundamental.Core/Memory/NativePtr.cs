@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace Fundamental.Basic
+namespace Fundamental.Core.Memory
 {
     public abstract class NativePtr : IDisposable
     {

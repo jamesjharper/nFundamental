@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fundamental.Interface
+namespace Fundamental.Core
 {
     public interface IInterfaceOptions<out TOptions>
     {

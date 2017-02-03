@@ -6,6 +6,7 @@
 
     "dependencies": {
         "nFundamental": { "target": "project" },
+        "nFundamental.Core": { "target": "project" },
         "nFundamental.Interface": { "target": "project" },
         "nFundamental.Interface.Wasapi": { "target": "project" }
     },
@@ -27,7 +28,7 @@
             "dependencies": {
                 "Microsoft.NETCore.App": {
                     "type": "platform",
-                    "version": "1.0.0-*"
+                    "version": "1.1.0-*"
                 }
             }
         }

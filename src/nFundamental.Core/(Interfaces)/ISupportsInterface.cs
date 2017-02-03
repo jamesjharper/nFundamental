@@ -1,5 +1,5 @@
 ﻿
-namespace Fundamental.Interface
+namespace Fundamental.Core
 {
     public interface ISupportsInterface<out T> // Note: don't break convariants! It is needed for down casting supported interfaces 
     {

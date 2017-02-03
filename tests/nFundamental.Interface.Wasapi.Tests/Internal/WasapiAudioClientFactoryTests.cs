@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Fundamental.Interface.Wasapi.Internal;
+using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi.Win32;
 using NSubstitute;
 using NUnit.Framework;
-using Fundamental.Interface.Wasapi;
-using Fundamental.Interface.Wasapi.Internal;
-using Fundamental.Interface.Wasapi.Win32;
-using Fundamental.Interface.Wasapi.Interop;
 
-namespace nFundamental.Interface.Wasapi.Tests.Internal
+namespace Fundamental.Interface.Wasapi.Tests.Internal
 {
     [TestFixture]
     public class WasapiAudioClientFactoryTests

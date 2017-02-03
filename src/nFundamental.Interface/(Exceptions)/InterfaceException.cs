@@ -1,4 +1,6 @@
-﻿namespace Fundamental.Interface
+﻿using Fundamental.Core;
+
+namespace Fundamental.Interface
 {
     public class InterfaceException : FundamentalException
     {

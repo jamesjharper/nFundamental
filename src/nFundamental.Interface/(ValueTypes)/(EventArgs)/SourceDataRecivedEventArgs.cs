@@ -1,4 +1,6 @@
-﻿namespace Fundamental.Interface
+﻿using Fundamental.Core;
+
+namespace Fundamental.Interface
 {
     /// <summary>
     /// Source Data Received Event arguments 

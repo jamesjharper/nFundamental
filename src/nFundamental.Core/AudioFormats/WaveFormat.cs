@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using MiscUtil.Conversion;
 
-namespace Fundamental.AudioFormats
+namespace Fundamental.Core.AudioFormats
 {
     /// <summary>
     /// 

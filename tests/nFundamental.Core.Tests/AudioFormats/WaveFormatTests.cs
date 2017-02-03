@@ -1,11 +1,10 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
+using Fundamental.Core.AudioFormats;
 using MiscUtil.Conversion;
 using NUnit.Framework;
-using Fundamental.AudioFormats;
 
-namespace Fundamental.Tests.AudioFormats
+namespace Fundamental.Core.Tests.AudioFormats
 {
     [TestFixture]
     public class WaveFormatTests
