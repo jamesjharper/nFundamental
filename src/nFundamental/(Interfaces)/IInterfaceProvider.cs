@@ -1,6 +1,6 @@
 ﻿
 
-namespace Fundamental.Interface
+namespace Fundamental
 {
     public interface IInterfaceProvider
     {

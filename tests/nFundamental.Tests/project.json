@@ -23,8 +23,6 @@
                 "portable-net46+win8"
             ]
         }
-
-
     },
 
     "testRunner": "nunit"
