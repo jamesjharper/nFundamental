@@ -37,7 +37,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var isSupported = factory.IsAudioInterfaceSupported<IDefaultDeviceProvider>();
+            var isSupported = factory.IsSupported<IDefaultDeviceProvider>();
 
             // -> ASSET:
             Assert.IsTrue( isSupported);
@@ -50,7 +50,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var interfaceInstance = factory.GetAudioInterface<IDefaultDeviceProvider>();
+            var interfaceInstance = factory.Get<IDefaultDeviceProvider>();
 
             // -> ASSERT:
             Assert.IsNotNull(interfaceInstance);
@@ -67,7 +67,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var isSupported = factory.IsAudioInterfaceSupported<IDeviceEnumerator>();
+            var isSupported = factory.IsSupported<IDeviceEnumerator>();
 
             // -> ASSET:
             Assert.IsTrue(isSupported);
@@ -80,7 +80,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var interfaceInstance = factory.GetAudioInterface<IDeviceEnumerator>();
+            var interfaceInstance = factory.Get<IDeviceEnumerator>();
 
             // -> ASSERT:
             Assert.IsNotNull(interfaceInstance);
@@ -98,7 +98,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var isSupported = factory.IsAudioInterfaceSupported<IDefaultDeviceStatusNotifier>();
+            var isSupported = factory.IsSupported<IDefaultDeviceStatusNotifier>();
 
             // -> ASSET:
             Assert.IsTrue(isSupported);
@@ -111,7 +111,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var interfaceInstance = factory.GetAudioInterface<IDefaultDeviceStatusNotifier>();
+            var interfaceInstance = factory.Get<IDefaultDeviceStatusNotifier>();
 
             // -> ASSERT:
             factory.ImmDeviceEnumerator.RegisterEndpointNotificationCallback((IMMNotificationClient)interfaceInstance);
@@ -130,7 +130,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var isSupported = factory.IsAudioInterfaceSupported<IDeviceAvailabilityNotifier>();
+            var isSupported = factory.IsSupported<IDeviceAvailabilityNotifier>();
 
             // -> ASSET:
             Assert.IsTrue(isSupported);
@@ -143,7 +143,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var interfaceInstance = factory.GetAudioInterface<IDeviceAvailabilityNotifier>();
+            var interfaceInstance = factory.Get<IDeviceAvailabilityNotifier>();
 
             // -> ASSERT:
             factory.ImmDeviceEnumerator.RegisterEndpointNotificationCallback((IMMNotificationClient)interfaceInstance);
@@ -161,7 +161,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var isSupported = factory.IsAudioInterfaceSupported<IDeviceStatusNotifier>();
+            var isSupported = factory.IsSupported<IDeviceStatusNotifier>();
 
             // -> ASSET:
             Assert.IsTrue(isSupported);
@@ -174,7 +174,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var interfaceInstance = factory.GetAudioInterface<IDeviceStatusNotifier>();
+            var interfaceInstance = factory.Get<IDeviceStatusNotifier>();
 
             // -> ASSERT:
             factory.ImmDeviceEnumerator.RegisterEndpointNotificationCallback((IMMNotificationClient)interfaceInstance);
@@ -192,7 +192,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var isSupported = factory.IsAudioInterfaceSupported<IDeviceInfoFactory>();
+            var isSupported = factory.IsSupported<IDeviceInfoFactory>();
 
             // -> ASSET:
             Assert.IsTrue(isSupported);
@@ -205,7 +205,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             var factory = GetTestFixture();
 
             // -> ACT:
-            var interfaceInstance = factory.GetAudioInterface<IDeviceInfoFactory>();
+            var interfaceInstance = factory.Get<IDeviceInfoFactory>();
 
             // -> ASSERT:
             Assert.IsNotNull(interfaceInstance);

@@ -13,8 +13,8 @@ namespace nFundamental.Console
 #if NET46
         var factory = new WasapiInterfaceProvider();
 
-        var deviceEnumerator = factory.GetAudioInterface<IDeviceEnumerator>();
-        var deviceInfoFactory = factory.GetAudioInterface<IDeviceInfoFactory>();
+        var deviceEnumerator = factory.Get<IDeviceEnumerator>();
+        var deviceInfoFactory = factory.Get<IDeviceInfoFactory>();
 
         PrintDevices(deviceEnumerator, deviceInfoFactory);
 #endif

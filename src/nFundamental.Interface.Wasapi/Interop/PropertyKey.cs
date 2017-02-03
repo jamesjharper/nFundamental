@@ -11,9 +11,21 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// </summary>
         public static PropertyKey NullKey = new PropertyKey(Guid.Empty, 0);
 
-        public Guid FormatId;
-        public int PropertyId;
+        /// <summary>
+        /// The unified device property model format identifier
+        /// </summary>
+        public readonly Guid FormatId;
 
+        /// <summary>
+        /// The unified device property model property identifier
+        /// </summary>
+        public readonly int PropertyId;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PropertyKey"/>
+        /// </summary>
+        /// <param name="formatId">The format identifier.</param>
+        /// <param name="propertyId">The property identifier.</param>
         public PropertyKey(Guid formatId, int propertyId)
         {
             FormatId = formatId;

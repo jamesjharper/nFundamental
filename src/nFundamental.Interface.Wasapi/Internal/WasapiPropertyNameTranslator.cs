@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Fundamental.Core;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Options;
@@ -21,135 +23,135 @@ namespace Fundamental.Interface.Wasapi.Internal
         private WasapiOptions Options => _wasapiOptions.Value;
 
         /// <summary>
-        /// The property name to unique identifier map which is used
-        /// to translate between property names and their GUIDs 
+        /// The property name to Property key map.
+        /// Is used to translate between property names and their GUIDs 
         /// </summary>
         public static TwoWayMap<string, PropertyKey> PropertyKeyLookUpTable = new TwoWayMap<string, PropertyKey>
         {
-            {"Name",                                   PropertyKeys.Name                                 },
-            {"DeviceDeviceDesc",                       PropertyKeys.DeviceDeviceDesc                     },
-            {"DeviceHardwareIds",                      PropertyKeys.DeviceHardwareIds                    },
-            {"DeviceCompatibleIds",                    PropertyKeys.DeviceCompatibleIds                  },
-            {"DeviceService",                          PropertyKeys.DeviceService                        },
-            {"DeviceClass",                            PropertyKeys.DeviceClass                          },
-            {"DeviceClassGuid",                        PropertyKeys.DeviceClassGuid                      },
-            {"DeviceDriver",                           PropertyKeys.DeviceDriver                         },
-            {"DeviceConfigFlags",                      PropertyKeys.DeviceConfigFlags                    },
-            {"DeviceManufacturer",                     PropertyKeys.DeviceManufacturer                   },
-            {"DeviceFriendlyName",                     PropertyKeys.DeviceFriendlyName                   },
-            {"DeviceLocationInfo",                     PropertyKeys.DeviceLocationInfo                   },
-            {"DevicePdoName",                          PropertyKeys.DevicePdoName                        },
-            {"DeviceCapabilities",                     PropertyKeys.DeviceCapabilities                   },
-            {"DeviceUiNumber",                         PropertyKeys.DeviceUiNumber                       },
-            {"DeviceUpperFilters",                     PropertyKeys.DeviceUpperFilters                   },
-            {"DeviceLowerFilters",                     PropertyKeys.DeviceLowerFilters                   },
-            {"DeviceBusTypeGuid",                      PropertyKeys.DeviceBusTypeGuid                    },
-            {"DeviceLegacyBusType",                    PropertyKeys.DeviceLegacyBusType                  },
-            {"DeviceBusNumber",                        PropertyKeys.DeviceBusNumber                      },
-            {"DeviceEnumeratorName",                   PropertyKeys.DeviceEnumeratorName                 },
-            {"DeviceSecurity",                         PropertyKeys.DeviceSecurity                       },
-            {"DeviceSecuritySds",                      PropertyKeys.DeviceSecuritySds                    },
-            {"DeviceDevType",                          PropertyKeys.DeviceDevType                        },
-            {"DeviceExclusive",                        PropertyKeys.DeviceExclusive                      },
-            {"DeviceCharacteristics",                  PropertyKeys.DeviceCharacteristics                },
-            {"DeviceAddress",                          PropertyKeys.DeviceAddress                        },
-            {"DeviceUiNumberDescFormat",               PropertyKeys.DeviceUiNumberDescFormat             },
-            {"DevicePowerData",                        PropertyKeys.DevicePowerData                      },
-            {"DeviceRemovalPolicy",                    PropertyKeys.DeviceRemovalPolicy                  },
-            {"DeviceRemovalPolicyDefault",             PropertyKeys.DeviceRemovalPolicyDefault           },
-            {"DeviceRemovalPolicyOverride ",           PropertyKeys.DeviceRemovalPolicyOverride          },
-            {"DeviceInstallState",                     PropertyKeys.DeviceInstallState                   },
-            {"DeviceLocationPaths",                    PropertyKeys.DeviceLocationPaths                  },
-            {"DeviceBaseContainerId",                  PropertyKeys.DeviceBaseContainerId                },
-            {"DeviceDevNodeStatus",                    PropertyKeys.DeviceDevNodeStatus                  },
-            {"DeviceProblemCode",                      PropertyKeys.DeviceProblemCode                    },
-            {"DeviceEjectionRelations",                PropertyKeys.DeviceEjectionRelations              },
-            {"DeviceRemovalRelations",                 PropertyKeys.DeviceRemovalRelations               },
-            {"DevicePowerRelations",                   PropertyKeys.DevicePowerRelations                 },
-            {"DeviceBusRelationsn ",                   PropertyKeys.DeviceBusRelationsn                  },
-            {"DeviceParent",                           PropertyKeys.DeviceParent                         },
-            {"DeviceChildren",                         PropertyKeys.DeviceChildren                       },
-            {"DeviceSiblings",                         PropertyKeys.DeviceSiblings                       },
-            {"DeviceTransportRelations",               PropertyKeys.DeviceTransportRelations             },
-            {"DeviceReported",                         PropertyKeys.DeviceReported                       },
-            {"DeviceLegacy",                           PropertyKeys.DeviceLegacy                         },
-            {"DeviceInstanceId",                       PropertyKeys.DeviceInstanceId                     },
-            {"DeviceContainerId",                      PropertyKeys.DeviceContainerId                    },
-            {"DeviceModelId",                          PropertyKeys.DeviceModelId                        },
-            {"DeviceFriendlyNameAttributes",           PropertyKeys.DeviceFriendlyNameAttributes         },
-            {"DeviceManufacturerAttributes",           PropertyKeys.DeviceManufacturerAttributes         },
-            {"DevicePresenceNotForDeviceb",            PropertyKeys.DevicePresenceNotForDeviceb          },
-            {"DeviceSignalStrength",                   PropertyKeys.DeviceSignalStrength                 },
-            {"DeviceIsAssociateableByUserAction",      PropertyKeys.DeviceIsAssociateableByUserAction    },
-            {"NumaProximityDomain",                    PropertyKeys.NumaProximityDomain                  },
-            {"DeviceDhpRebalancePolicy",               PropertyKeys.DeviceDhpRebalancePolicy             },
-            {"DeviceNumaNode",                         PropertyKeys.DeviceNumaNode                       },
-            {"DeviceBusReportedDeviceDesc",            PropertyKeys.DeviceBusReportedDeviceDesc          },
-            {"DeviceInstallInProgress",                PropertyKeys.DeviceInstallInProgress              },
-            {"DeviceDriverDate",                       PropertyKeys.DeviceDriverDate                     },
-            {"DeviceDriverVersion",                    PropertyKeys.DeviceDriverVersion                  },
-            {"DeviceDriverDesc",                       PropertyKeys.DeviceDriverDesc                     },
-            {"DeviceDriverInfPath",                    PropertyKeys.DeviceDriverInfPath                  },
-            {"DeviceDriverInfSection",                 PropertyKeys.DeviceDriverInfSection               },
-            {"DeviceDriverInfSectionExt",              PropertyKeys.DeviceDriverInfSectionExt            },
-            {"DeviceMatchingDeviceId",                 PropertyKeys.DeviceMatchingDeviceId               },
-            {"DeviceDriverProvider",                   PropertyKeys.DeviceDriverProvider                 },
-            {"DeviceDriverPropPageProvider",           PropertyKeys.DeviceDriverPropPageProvider         },
-            {"DeviceDriverCoInstallers",               PropertyKeys.DeviceDriverCoInstallers             },
-            {"DeviceResourcePickerTags",               PropertyKeys.DeviceResourcePickerTags             },
-            {"DeviceResourcePickerExceptions",         PropertyKeys.DeviceResourcePickerExceptions       },
-            {"DeviceDriverRank",                       PropertyKeys.DeviceDriverRank                     },
-            {"DeviceDriverLogoLevel",                  PropertyKeys.DeviceDriverLogoLevel                },
-            {"DeviceNoConnectSound",                   PropertyKeys.DeviceNoConnectSound                 },
-            {"DeviceGenericDriverInstalled",           PropertyKeys.DeviceGenericDriverInstalled         },
-            {"DeviceAdditionalSoftwareRequested",      PropertyKeys.DeviceAdditionalSoftwareRequested    },
-            {"DeviceSafeRemovalRequired",              PropertyKeys.DeviceSafeRemovalRequired            },
-            {"DeviceSafeRemovalRequiredOverride",      PropertyKeys.DeviceSafeRemovalRequiredOverride    },
-            {"DrvPkgModel",                            PropertyKeys.DrvPkgModel                          },
-            {"DrvPkgVendorWebSite",                    PropertyKeys.DrvPkgVendorWebSite                  },
-            {"DrvPkgDetailedDescription",              PropertyKeys.DrvPkgDetailedDescription            },
-            {"DrvPkgDocumentationLink",                PropertyKeys.DrvPkgDocumentationLink              },
-            {"DrvPkgBrandingIcon",                     PropertyKeys.DrvPkgBrandingIcon                   },
-            {"DrvPkgIcon",                             PropertyKeys.DrvPkgIcon                           },
-            {"DeviceClassUpperFilters",                PropertyKeys.DeviceClassUpperFilters              },
-            {"DeviceClassLowerFilters ",               PropertyKeys.DeviceClassLowerFilters              },
-            {"DeviceClassSecurity",                    PropertyKeys.DeviceClassSecurity                  },
-            {"DeviceClassSecuritySds",                 PropertyKeys.DeviceClassSecuritySds               },
-            {"DeviceClassDevType",                     PropertyKeys.DeviceClassDevType                   },
-            {"DeviceClassExclusive",                   PropertyKeys.DeviceClassExclusive                 },
-            {"DeviceClassCharacteristics",             PropertyKeys.DeviceClassCharacteristics           },
-            {"DeviceClassName",                        PropertyKeys.DeviceClassName                      },
-            {"DeviceClassClassName",                   PropertyKeys.DeviceClassClassName                 },
-            {"DeviceClassIcon",                        PropertyKeys.DeviceClassIcon                      },
-            {"DeviceClassClassInstaller",              PropertyKeys.DeviceClassClassInstaller            },
-            {"DeviceClassPropPageProvider",            PropertyKeys.DeviceClassPropPageProvider          },
-            {"DeviceClassNoInstallClass",              PropertyKeys.DeviceClassNoInstallClass            },
-            {"DeviceClassNoDisplayClass",              PropertyKeys.DeviceClassNoDisplayClass            },
-            {"DeviceClassSilentInstall",               PropertyKeys.DeviceClassSilentInstall             },
-            {"DeviceClassNoUseClass",                  PropertyKeys.DeviceClassNoUseClass                },
-            {"DeviceClassDefaultService",              PropertyKeys.DeviceClassDefaultService            },
-            {"DeviceClassIconPath",                    PropertyKeys.DeviceClassIconPath                  },
-            {"DeviceClassClassCoInstallers",           PropertyKeys.DeviceClassClassCoInstallers         },
-            {"DeviceInterfaceFriendlyName",            PropertyKeys.DeviceInterfaceFriendlyName          },
-            {"DeviceInterfaceEnabled",                 PropertyKeys.DeviceInterfaceEnabled               },
-            {"DeviceInterfaceClassGuid",               PropertyKeys.DeviceInterfaceClassGuid             },
-            {"DeviceInterfaceClassDefaultInterface",   PropertyKeys.DeviceInterfaceClassDefaultInterface },
-            {"AudioEndpointFormFactor",                PropertyKeys.AudioEndpointFormFactor              },
-            {"AudioEndpointControlPanelPageProvider",  PropertyKeys.AudioEndpointControlPanelPageProvider},
-            {"AudioEndpointAssociation",               PropertyKeys.AudioEndpointAssociation             },
-            {"AudioEndpointPhysicalSpeakers",          PropertyKeys.AudioEndpointPhysicalSpeakers        },
-            {"AudioEndpointGuid",                      PropertyKeys.AudioEndpointGuid                    },
-            {"AudioEndpointDisableSysFx",              PropertyKeys.AudioEndpointDisableSysFx            },
-            {"AudioEndpointFullRangeSpeakers",         PropertyKeys.AudioEndpointFullRangeSpeakers       },
-            {"AudioEndpointSupportsEventDrivenMode",   PropertyKeys.AudioEndpointSupportsEventDrivenMode },
-            {"AudioEndpointJackSubType",               PropertyKeys.AudioEndpointJackSubType             },
-            {"AudioEngineDeviceFormat",                PropertyKeys.AudioEngineDeviceFormat              },
-            {"AudioEngineOemFormat",                   PropertyKeys.AudioEngineOemFormat                 },
+            {"Name",                                    PropertyKeys.Name                                 },
+            {"Device.DeviceDesc",                       PropertyKeys.DeviceDeviceDesc                     },
+            {"Device.HardwareIds",                      PropertyKeys.DeviceHardwareIds                    },
+            {"Device.CompatibleIds",                    PropertyKeys.DeviceCompatibleIds                  },
+            {"Device.Service",                          PropertyKeys.DeviceService                        },
+            {"Device.Class",                            PropertyKeys.DeviceClass                          },
+            {"Device.ClassGuid",                        PropertyKeys.DeviceClassGuid                      },
+            {"Device.Driver",                           PropertyKeys.DeviceDriver                         },
+            {"Device.ConfigFlags",                      PropertyKeys.DeviceConfigFlags                    },
+            {"Device.Manufacturer",                     PropertyKeys.DeviceManufacturer                   },
+            {"Device.FriendlyName",                     PropertyKeys.DeviceFriendlyName                   },
+            {"Device.LocationInfo",                     PropertyKeys.DeviceLocationInfo                   },
+            {"Device.PdoName",                          PropertyKeys.DevicePdoName                        },
+            {"Device.Capabilities",                     PropertyKeys.DeviceCapabilities                   },
+            {"Device.UiNumber",                         PropertyKeys.DeviceUiNumber                       },
+            {"Device.UpperFilters",                     PropertyKeys.DeviceUpperFilters                   },
+            {"Device.LowerFilters",                     PropertyKeys.DeviceLowerFilters                   },
+            {"Device.BusTypeGuid",                      PropertyKeys.DeviceBusTypeGuid                    },
+            {"Device.LegacyBusType",                    PropertyKeys.DeviceLegacyBusType                  },
+            {"Device.BusNumber",                        PropertyKeys.DeviceBusNumber                      },
+            {"Device.EnumeratorName",                   PropertyKeys.DeviceEnumeratorName                 },
+            {"Device.Security",                         PropertyKeys.DeviceSecurity                       },
+            {"Device.SecuritySds",                      PropertyKeys.DeviceSecuritySds                    },
+            {"Device.DevType",                          PropertyKeys.DeviceDevType                        },
+            {"Device.Exclusive",                        PropertyKeys.DeviceExclusive                      },
+            {"Device.Characteristics",                  PropertyKeys.DeviceCharacteristics                },
+            {"Device.Address",                          PropertyKeys.DeviceAddress                        },
+            {"Device.UiNumberDescFormat",               PropertyKeys.DeviceUiNumberDescFormat             },
+            {"Device.PowerData",                        PropertyKeys.DevicePowerData                      },
+            {"Device.RemovalPolicy",                    PropertyKeys.DeviceRemovalPolicy                  },
+            {"Device.RemovalPolicyDefault",             PropertyKeys.DeviceRemovalPolicyDefault           },
+            {"Device.RemovalPolicyOverride ",           PropertyKeys.DeviceRemovalPolicyOverride          },
+            {"Device.InstallState",                     PropertyKeys.DeviceInstallState                   },
+            {"Device.LocationPaths",                    PropertyKeys.DeviceLocationPaths                  },
+            {"Device.BaseContainerId",                  PropertyKeys.DeviceBaseContainerId                },
+            {"Device.DevNodeStatus",                    PropertyKeys.DeviceDevNodeStatus                  },
+            {"Device.ProblemCode",                      PropertyKeys.DeviceProblemCode                    },
+            {"Device.EjectionRelations",                PropertyKeys.DeviceEjectionRelations              },
+            {"Device.RemovalRelations",                 PropertyKeys.DeviceRemovalRelations               },
+            {"Device.PowerRelations",                   PropertyKeys.DevicePowerRelations                 },
+            {"Device.BusRelationsn ",                   PropertyKeys.DeviceBusRelationsn                  },
+            {"Device.Parent",                           PropertyKeys.DeviceParent                         },
+            {"Device.Children",                         PropertyKeys.DeviceChildren                       },
+            {"Device.Siblings",                         PropertyKeys.DeviceSiblings                       },
+            {"Device.TransportRelations",               PropertyKeys.DeviceTransportRelations             },
+            {"Device.Reported",                         PropertyKeys.DeviceReported                       },
+            {"Device.Legacy",                           PropertyKeys.DeviceLegacy                         },
+            {"Device.InstanceId",                       PropertyKeys.DeviceInstanceId                     },
+            {"Device.ContainerId",                      PropertyKeys.DeviceContainerId                    },
+            {"Device.ModelId",                          PropertyKeys.DeviceModelId                        },
+            {"Device.FriendlyNameAttributes",           PropertyKeys.DeviceFriendlyNameAttributes         },
+            {"Device.ManufacturerAttributes",           PropertyKeys.DeviceManufacturerAttributes         },
+            {"Device.PresenceNotForDeviceb",            PropertyKeys.DevicePresenceNotForDeviceb          },
+            {"Device.SignalStrength",                   PropertyKeys.DeviceSignalStrength                 },
+            {"Device.IsAssociateableByUserAction",      PropertyKeys.DeviceIsAssociateableByUserAction    },
+            {"Numa.ProximityDomain",                    PropertyKeys.NumaProximityDomain                  },
+            {"Device.DhpRebalancePolicy",               PropertyKeys.DeviceDhpRebalancePolicy             },
+            {"Device.NumaNode",                         PropertyKeys.DeviceNumaNode                       },
+            {"Device.BusReportedDeviceDesc",            PropertyKeys.DeviceBusReportedDeviceDesc          },
+            {"Device.InstallInProgress",                PropertyKeys.DeviceInstallInProgress              },
+            {"Device.DriverDate",                       PropertyKeys.DeviceDriverDate                     },
+            {"Device.DriverVersion",                    PropertyKeys.DeviceDriverVersion                  },
+            {"Device.DriverDesc",                       PropertyKeys.DeviceDriverDesc                     },
+            {"Device.DriverInfPath",                    PropertyKeys.DeviceDriverInfPath                  },
+            {"Device.DriverInfSection",                 PropertyKeys.DeviceDriverInfSection               },
+            {"Device.DriverInfSectionExt",              PropertyKeys.DeviceDriverInfSectionExt            },
+            {"Device.MatchingDeviceId",                 PropertyKeys.DeviceMatchingDeviceId               },
+            {"Device.DriverProvider",                   PropertyKeys.DeviceDriverProvider                 },
+            {"Device.DriverPropPageProvider",           PropertyKeys.DeviceDriverPropPageProvider         },
+            {"Device.DriverCoInstallers",               PropertyKeys.DeviceDriverCoInstallers             },
+            {"Device.ResourcePickerTags",               PropertyKeys.DeviceResourcePickerTags             },
+            {"Device.ResourcePickerExceptions",         PropertyKeys.DeviceResourcePickerExceptions       },
+            {"Device.DriverRank",                       PropertyKeys.DeviceDriverRank                     },
+            {"Device.DriverLogoLevel",                  PropertyKeys.DeviceDriverLogoLevel                },
+            {"Device.NoConnectSound",                   PropertyKeys.DeviceNoConnectSound                 },
+            {"Device.GenericDriverInstalled",           PropertyKeys.DeviceGenericDriverInstalled         },
+            {"Device.AdditionalSoftwareRequested",      PropertyKeys.DeviceAdditionalSoftwareRequested    },
+            {"DeviceSafeRemoval.Required",              PropertyKeys.DeviceSafeRemovalRequired            },
+            {"DeviceSafeRemoval.RequiredOverride",      PropertyKeys.DeviceSafeRemovalRequiredOverride    },
+            {"DriverPackage.Model",                     PropertyKeys.DrvPkgModel                          },
+            {"DriverPackage.VendorWebSite",             PropertyKeys.DrvPkgVendorWebSite                  },
+            {"DriverPackage.DetailedDescription",       PropertyKeys.DrvPkgDetailedDescription            },
+            {"DriverPackage.DocumentationLink",         PropertyKeys.DrvPkgDocumentationLink              },
+            {"DriverPackage.BrandingIcon",              PropertyKeys.DrvPkgBrandingIcon                   },
+            {"DriverPackage.Icon",                      PropertyKeys.DrvPkgIcon                           },
+            {"DeviceClass.UpperFilters",                PropertyKeys.DeviceClassUpperFilters              },
+            {"DeviceClass.LowerFilters ",               PropertyKeys.DeviceClassLowerFilters              },
+            {"DeviceClass.Security",                    PropertyKeys.DeviceClassSecurity                  },
+            {"DeviceClass.SecuritySds",                 PropertyKeys.DeviceClassSecuritySds               },
+            {"DeviceClass.DevType",                     PropertyKeys.DeviceClassDevType                   },
+            {"DeviceClass.Exclusive",                   PropertyKeys.DeviceClassExclusive                 },
+            {"DeviceClass.Characteristics",             PropertyKeys.DeviceClassCharacteristics           },
+            {"DeviceClass.Name",                        PropertyKeys.DeviceClassName                      },
+            {"DeviceClass.ClassName",                   PropertyKeys.DeviceClassClassName                 },
+            {"DeviceClass.Icon",                        PropertyKeys.DeviceClassIcon                      },
+            {"DeviceClass.ClassInstaller",              PropertyKeys.DeviceClassClassInstaller            },
+            {"DeviceClass.PropPageProvider",            PropertyKeys.DeviceClassPropPageProvider          },
+            {"DeviceClass.NoInstallClass",              PropertyKeys.DeviceClassNoInstallClass            },
+            {"DeviceClass.NoDisplayClass",              PropertyKeys.DeviceClassNoDisplayClass            },
+            {"DeviceClass.SilentInstall",               PropertyKeys.DeviceClassSilentInstall             },
+            {"DeviceClass.NoUseClass",                  PropertyKeys.DeviceClassNoUseClass                },
+            {"DeviceClass.DefaultService",              PropertyKeys.DeviceClassDefaultService            },
+            {"DeviceClass.IconPath",                    PropertyKeys.DeviceClassIconPath                  },
+            {"DeviceClass.ClassCoInstallers",           PropertyKeys.DeviceClassClassCoInstallers         },
+            {"DeviceInterface.FriendlyName",            PropertyKeys.DeviceInterfaceFriendlyName          },
+            {"DeviceInterface.Enabled",                 PropertyKeys.DeviceInterfaceEnabled               },
+            {"DeviceInterface.ClassGuid",               PropertyKeys.DeviceInterfaceClassGuid             },
+            {"DeviceInterface.ClassDefaultInterface",   PropertyKeys.DeviceInterfaceClassDefaultInterface },
+            {"AudioEndpoint.FormFactor",                PropertyKeys.AudioEndpointFormFactor              },
+            {"AudioEndpoint.ControlPanelPageProvider",  PropertyKeys.AudioEndpointControlPanelPageProvider},
+            {"AudioEndpoint.Association",               PropertyKeys.AudioEndpointAssociation             },
+            {"AudioEndpoint.PhysicalSpeakers",          PropertyKeys.AudioEndpointPhysicalSpeakers        },
+            {"AudioEndpoint.Guid",                      PropertyKeys.AudioEndpointGuid                    },
+            {"AudioEndpoint.DisableSysFx",              PropertyKeys.AudioEndpointDisableSysFx            },
+            {"AudioEndpoint.FullRangeSpeakers",         PropertyKeys.AudioEndpointFullRangeSpeakers       },
+            {"AudioEndpoint.SupportsEventDrivenMode",   PropertyKeys.AudioEndpointSupportsEventDrivenMode },
+            {"AudioEndpoint.JackSubType",               PropertyKeys.AudioEndpointJackSubType             },
+            {"AudioEngine.DeviceFormat",                PropertyKeys.AudioEngineDeviceFormat              },
+            {"AudioEngine.OemFormat",                   PropertyKeys.AudioEngineOemFormat                 },
         };
-     
+
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiPropertyNameTranslator"/> class.
-        /// </summary>C:\Projects\Personal\nFundamental\tests\nFundamental.Interface.Wasapi.Tests\WasapiInterfaceNotifyClientTests.cs
+        /// </summary>
         /// <param name="wasapiOptions">The WASAPI settings.</param>
         public WasapiPropertyNameTranslator(IOptions<WasapiOptions> wasapiOptions)
         {
@@ -157,28 +159,76 @@ namespace Fundamental.Interface.Wasapi.Internal
         }
 
         /// <summary>
-        /// Resolves the name of the property.
+        /// Resolves the property key from the WASAPI Property key object.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns></returns>
-        public string ResolvePropertyName(PropertyKey key)
+        public WasapiPropertyBagKey ResolvePropertyKey(PropertyKey key)
         {
-            string propertyName;
-            if(PropertyKeyLookUpTable.TryGetValue(key, out propertyName))
-                return propertyName;
-            
-            return Options.DeviceInfo.OmitUnknownDeviceProperty ? string.Empty : key.ToString();
+            string propertyId;
+            var isKnownValue = ResolvePropertyId(key, out propertyId);
+
+            // Omit unknown keys
+            if (!isKnownValue && Options.DeviceInfo.OmitUnknownDeviceProperty)
+            {
+                return null;
+            }
+
+            var propertyCategory    = ResolvePropertyCategory(propertyId);
+            var propertyName        = ResolvePropertyName(propertyId);
+
+            return new WasapiPropertyBagKey(propertyId, propertyName, propertyCategory, key.PropertyId, key.FormatId, isKnownValue);
         }
+
 
         /// <summary>
         /// Resolves the property key.
         /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="keyId"> The Property key Id.</param>
         /// <returns></returns>
-        public PropertyKey ResolvePropertyKey(string propertyName)
+        public PropertyKey ResolvePropertyKey(string keyId)
         {
             PropertyKey propertyKey;
-            return !PropertyKeyLookUpTable.TryGetValue(propertyName, out propertyKey) ? new PropertyKey(Guid.Empty, 0) : propertyKey;
+            return !PropertyKeyLookUpTable.TryGetValue(keyId, out propertyKey) ? new PropertyKey(Guid.Empty, 0) : propertyKey;
+        }
+
+
+        /// <summary>
+        /// Resolves the name of the property.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        public bool ResolvePropertyId(PropertyKey key, out string id)
+        {
+            if (PropertyKeyLookUpTable.TryGetValue(key, out id))
+            {
+                return true;
+            }
+
+            id = $"{key.FormatId}.{key.FormatId}";
+            return false;
+        }
+
+        /// <summary>
+        /// Resolves the name of the property.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        public string ResolvePropertyCategory(string id)
+        {
+            var components = id.Split('.');
+            return components.Length == 1 ? string.Empty : components.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Resolves the name of the property.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        public string ResolvePropertyName(string id)
+        {
+            return id.Split('.').LastOrDefault();
         }
     }
 }

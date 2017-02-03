@@ -27,7 +27,6 @@ namespace Fundamental.Interface.Wasapi.Tests
             WasapiDeviceToken = new WasapiDeviceToken("A63439A9-5928-4BEC-99EC-F39B0414278B", ImmDevice);
             WasapiInterfaceNotifyClient = Substitute.For<IWasapiInterfaceNotifyClient>();
             WasapiPropertyNameTranslatorTestFixture = Substitute.For<IWasapiPropertyNameTranslator>();
-
         }
 
         private WasapiDeviceInfo GetTestFixture()
@@ -104,19 +103,21 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var keyRaisedInEvent = new PropertyKey(new Guid("A838D5FC-6880-4F15-BEFF-FB760CEE3857"), 2);
             var tokenRaisedInEvent = WasapiDeviceToken;
-           
+
+            var returnedPropertyBagKey = new WasapiPropertyBagKey("key9", "name1", "category2", 9, new Guid("AAEE33E2-48BA-44F3-8923-F7C3DAA8B17A"), /* is known */ true); ;
+
             bool eventWasCalled = false;
             fixture.PropertyValueChangedEvent += (sender, args) =>
                 {
                     eventWasCalled = true;
-                    Assert.AreEqual("Key2", args.PropertyKey);
+                    Assert.AreEqual("Key9", args.PropertyKey);
                     Assert.AreEqual(fixture, args.DeviceInfo);
                 };
 
 
             WasapiPropertyNameTranslatorTestFixture
-                .ResolvePropertyName(keyRaisedInEvent)
-                .Returns("Key2");
+                .ResolvePropertyKey(keyRaisedInEvent)
+                .Returns(returnedPropertyBagKey);
 
             // -> ACT
             WasapiInterfaceNotifyClient.DevicePropertyChanged 

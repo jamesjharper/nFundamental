@@ -9,7 +9,7 @@ namespace Fundamental.Core
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        T GetAudioInterface<T>();
+        T Get<T>();
 
         /// <summary>
         /// Determines whether [is audio interface supported].
@@ -18,6 +18,6 @@ namespace Fundamental.Core
         /// <returns>
         ///   <c>true</c> if [is audio interface supported]; otherwise, <c>false</c>.
         /// </returns>
-        bool IsAudioInterfaceSupported<T>();
+        bool IsSupported<T>();
     }
 }

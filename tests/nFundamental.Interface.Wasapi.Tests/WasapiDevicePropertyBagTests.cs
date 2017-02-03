@@ -17,16 +17,21 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         public IPropertyStore PropertyStoreTestFixture { get; set; }
 
+        public WasapiPropertyBagKey WasapiPropertyBagKey1 { get; set; }
+        public WasapiPropertyBagKey WasapiPropertyBagKey2 { get; set; }
 
         [SetUp]
         public void SetUp()
         {
             WasapiPropertyNameTranslator = Substitute.For<IWasapiPropertyNameTranslator>();
             PropertyStoreTestFixture = Substitute.For<IPropertyStore>();
+
+            WasapiPropertyBagKey1 = new WasapiPropertyBagKey("key9", "name1", "category2", 9, new Guid("AAEE33E2-48BA-44F3-8923-F7C3DAA8B17A"), /* is known */ true);
+            WasapiPropertyBagKey2 = new WasapiPropertyBagKey("key2", "name4", "category3", 1, new Guid("4FF1D97C-1220-4FC7-B82C-0E78306B2805"), /* is known */ true);
         }
 
-        private WasapiDevicePropertyBag GetTestFixture()
-            => new WasapiDevicePropertyBag(PropertyStoreTestFixture, WasapiPropertyNameTranslator);
+        private WasapiPropertyBag GetTestFixture()
+            => new WasapiPropertyBag(PropertyStoreTestFixture, WasapiPropertyNameTranslator);
 
 
         // Handling unknown property names
@@ -365,6 +370,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var returnedPropertyKey1 = new PropertyKey(new Guid("071576F4-388C-465C-A31E-52A46DE367C6"), 2);
+            var returnedPropertyBagKey1 = WasapiPropertyBagKey1;
 
             // Expect a call to get the current property count
             int outCount;
@@ -398,8 +404,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey1)
-                .Returns("key9");
+                .ResolvePropertyKey(returnedPropertyKey1)
+                .Returns(returnedPropertyBagKey1);
 
             // -> ACT
             var valueList = fixture.Values.ToList();
@@ -415,6 +421,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var returnedPropertyKey1 = new PropertyKey(new Guid("071576F4-388C-465C-A31E-52A46DE367C6"), 2);
+            var returnedPropertyBagKey1 = WasapiPropertyBagKey1;
 
             // Expect a call to get the current property count
             int outCount;
@@ -448,15 +455,15 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey1)
-                .Returns("key9");
+                .ResolvePropertyKey(returnedPropertyKey1)
+                .Returns(returnedPropertyBagKey1);
 
             // -> ACT
             var keyList = fixture.Keys.ToList();
 
             // -> ASSERT
             Assert.AreEqual(1, keyList.Count);
-            Assert.Contains("key9", keyList);
+            Assert.Contains(returnedPropertyBagKey1, keyList);
         }
 
 
@@ -466,6 +473,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ARRANGE:
             var fixture = GetTestFixture();
             var returnedPropertyKey1 = new PropertyKey(new Guid("071576F4-388C-465C-A31E-52A46DE367C6"), 2);
+            var returnedPropertyBagKey1 = WasapiPropertyBagKey1;
 
             // Expect a call to get the current property count
             int outCount;
@@ -499,15 +507,15 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey1)
-                .Returns("key9");
+                .ResolvePropertyKey(returnedPropertyKey1)
+                .Returns(returnedPropertyBagKey1);
 
             // -> ACT
             var keyList = fixture.ToList();
 
             // -> ASSERT
             Assert.AreEqual(1, keyList.Count);
-            Assert.Contains(new KeyValuePair<string, object>("key9", 234), keyList);
+            Assert.Contains(new KeyValuePair<IPropertyBagKey, object>(returnedPropertyBagKey1, 234), keyList);
         }
 
         // Many Value Enumeration
@@ -517,8 +525,12 @@ namespace Fundamental.Interface.Wasapi.Tests
         {
             // -> ARRANGE:
             var fixture = GetTestFixture();
+
             var returnedPropertyKey1 = new PropertyKey(new Guid("071576F4-388C-465C-A31E-52A46DE367C6"), 2);
             var returnedPropertyKey2 = new PropertyKey(new Guid("40999244-8186-4DB6-90C7-78BBDD85BD9B"), 4);
+
+            var returnedPropertyBagKey1 = WasapiPropertyBagKey1;
+            var returnedPropertyBagKey2 = WasapiPropertyBagKey2;
 
             // Expect a call to get the current property count
             int outCount;
@@ -554,8 +566,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey1)
-                .Returns("key9");
+                .ResolvePropertyKey(returnedPropertyKey1)
+                .Returns(returnedPropertyBagKey1);
 
             // Value 2:
             //
@@ -579,8 +591,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey2)
-                .Returns("key2");
+                .ResolvePropertyKey(returnedPropertyKey2)
+                .Returns(returnedPropertyBagKey2);
 
             // -> ACT
             var valueList = fixture.Values.ToList();
@@ -596,8 +608,12 @@ namespace Fundamental.Interface.Wasapi.Tests
         {
             // -> ARRANGE:
             var fixture = GetTestFixture();
+
             var returnedPropertyKey1 = new PropertyKey(new Guid("071576F4-388C-465C-A31E-52A46DE367C6"), 2);
             var returnedPropertyKey2 = new PropertyKey(new Guid("40999244-8186-4DB6-90C7-78BBDD85BD9B"), 4);
+
+            var returnedPropertyBagKey1 = WasapiPropertyBagKey1;
+            var returnedPropertyBagKey2 = WasapiPropertyBagKey2;
 
             // Expect a call to get the current property count
             int outCount;
@@ -633,8 +649,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey1)
-                .Returns("key9");
+                .ResolvePropertyKey(returnedPropertyKey1)
+                .Returns(returnedPropertyBagKey1);
 
             // Value 2:
             //
@@ -658,16 +674,16 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized)
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey2)
-                .Returns("key2");
+                .ResolvePropertyKey(returnedPropertyKey2)
+                .Returns(returnedPropertyBagKey2);
 
             // -> ACT
             var valueList = fixture.Keys.ToList();
 
             // -> ASSERT
             Assert.AreEqual(2, valueList.Count);
-            Assert.Contains("key9", valueList);
-            Assert.Contains("key2", valueList);
+            Assert.Contains(returnedPropertyBagKey1, valueList);
+            Assert.Contains(returnedPropertyBagKey2, valueList);
         }
 
         [Test]
@@ -678,6 +694,9 @@ namespace Fundamental.Interface.Wasapi.Tests
             var returnedPropertyKey1 = new PropertyKey(new Guid("071576F4-388C-465C-A31E-52A46DE367C6"), 2);
             var returnedPropertyKey2 = new PropertyKey(new Guid("40999244-8186-4DB6-90C7-78BBDD85BD9B"), 4);
 
+            var returnedPropertyBagKey1 = WasapiPropertyBagKey1;
+            var returnedPropertyBagKey2 = WasapiPropertyBagKey2;
+
             // Expect a call to get the current property count
             int outCount;
             PropertyStoreTestFixture
@@ -712,8 +731,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized )
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey1)
-                .Returns("key9");
+                .ResolvePropertyKey(returnedPropertyKey1)
+                .Returns(returnedPropertyBagKey1);
 
             // Value 2:
             //
@@ -737,16 +756,16 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             // Expect a call to resolve the property key (so we know if the key is recognized)
             WasapiPropertyNameTranslator
-                .ResolvePropertyName(returnedPropertyKey2)
-                .Returns("key2");
+                .ResolvePropertyKey(returnedPropertyKey2)
+                .Returns(returnedPropertyBagKey2);
 
             // -> ACT
             var valueList = fixture.ToList();
 
             // -> ASSERT
             Assert.AreEqual(2, valueList.Count);
-            Assert.Contains(new KeyValuePair<string, object>("key9", 234), valueList);
-            Assert.Contains(new KeyValuePair<string, object>("key2", 1), valueList);
+            Assert.Contains(new KeyValuePair<IPropertyBagKey, object>(returnedPropertyBagKey1, 234), valueList);
+            Assert.Contains(new KeyValuePair<IPropertyBagKey, object>(returnedPropertyBagKey2, 1), valueList);
         }
     }
 }
