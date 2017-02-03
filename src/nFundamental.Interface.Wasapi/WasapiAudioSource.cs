@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Fundamental.Core;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Options;
 

@@ -16,8 +16,6 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental", "src\nFundam
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{22A7F0B3-7051-40D1-9B81-988813496404}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Tests", "tests\nFundamental.Tests\nFundamental.Tests.xproj", "{B77BAFB8-7130-4756-9AF4-CA262420408A}"
-EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Interface", "src\nFundamental.Interface\nFundamental.Interface.xproj", "{FE58A1D3-0C44-43BF-B5CF-FA9B7013013C}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Interface.Wasapi", "src\nFundamental.Interface.Wasapi\nFundamental.Interface.Wasapi.xproj", "{5FCE938E-8B60-40AD-9DFD-038B1DD344D0}"
@@ -25,6 +23,10 @@ EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Console", "src\nFundamental.Console\nFundamental.Console.xproj", "{16629646-AA5F-47F5-9EB1-AE030489B5D1}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Interface.Wasapi.Tests", "tests\nFundamental.Interface.Wasapi.Tests\nFundamental.Interface.Wasapi.Tests.xproj", "{946DD7D5-FE1D-4AAA-A50F-87A7C1F25B18}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Core", "src\nFundamental.Core\nFundamental.Core.xproj", "{CF58D9EA-751E-49A2-B034-EECDC18D19B0}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "nFundamental.Core.Tests", "tests\nFundamental.Core.Tests\nFundamental.Core.Tests.xproj", "{B77BAFB8-7130-4756-9AF4-CA262420408A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +38,6 @@ Global
 		{D25C627D-7BE4-4ABA-B07D-EA233C02F87F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D25C627D-7BE4-4ABA-B07D-EA233C02F87F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D25C627D-7BE4-4ABA-B07D-EA233C02F87F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FE58A1D3-0C44-43BF-B5CF-FA9B7013013C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FE58A1D3-0C44-43BF-B5CF-FA9B7013013C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE58A1D3-0C44-43BF-B5CF-FA9B7013013C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -56,16 +54,25 @@ Global
 		{946DD7D5-FE1D-4AAA-A50F-87A7C1F25B18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{946DD7D5-FE1D-4AAA-A50F-87A7C1F25B18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{946DD7D5-FE1D-4AAA-A50F-87A7C1F25B18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF58D9EA-751E-49A2-B034-EECDC18D19B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF58D9EA-751E-49A2-B034-EECDC18D19B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF58D9EA-751E-49A2-B034-EECDC18D19B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF58D9EA-751E-49A2-B034-EECDC18D19B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B77BAFB8-7130-4756-9AF4-CA262420408A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D25C627D-7BE4-4ABA-B07D-EA233C02F87F} = {47D8B6BF-96B0-4454-9E3F-B5192FB193EB}
-		{B77BAFB8-7130-4756-9AF4-CA262420408A} = {22A7F0B3-7051-40D1-9B81-988813496404}
 		{FE58A1D3-0C44-43BF-B5CF-FA9B7013013C} = {47D8B6BF-96B0-4454-9E3F-B5192FB193EB}
 		{5FCE938E-8B60-40AD-9DFD-038B1DD344D0} = {47D8B6BF-96B0-4454-9E3F-B5192FB193EB}
 		{16629646-AA5F-47F5-9EB1-AE030489B5D1} = {47D8B6BF-96B0-4454-9E3F-B5192FB193EB}
 		{946DD7D5-FE1D-4AAA-A50F-87A7C1F25B18} = {22A7F0B3-7051-40D1-9B81-988813496404}
+		{CF58D9EA-751E-49A2-B034-EECDC18D19B0} = {47D8B6BF-96B0-4454-9E3F-B5192FB193EB}
+		{B77BAFB8-7130-4756-9AF4-CA262420408A} = {22A7F0B3-7051-40D1-9B81-988813496404}
 	EndGlobalSection
 EndGlobal

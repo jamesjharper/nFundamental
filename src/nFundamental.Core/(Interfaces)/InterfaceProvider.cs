@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fundamental
+namespace Fundamental.Core
 {
     public abstract class InterfaceProvider : IInterfaceProvider
     {

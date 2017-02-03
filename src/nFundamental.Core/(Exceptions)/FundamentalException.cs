@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace Fundamental
+namespace Fundamental.Core
 {
- 
     public class FundamentalException : Exception
     {
         /// <summary>

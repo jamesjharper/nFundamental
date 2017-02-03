@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fundamental
+namespace Fundamental.Core
 {
     public class Options<TOptions> : IOptions<TOptions> where TOptions : class, new()
     {

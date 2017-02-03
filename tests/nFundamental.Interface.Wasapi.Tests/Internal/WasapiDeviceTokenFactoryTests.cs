@@ -1,12 +1,10 @@
-﻿using System;
-using Fundamental.Interface.Wasapi.Internal;
+﻿using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
-using Fundamental.Interface.Wasapi;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace Fundamental.Interface.Wasapi.Tests
+namespace Fundamental.Interface.Wasapi.Tests.Internal
 {
     [TestFixture]
     public class WasapiDeviceTokenFactoryTests

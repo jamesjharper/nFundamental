@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
-namespace Fundamental.Basic
+namespace Fundamental.Core.Memory
 {
-    public class HGlobalPtr : NativePtr
+    public class CoTaskMemPtr : NativePtr
     {
-        private HGlobalPtr(IntPtr ptr) : base(ptr) { }
+        private CoTaskMemPtr(IntPtr ptr) : base(ptr) { }
 
         public static NativePtr Alloc(int size)
         {
-            var ptr = Marshal.AllocHGlobal(size);
-            return new HGlobalPtr(ptr);
+            var ptr = Marshal.AllocCoTaskMem(size);
+            return new CoTaskMemPtr(ptr);
         }
 
         public static NativePtr CopyToPtr<T>(T structure)
@@ -25,7 +22,7 @@ namespace Fundamental.Basic
 
         protected override void Dealloc(IntPtr ptr)
         {
-            Marshal.FreeHGlobal(ptr);
+            Marshal.FreeCoTaskMem(ptr);
         }
     }
 }

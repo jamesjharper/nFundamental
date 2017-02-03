@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Fundamental
+namespace Fundamental.Core
 {
     public interface IAudioFormat : IEnumerable<KeyValuePair<string, object>>
     {

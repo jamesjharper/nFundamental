@@ -1,4 +1,5 @@
 ﻿using System;
+using Fundamental.Core;
 
 namespace Fundamental.Interface
 {

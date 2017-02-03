@@ -6,6 +6,7 @@
 
     "dependencies": {
         "nFundamental": { "target": "project" },
+        "nFundamental.Core": { "target": "project" },
         "nFundamental.Interface": { "target": "project" },
         "nFundamental.Interface.Wasapi": { "target": "project" }
     },

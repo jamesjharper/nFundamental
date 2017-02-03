@@ -1,4 +1,4 @@
-﻿namespace Fundamental
+﻿namespace Fundamental.Core
 {
     public interface IOptions<out TOptions> where TOptions : class, new()
     {

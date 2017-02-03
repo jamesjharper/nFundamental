@@ -6,8 +6,8 @@
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>946dd7d5-fe1d-4aaa-a50f-87a7c1f25b18</ProjectGuid>
-    <RootNamespace>Fundamental.Interface.Wasapi.Tests</RootNamespace>
+    <ProjectGuid>b77bafb8-7130-4756-9af4-ca262420408a</ProjectGuid>
+    <RootNamespace>Fundamental.Core.Tests</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">.\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">.\bin\</OutputPath>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>

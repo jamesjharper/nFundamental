@@ -2,10 +2,8 @@
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
-using Fundamental.Interface.Wasapi;
 using NSubstitute;
 using NUnit.Framework;
-using DeviceState = Fundamental.Interface.DeviceState;
 
 namespace Fundamental.Interface.Wasapi.Tests
 {
@@ -56,12 +54,12 @@ namespace Fundamental.Interface.Wasapi.Tests
             var fixture = GetTestFixture();
 
             // Expect a call to IMMDevice.GetState
-            Interop.DeviceState deviceStateOut;
+            Fundamental.Interface.Wasapi.Interop.DeviceState deviceStateOut;
             ImmDevice
                 .GetState(out deviceStateOut)
                 .Returns(param =>
                 {
-                    param[0] = Interop.DeviceState.Disabled;
+                    param[0] = Fundamental.Interface.Wasapi.Interop.DeviceState.Disabled;
                     return HResult.S_OK;
                 });
 

@@ -1,4 +1,4 @@
-﻿namespace Fundamental
+﻿namespace Fundamental.Core
 {
     /// <summary>
     /// Format Negotiator 

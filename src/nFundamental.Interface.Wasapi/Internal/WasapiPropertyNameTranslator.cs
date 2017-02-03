@@ -1,4 +1,5 @@
 ﻿using System;
+using Fundamental.Core;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Options;
 
