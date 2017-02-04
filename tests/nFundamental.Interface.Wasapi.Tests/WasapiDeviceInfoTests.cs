@@ -110,7 +110,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             fixture.PropertyValueChangedEvent += (sender, args) =>
                 {
                     eventWasCalled = true;
-                    Assert.AreEqual("Key9", args.PropertyKey);
+                    Assert.AreEqual("key9", args.PropertyKey);
                     Assert.AreEqual(fixture, args.DeviceInfo);
                 };
 

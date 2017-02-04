@@ -22,7 +22,6 @@ namespace Fundamental.Console.DeviceInfo
             {
                 System.Console.WriteLine(ex.Message);
                 Environment.Exit(-1);
-
             }
 
             System.Console.ReadLine();
@@ -31,33 +30,53 @@ namespace Fundamental.Console.DeviceInfo
 
         private static void PrintDevices(IDeviceEnumerator deviceEnumerator, IDeviceInfoFactory deviceInfoFactory)
         {
-            var allDevices = deviceEnumerator.GetDevices();
-            foreach (var device in allDevices)
+            System.Console.WriteLine(" -----------------");
+            System.Console.WriteLine("  CAPTURE DEVICES ");
+            System.Console.WriteLine(" -----------------");
+            System.Console.WriteLine();
+
+            var capatureDevices = deviceEnumerator.GetDevices(DeviceType.Capture);
+            PrintDevices(capatureDevices, deviceInfoFactory);
+
+            System.Console.WriteLine();
+            System.Console.WriteLine();
+
+            System.Console.WriteLine(" ----------------");
+            System.Console.WriteLine("  RENDER DEVICES ");
+            System.Console.WriteLine(" ----------------");
+            System.Console.WriteLine();
+
+            var renderDevices = deviceEnumerator.GetDevices(DeviceType.Render);
+            PrintDevices(renderDevices, deviceInfoFactory);
+        }
+
+        private static void PrintDevices(IEnumerable<IDeviceToken> devices, IDeviceInfoFactory deviceInfoFactory)
+        {
+            foreach (var device in devices)
             {
                 var deviceInfo = deviceInfoFactory.GetInfoDevice(device);
-                PrintDeviceDetails(deviceInfo); 
+                var deviceDetailsVivisector = new DeviceDetailsVivisector(deviceInfo);
+                PrintDeviceDetails(deviceDetailsVivisector);
             }
         }
 
 
-        private static void PrintDeviceDetails(IDeviceInfo deviceInfo)
+        private static void PrintDeviceDetails(DeviceDetailsVivisector deviceInfo)
         {
-            var deviceDetailsVivisector = new DeviceDetailsVivisector(deviceInfo);
 
+            System.Console.WriteLine($" Device: {deviceInfo.GetDeviceTitle()}");
 
-            System.Console.WriteLine($"Device: {deviceDetailsVivisector.GetDeviceTitle()}");
-
-            foreach (var deviceDetail in deviceDetailsVivisector.GetNonGrouppedDeviceDetails())
+            foreach (var deviceDetail in deviceInfo.GetNonGroupedDeviceDetails())
             {
-                System.Console.WriteLine($"   {deviceDetail.Name}: {deviceDetail.Value}");
+                System.Console.WriteLine($"    {deviceDetail.Name}: {deviceDetail.Value}");
             }
 
-            foreach (var group in deviceDetailsVivisector.GetGrouppedDeviceDetails())
+            foreach (var group in deviceInfo.GetGroupedDeviceDetails())
             {
-                System.Console.WriteLine($"   {group.Key}");
+                System.Console.WriteLine($"    {group.Key}");
                 foreach (var deviceDetail in group)
                 {
-                    System.Console.WriteLine($"    - {deviceDetail.Name}: {deviceDetail.Value}");
+                    System.Console.WriteLine($"     - {deviceDetail.Name}: {deviceDetail.Value}");
                 }
                 System.Console.WriteLine();
             }

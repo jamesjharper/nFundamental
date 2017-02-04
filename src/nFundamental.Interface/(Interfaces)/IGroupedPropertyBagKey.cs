@@ -1,6 +1,6 @@
 ﻿namespace Fundamental.Interface
 {
-    public interface IGrouppedPropertyBagKey : IPropertyBagKey
+    public interface IGroupedPropertyBagKey : IPropertyBagKey
     {
         /// <summary>
         /// Gets the group category.

@@ -3,7 +3,7 @@ using System;
 
 namespace Fundamental.Interface.Wasapi
 {
-    public class WasapiPropertyBagKey : IGrouppedPropertyBagKey
+    public class WasapiPropertyBagKey : IGroupedPropertyBagKey
     {
         /// <summary>
         /// Gets the name of the key.
