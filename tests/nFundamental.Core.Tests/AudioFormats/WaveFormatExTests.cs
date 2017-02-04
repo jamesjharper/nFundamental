@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Fundamental.Core.Tests.AudioFormats
 {
     [TestFixture]
-    public class WaveFormatTests
+    public class WaveFormatExTests
     {
 
         #region Test PCM Formats
@@ -220,7 +220,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             fixed (byte* pFormat = formatBytes)
             {
                 // -> ACT
-                var waveFormat = new WaveFormat((IntPtr)pFormat, endianess);
+                var waveFormat = new WaveFormatEx((IntPtr)pFormat, endianess);
 
                 // -> ASSERT
                 Assert.AreEqual(formatTag, waveFormat.FormatTag);
@@ -248,7 +248,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             var exectedFormatBytes = GetFormat(endianess, formatTag, numberOfChannels, samplesPerSec, bitsPerSample, extended);
 
             // -> ACT
-            var actualFormatBytes = new WaveFormat(endianess)
+            var actualFormatBytes = new WaveFormatEx(endianess)
                 {
                     FormatTag = formatTag,
                     Channels = numberOfChannels,

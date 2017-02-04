@@ -7,32 +7,13 @@ namespace Fundamental.Core.AudioFormats
     /// <summary>
     /// 
     /// </summary>
-    public class WaveFormat
+    public sealed class WaveFormatEx : WaveFormat
     {
-
-
-        //        typedef struct {
-        //  WAVEFORMATEX Format;
-        //        union {
-        //    WORD wValidBitsPerSample;
-        //        WORD wSamplesPerBlock;
-        //        WORD wReserved;
-        //    }
-        //    Samples;
-        //  DWORD dwChannelMask;
-        //    GUID SubFormat;
-        //}
-        //WAVEFORMATEXTENSIBLE, * PWAVEFORMATEXTENSIBLE;
 
         /// <summary>
         /// The wave format EX stuct size
         /// </summary>
         private const int WaveFormatExSize = 18 /* Bytes*/;
-
-        /// <summary>
-        /// The bit converter for handling Endian-ness
-        /// </summary>
-        protected EndianBitConverter BitConverter;
 
         /// <summary>
         /// The bytes
@@ -45,15 +26,23 @@ namespace Fundamental.Core.AudioFormats
         private byte[] _waveFormatExBytes = new byte[0];
 
         /// <summary>
+        /// Gets or sets the bit converter used to read and write this format instance.
+        /// </summary>
+        /// <value>
+        /// The bit converter.
+        /// </value>
+        public override EndianBitConverter BitConverter { get; }
+
+        /// <summary>
         /// Gets or sets the format tag.
         /// </summary>
         /// <value>
         /// The format tag.
         /// </value>
-        public WaveFormatTag FormatTag
+        public override WaveFormatTag FormatTag
         {
             get { return (WaveFormatTag)BitConverter.ToUInt16(_waveformatBytes, 0 /* offset */); }
-            set { BitConverter.CopyBytes((ushort)value, _waveformatBytes, 0 /* offset */); }
+            set { BitConverter.CopyBytes((ushort)value, _waveformatBytes, 0       /* offset */); }
         }
 
         /// <summary>
@@ -62,7 +51,7 @@ namespace Fundamental.Core.AudioFormats
         /// <value>
         /// The channels.
         /// </value>
-        public ushort Channels
+        public override ushort Channels
         {
             get { return BitConverter.ToUInt16(_waveformatBytes,  2 /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 2 /* offset */); }
@@ -74,9 +63,9 @@ namespace Fundamental.Core.AudioFormats
         /// <value>
         /// The samples per sec.
         /// </value>
-        public uint SamplesPerSec
+        public override uint SamplesPerSec
         {
-            get { return BitConverter.ToUInt32(_waveformatBytes, 4 /* offset */); }
+            get { return BitConverter.ToUInt32(_waveformatBytes, 4  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 4 /* offset */); }
         }
 
@@ -86,9 +75,9 @@ namespace Fundamental.Core.AudioFormats
         /// <value>
         /// The average bytes per sec.
         /// </value>
-        public uint AvgBytesPerSec
+        public override uint AvgBytesPerSec
         {
-            get { return BitConverter.ToUInt32(_waveformatBytes, 8 /* offset */); }
+            get { return BitConverter.ToUInt32(_waveformatBytes, 8  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 8 /* offset */); }
         }
 
@@ -98,9 +87,9 @@ namespace Fundamental.Core.AudioFormats
         /// <value>
         /// The block align.
         /// </value>
-        public ushort BlockAlign
+        public override ushort BlockAlign
         {
-            get { return BitConverter.ToUInt16(_waveformatBytes, 12 /* offset */); }
+            get { return BitConverter.ToUInt16(_waveformatBytes, 12  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 12 /* offset */); }
         }
 
@@ -110,9 +99,9 @@ namespace Fundamental.Core.AudioFormats
         /// <value>
         /// The bits per sample.
         /// </value>
-        public ushort BitsPerSample
+        public override ushort BitsPerSample
         {
-            get { return BitConverter.ToUInt16(_waveformatBytes, 14 /* offset */); }
+            get { return BitConverter.ToUInt16(_waveformatBytes, 14  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 14 /* offset */); }
         }
 
@@ -122,7 +111,7 @@ namespace Fundamental.Core.AudioFormats
         /// <value>
         /// The extended.
         /// </value>
-        public byte[] ExtendedBytes
+        public override byte[] ExtendedBytes
         {
             get { return _waveFormatExBytes; }
             set
@@ -141,16 +130,16 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         private ushort ExtendedSize
         {
-            get { return BitConverter.ToUInt16(_waveformatBytes, 16 /* offset */); }
+            get { return BitConverter.ToUInt16(_waveformatBytes, 16  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 16 /* offset */); }
         }
 
-        public WaveFormat(EndianBitConverter bitConverter)
+        public WaveFormatEx(EndianBitConverter bitConverter)
         {
             BitConverter = bitConverter;
         }
 
-        public WaveFormat(IntPtr ptr, EndianBitConverter bitConverter)
+        public WaveFormatEx(IntPtr ptr, EndianBitConverter bitConverter)
         {
             BitConverter = bitConverter;
 
@@ -186,18 +175,15 @@ namespace Fundamental.Core.AudioFormats
         /// Bytes the size.
         /// </summary>
         /// <returns></returns>
-        public int ByteSize()
-        {
-            return _waveformatBytes.Length + ExtendedBytes.Length;
-        }
+        public override int ByteSize => _waveformatBytes.Length + ExtendedBytes.Length;
 
         /// <summary>
         /// To the bytes.
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes()
+        public override byte[] ToBytes()
         {
-            var bytes = new byte[ByteSize()];
+            var bytes = new byte[ByteSize];
             Write(bytes, 0);
             return bytes;
         }
@@ -207,7 +193,7 @@ namespace Fundamental.Core.AudioFormats
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="offset">The offset.</param>
-        public void Write(byte[] target, int offset)
+        public override void Write(byte[] target, int offset)
         {
             Array.Copy(_waveformatBytes, 0, target, offset, _waveformatBytes.Length);
             offset += _waveformatBytes.Length;
