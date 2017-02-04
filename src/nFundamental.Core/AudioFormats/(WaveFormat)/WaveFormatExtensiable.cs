@@ -5,7 +5,7 @@ namespace Fundamental.Core.AudioFormats
 {
     public class WaveFormatExtensiable : WaveFormatDecorator
     {
-
+        // Defined as per:
         /*
   
         typedef struct {
@@ -20,7 +20,7 @@ namespace Fundamental.Core.AudioFormats
           GUID         SubFormat;
         } WAVEFORMATEXTENSIBLE, *PWAVEFORMATEXTENSIBLE;
 
-         */
+        */
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WaveFormatExtensiable"/> class.

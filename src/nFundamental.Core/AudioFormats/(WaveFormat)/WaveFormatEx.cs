@@ -10,8 +10,24 @@ namespace Fundamental.Core.AudioFormats
     public sealed class WaveFormatEx : WaveFormat
     {
 
+        // Defined as per:
+        /*
+
+        typedef struct 
+        {
+            WORD  wFormatTag;
+            WORD  nChannels;
+            DWORD nSamplesPerSec;
+            DWORD nAvgBytesPerSec;
+            WORD  nBlockAlign;
+            WORD  wBitsPerSample;
+            WORD  cbSize;
+        } WAVEFORMATEX;
+
+        */
+
         /// <summary>
-        /// The wave format EX stuct size
+        /// The wave format ex stuct size
         /// </summary>
         private const int WaveFormatExSize = 18 /* Bytes*/;
 
@@ -42,7 +58,7 @@ namespace Fundamental.Core.AudioFormats
         public override WaveFormatTag FormatTag
         {
             get { return (WaveFormatTag)BitConverter.ToUInt16(_waveformatBytes, 0 /* offset */); }
-            set { BitConverter.CopyBytes((ushort)value, _waveformatBytes, 0       /* offset */); }
+            set { BitConverter.CopyBytes((ushort)value, _waveformatBytes,       0 /* offset */); }
         }
 
         /// <summary>
@@ -65,7 +81,7 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         public override uint SamplesPerSec
         {
-            get { return BitConverter.ToUInt32(_waveformatBytes, 4  /* offset */); }
+            get { return BitConverter.ToUInt32(_waveformatBytes,  4  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 4 /* offset */); }
         }
 
@@ -77,7 +93,7 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         public override uint AvgBytesPerSec
         {
-            get { return BitConverter.ToUInt32(_waveformatBytes, 8  /* offset */); }
+            get { return BitConverter.ToUInt32(_waveformatBytes,  8  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 8 /* offset */); }
         }
 
@@ -89,7 +105,7 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         public override ushort BlockAlign
         {
-            get { return BitConverter.ToUInt16(_waveformatBytes, 12  /* offset */); }
+            get { return BitConverter.ToUInt16(_waveformatBytes,  12  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 12 /* offset */); }
         }
 
@@ -101,7 +117,7 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         public override ushort BitsPerSample
         {
-            get { return BitConverter.ToUInt16(_waveformatBytes, 14  /* offset */); }
+            get { return BitConverter.ToUInt16(_waveformatBytes,  14  /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 14 /* offset */); }
         }
 
@@ -130,7 +146,7 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         private ushort ExtendedSize
         {
-            get { return BitConverter.ToUInt16(_waveformatBytes, 16  /* offset */); }
+            get { return BitConverter.ToUInt16(_waveformatBytes,  16 /* offset */); }
             set { BitConverter.CopyBytes(value, _waveformatBytes, 16 /* offset */); }
         }
 

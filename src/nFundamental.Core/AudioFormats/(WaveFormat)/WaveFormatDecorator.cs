@@ -18,7 +18,7 @@ namespace Fundamental.Core.AudioFormats
         protected WaveFormatDecorator(EndianBitConverter bitConverter, WaveFormatTag waveFormatTag) :
             this(new WaveFormatEx(bitConverter))
         {
-            _waveFormatInner.FormatTag = WaveFormatTag.Extensible;
+            _waveFormatInner.FormatTag = waveFormatTag;
         }
 
         /// <summary>
