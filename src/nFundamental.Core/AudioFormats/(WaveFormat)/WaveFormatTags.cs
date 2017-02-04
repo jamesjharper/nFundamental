@@ -426,10 +426,16 @@
         FastDvm = 0x2000, 
 
 
+        // this WAVEFORMAT tag has Microsoft's blessing! It was assigned to 
+        // On2 Corporation and permission was given to use this format tag 
+        // by Keith Looney of On2 Corporation. 
+
+        /// <summary> Speex </summary>
+        Speex = 0xa109,
+
         // others - not from MS headers
         /// <summary> VORBIS1 </summary>
         Vorbis1 = 0x674f,
-
 
         /// <summary> VORBIS2 </summary>
         Vorbis2 = 0x6750,
