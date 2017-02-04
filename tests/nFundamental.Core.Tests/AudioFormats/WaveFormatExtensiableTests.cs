@@ -15,7 +15,7 @@ namespace Fundamental.Core.Tests.AudioFormats
         #region Test PCM Formats
 
         [Test]
-        public void CanReadLittleEndianExtensibalePcm()
+        public void CanReadLittleEndianExtensibalePcmFormatFromPointer()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -32,7 +32,7 @@ namespace Fundamental.Core.Tests.AudioFormats
 
 
         [Test]
-        public void CanReadBigEndianExtensibalePcm()
+        public void CanReadBigEndianExtensibalePcmFormatFromPointer()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -48,7 +48,7 @@ namespace Fundamental.Core.Tests.AudioFormats
         }
 
         [Test]
-        public void CanGetLittleEndianPcmBytes()
+        public void CanWriteLittleEndianBytesOfExtensibalePcmFormat()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -64,7 +64,7 @@ namespace Fundamental.Core.Tests.AudioFormats
         }
 
         [Test]
-        public void CanGetBigEndianPcmBytes()
+        public void CanWriteBigEndianBytesOfExtensibalePcmFormat()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -84,7 +84,7 @@ namespace Fundamental.Core.Tests.AudioFormats
         #region Test Ieee Float Formats
 
         [Test]
-        public void CanReadLittleEndianExtensibaleIeeeFloat()
+        public void CanReadLittleEndianExtensibaleIeeeFloatFormatFromPointer()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -101,7 +101,7 @@ namespace Fundamental.Core.Tests.AudioFormats
 
 
         [Test]
-        public void CanReadBigEndianExtensibaleIeeeFloat()
+        public void CanReadBigEndianExtensibaleIeeeFloatFormatFromPointer()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -117,7 +117,7 @@ namespace Fundamental.Core.Tests.AudioFormats
         }
 
         [Test]
-        public void CanGetLittleEndianIeeeFloatBytes()
+        public void CanWriteLittleEndianBytesOfExtensibaleIeeeFloatFormat()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
@@ -133,7 +133,7 @@ namespace Fundamental.Core.Tests.AudioFormats
         }
 
         [Test]
-        public void CanGetBigEndianIeeeFloatBytes()
+        public void CanWriteBigEndianBytesOfExtensibaleIeeeFloatFormat()
         {
             // -> ASSERT
             AssertCanReadFormatFromPointer
