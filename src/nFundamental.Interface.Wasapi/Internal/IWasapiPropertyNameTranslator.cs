@@ -2,20 +2,23 @@
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public interface IWasapiPropertyNameTranslator
     {
         /// <summary>
-        /// Resolves the name of the property.
+        /// Resolves the property key from the WASAPI Property key object.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns></returns>
-        string ResolvePropertyName(PropertyKey key);
+        WasapiPropertyBagKey ResolvePropertyKey(PropertyKey key);
 
         /// <summary>
         /// Resolves the property key.
         /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="keyId"> The Property key Id.</param>
         /// <returns></returns>
-        PropertyKey ResolvePropertyKey(string propertyName);
+        PropertyKey ResolvePropertyKey(string keyId);
     }
 }

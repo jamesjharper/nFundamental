@@ -31,6 +31,6 @@ namespace Fundamental.Interface
         /// <value>
         /// The properties.
         /// </value>
-        IDevicePropertyBag Properties { get; }
+        IPropertyBag Properties { get; }
     }
 }

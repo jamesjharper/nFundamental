@@ -16,7 +16,7 @@ namespace Fundamental.Interface.Wasapi
         /// <summary>
         /// The device property bag
         /// </summary>
-        private WasapiDevicePropertyBag _devicePropertyBag;
+        private WasapiPropertyBag _propertyBag;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiDeviceInfo" /> class.
@@ -61,7 +61,7 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// The properties.
         /// </value>
-        public WasapiDevicePropertyBag Properties => _devicePropertyBag ?? (_devicePropertyBag = CreatePropertyBag());
+        public WasapiPropertyBag Properties => _propertyBag ?? (_propertyBag = CreatePropertyBag());
 
         /// <summary>
         /// Gets the device handle.
@@ -77,15 +77,15 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// The properties.
         /// </value>
-        IDevicePropertyBag IDeviceInfo.Properties => Properties;
+        IPropertyBag IDeviceInfo.Properties => Properties;
 
         // Private Methods
 
-        private WasapiDevicePropertyBag CreatePropertyBag()
+        private WasapiPropertyBag CreatePropertyBag()
         {
             IPropertyStore propertyStore;
             DeviceToken.MmDevice.OpenPropertyStore(StorageAccess.Read, out propertyStore);
-            return new WasapiDevicePropertyBag(propertyStore, _wasapiPropertyNameTranslator);
+            return new WasapiPropertyBag(propertyStore, _wasapiPropertyNameTranslator);
         }
 
         private DeviceState GetState()
@@ -107,8 +107,8 @@ namespace Fundamental.Interface.Wasapi
             if (!Equals(args.DeviceToken, DeviceToken))
                 return;
 
-            var propertyName = _wasapiPropertyNameTranslator.ResolvePropertyName(args.PropertyKey);
-            handler.Invoke(this, new DevicePropertyChangedEventArgs(this, propertyName));
+            var propertyName = _wasapiPropertyNameTranslator.ResolvePropertyKey(args.PropertyKey);
+            handler.Invoke(this, new DevicePropertyChangedEventArgs(this, propertyName.Id));
         }
     }
 }
