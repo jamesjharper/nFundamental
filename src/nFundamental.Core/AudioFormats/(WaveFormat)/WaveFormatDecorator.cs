@@ -1,4 +1,5 @@
-﻿using MiscUtil.Conversion;
+﻿using System;
+using MiscUtil.Conversion;
 
 namespace Fundamental.Core.AudioFormats
 {
@@ -8,6 +9,27 @@ namespace Fundamental.Core.AudioFormats
         /// The wave format inner
         /// </summary>
         private readonly WaveFormat _waveFormatInner;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatDecorator" /> class.
+        /// </summary>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <param name="waveFormatTag">The wave format tag.</param>
+        protected WaveFormatDecorator(EndianBitConverter bitConverter, WaveFormatTag waveFormatTag) :
+            this(new WaveFormatEx(bitConverter))
+        {
+            _waveFormatInner.FormatTag = WaveFormatTag.Extensible;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatDecorator"/> class.
+        /// </summary>
+        /// <param name="ptr">The PTR.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        public WaveFormatDecorator(IntPtr ptr, EndianBitConverter bitConverter) :
+            this(new WaveFormatEx(ptr, bitConverter))
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WaveFormatDecorator"/> class.

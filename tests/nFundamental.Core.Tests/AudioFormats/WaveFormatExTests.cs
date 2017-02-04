@@ -216,7 +216,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             var blockAlign = (ushort)(numberOfChannels * (bitsPerSample / 8));
             var avgBytesPerSec = (uint)(blockAlign * samplesPerSec);
 
-            var formatBytes = GetFormat (endianess, formatTag, numberOfChannels, samplesPerSec, bitsPerSample, extended);
+            var formatBytes = WaveFormatHelper.CreateFormatEx(endianess, formatTag, numberOfChannels, samplesPerSec, bitsPerSample, extended);
             fixed (byte* pFormat = formatBytes)
             {
                 // -> ACT
@@ -245,7 +245,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             var blockAlign = (ushort)(numberOfChannels * (bitsPerSample / 8));
             var avgBytesPerSec = (uint)(blockAlign * samplesPerSec);
 
-            var exectedFormatBytes = GetFormat(endianess, formatTag, numberOfChannels, samplesPerSec, bitsPerSample, extended);
+            var exectedFormatBytes = WaveFormatHelper.CreateFormatEx(endianess, formatTag, numberOfChannels, samplesPerSec, bitsPerSample, extended);
 
             // -> ACT
             var actualFormatBytes = new WaveFormatEx(endianess)
@@ -263,41 +263,6 @@ namespace Fundamental.Core.Tests.AudioFormats
             Assert.AreEqual(exectedFormatBytes, actualFormatBytes);
         }
 
-        byte[] GetFormat(EndianBitConverter endianBitConverter,
-                         WaveFormatTag waveFormatTag,
-                         ushort numberOfChannels,
-                         uint samplesPerSec,
-                         ushort bitsPerSample,
-                         byte[] extended)
-        {
-            var blockAlign = (ushort)(numberOfChannels * (bitsPerSample / 8));
-            var avgBytesPerSec = (uint)(blockAlign * samplesPerSec);
-
-            var ms = new MemoryStream();
-
-            var formatTagBytes = endianBitConverter.GetBytes((ushort)waveFormatTag);
-            ms.Write(formatTagBytes, 0, formatTagBytes.Length);
-
-            var numberOfChannelBytes = endianBitConverter.GetBytes(numberOfChannels);
-            ms.Write(numberOfChannelBytes, 0, numberOfChannelBytes.Length);
-
-            var samplesPerSecBytes = endianBitConverter.GetBytes(samplesPerSec);
-            ms.Write(samplesPerSecBytes, 0, samplesPerSecBytes.Length);
-
-            var avgBytesPerSecBytes = endianBitConverter.GetBytes(avgBytesPerSec);
-            ms.Write(avgBytesPerSecBytes, 0, avgBytesPerSecBytes.Length);
-
-            var blockAlignBytes = endianBitConverter.GetBytes(blockAlign);
-            ms.Write(blockAlignBytes, 0, blockAlignBytes.Length);
-
-            var bitsPerSampleBytes = endianBitConverter.GetBytes(bitsPerSample);
-            ms.Write(bitsPerSampleBytes, 0, bitsPerSampleBytes.Length);
-
-            var extendedSizeBytes = endianBitConverter.GetBytes((ushort)extended.Length);
-            ms.Write(extendedSizeBytes, 0, extendedSizeBytes.Length);
-            ms.Write(extended, 0, extended.Length);
-
-            return ms.ToArray();
-        }
+      
     }
 }

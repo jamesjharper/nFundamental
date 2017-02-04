@@ -30,7 +30,6 @@
         /// </summary>
         Khz22 = 22050,
 
-
         /// <summary>
         /// 32 kHz. A multiple of 16 kHz. 
         /// This sample rate generally used with 12-bit audio on DV.
