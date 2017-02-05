@@ -3,7 +3,7 @@ using MiscUtil.Conversion;
 
 namespace Fundamental.Core.AudioFormats
 {
-    public class WaveFormatExtensiable : WaveFormatDecorator
+    public sealed class WaveFormatExtensible : WaveFormatDecorator
     {
         // Defined as per:
         /*
@@ -23,31 +23,60 @@ namespace Fundamental.Core.AudioFormats
         */
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WaveFormatExtensiable"/> class.
+        /// The wave format ex stuct size
         /// </summary>
-        /// <param name="waveFormatInner">The wave format instance to be wrapped by the decorator.</param>
-        public WaveFormatExtensiable(WaveFormat waveFormatInner) 
-            : base(waveFormatInner)
+        private const int WaveFormatExtensibleCbSize = 22 /* Bytes*/;
+
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatExtensible" /> class.
+        /// </summary>
+        /// <param name="subFormatType">Type of the sub format.</param>
+        public WaveFormatExtensible(Guid subFormatType)
+            : base(WaveFormatTag.Extensible, WaveFormatExtensibleCbSize)
         {
+            SubFormat = subFormatType;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WaveFormatExtensiable"/> class.
+        /// Initializes a new instance of the <see cref="WaveFormatExtensible" /> class.
         /// </summary>
+        /// <param name="subFormatType">Type of the sub format.</param>
         /// <param name="bitConverter">The bit converter.</param>
-        public WaveFormatExtensiable(EndianBitConverter bitConverter) 
-            : base(bitConverter, WaveFormatTag.Extensible)
+        public WaveFormatExtensible(Guid subFormatType, EndianBitConverter bitConverter) 
+            : base(bitConverter, WaveFormatTag.Extensible, WaveFormatExtensibleCbSize)
         {
+            SubFormat = subFormatType;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WaveFormatExtensiable"/> class.
+        /// Initializes a new instance of the <see cref="WaveFormatExtensible"/> class.
         /// </summary>
         /// <param name="ptr">The PTR.</param>
         /// <param name="bitConverter">The bit converter.</param>
-        public WaveFormatExtensiable(IntPtr ptr, EndianBitConverter bitConverter) 
+        public WaveFormatExtensible(IntPtr ptr, EndianBitConverter bitConverter) 
             : base(ptr, bitConverter)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatExtensible"/> class.
+        /// </summary>
+        /// <param name="waveFormatInner">The wave format instance to be wrapped by the decorator.</param>
+        public WaveFormatExtensible(WaveFormat waveFormatInner) 
+            : base(waveFormatInner)
+        {
+
+        }
+
+        /// <summary>
+        /// Validates this instance.
+        /// </summary>
+        protected override void Vaidate()
+        {
+            if(WaveFormatExtensibleCbSize < ExtendedBytes.Length)
+                throw new FormatException("Given pointer did not de-serialize to a valid WAVEFORMATEXTENTSIBLE struct.");
         }
 
         /// <summary>
@@ -124,7 +153,7 @@ namespace Fundamental.Core.AudioFormats
         /// </value>
         public Guid SubFormat
         {
-             get { return ToGuid(ExtendedBytes,   6 /* offset */); }
+            get { return ToGuid(ExtendedBytes,   6 /* offset */); }
             set { ToBytes(value, ExtendedBytes,   6 /* offset */); }
         }
 

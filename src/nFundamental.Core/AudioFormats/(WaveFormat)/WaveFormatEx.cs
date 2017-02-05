@@ -32,6 +32,11 @@ namespace Fundamental.Core.AudioFormats
         private const int WaveFormatExSize = 18 /* Bytes*/;
 
         /// <summary>
+        /// The default endianness
+        /// </summary>
+        public static EndianBitConverter DefaultEndianness = EndianBitConverter.Little;
+
+        /// <summary>
         /// The bytes
         /// </summary>
         private readonly byte[] _waveformatBytes = new byte[WaveFormatExSize];
@@ -132,11 +137,18 @@ namespace Fundamental.Core.AudioFormats
             get { return _waveFormatExBytes; }
             set
             {
-                _waveFormatExBytes = value;
                 // Ensure the extended size matches
-                checked { ExtendedSize = (ushort)ExtendedBytes.Length; }
+                checked { ExtendedSize = (ushort)value.Length; }
+                _waveFormatExBytes = value;
             }
         }
+
+
+        /// <summary>
+        /// Bytes the size.
+        /// </summary>
+        /// <returns></returns>
+        public override int ByteSize => _waveformatBytes.Length + ExtendedBytes.Length;
 
         /// <summary>
         /// Gets or sets the size of the extended segment.
@@ -150,12 +162,98 @@ namespace Fundamental.Core.AudioFormats
             set { BitConverter.CopyBytes(value, _waveformatBytes, 16 /* offset */); }
         }
 
-        public WaveFormatEx(EndianBitConverter bitConverter)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
+        /// </summary>
+        public WaveFormatEx() :
+            this(DefaultEndianness)
         {
-            BitConverter = bitConverter;
         }
 
-        public WaveFormatEx(IntPtr ptr, EndianBitConverter bitConverter)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx" /> class.
+        /// </summary>
+        /// <param name="bitConverter">The bit converter.</param>
+        public WaveFormatEx(EndianBitConverter bitConverter) :
+            this(bitConverter, /* extended byte size */0)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx" /> class.
+        /// </summary>
+        /// <param name="sbSize">Size of the extended portion of the wave format.</param>
+        public WaveFormatEx(int sbSize) :
+           this(DefaultEndianness, sbSize)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
+        /// </summary>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <param name="sbSize">Size of the extended portion of the wave format.</param>
+        public WaveFormatEx(EndianBitConverter bitConverter, int sbSize)
+        {
+            BitConverter = bitConverter;
+            _waveFormatExBytes = new byte[sbSize];
+            ExtendedSize = checked((ushort)sbSize);
+        }
+
+     
+
+        /// <summary>
+        /// To the bytes.
+        /// </summary>
+        /// <returns></returns>
+        public override byte[] ToBytes()
+        {
+            var bytes = new byte[ByteSize];
+            Write(bytes, 0);
+            return bytes;
+        }
+
+        /// <summary>
+        /// Writes the specified target.
+        /// </summary>
+        /// <param name="target">The target.</param>
+        /// <param name="offset">The offset.</param>
+        public override void Write(byte[] target, int offset)
+        {
+            Array.Copy(_waveformatBytes, 0, target, offset, _waveformatBytes.Length);
+            offset += _waveformatBytes.Length;
+            Array.Copy(_waveFormatExBytes, 0, target, offset, _waveFormatExBytes.Length);
+        }
+
+
+        /// <summary>
+        /// Reads the Wave format Ex from a pointer.
+        /// </summary>
+        /// <param name="ptr">The source pointer.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromPointer(IntPtr ptr)
+        {
+            return FromPointer(ptr, DefaultEndianness);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a pointer.
+        /// </summary>
+        /// <param name="ptr">The source pointer.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromPointer(IntPtr ptr, EndianBitConverter bitConverter)
+        {
+            return new WaveFormatEx(ptr, bitConverter);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
+        /// </summary>
+        /// <param name="ptr">The PTR.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        private WaveFormatEx(IntPtr ptr, EndianBitConverter bitConverter)
         {
             BitConverter = bitConverter;
 
@@ -185,35 +283,6 @@ namespace Fundamental.Core.AudioFormats
 
             ExtendedBytes = new byte[ExtendedSize];
             Marshal.Copy(ptr + WaveFormatExSize, ExtendedBytes, 0, ExtendedBytes.Length);
-        }
-
-        /// <summary>
-        /// Bytes the size.
-        /// </summary>
-        /// <returns></returns>
-        public override int ByteSize => _waveformatBytes.Length + ExtendedBytes.Length;
-
-        /// <summary>
-        /// To the bytes.
-        /// </summary>
-        /// <returns></returns>
-        public override byte[] ToBytes()
-        {
-            var bytes = new byte[ByteSize];
-            Write(bytes, 0);
-            return bytes;
-        }
-
-        /// <summary>
-        /// Writes the specified target.
-        /// </summary>
-        /// <param name="target">The target.</param>
-        /// <param name="offset">The offset.</param>
-        public override void Write(byte[] target, int offset)
-        {
-            Array.Copy(_waveformatBytes, 0, target, offset, _waveformatBytes.Length);
-            offset += _waveformatBytes.Length;
-            Array.Copy(_waveFormatExBytes, 0, target, offset, _waveFormatExBytes.Length);
         }
     }
 }
