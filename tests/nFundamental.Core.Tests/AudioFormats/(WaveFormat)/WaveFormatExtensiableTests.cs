@@ -168,7 +168,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             fixed (byte* pFormat = formatBytes)
             {
                 // -> ACT
-                var waveFormat = new WaveFormatExtensiable((IntPtr)pFormat, endianess);
+                var waveFormat = new WaveFormatExtensible((IntPtr)pFormat, endianess);
 
                 // -> ASSERT
                 Assert.AreEqual(WaveFormatTag.Extensible, waveFormat.FormatTag);
@@ -200,7 +200,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             var expectedFormatBytes = WaveFormatHelper.CreateFormatExtensiable(endianess, numberOfChannels, samplesPerSec, bitsPerSample, blockAlign, avgBytesPerSec, samplesUnion, channelMask, subFormat);
 
             // -> ACT
-            var actualFormatBytes = new WaveFormatExtensiable(endianess)
+            var actualFormatBytes = new WaveFormatExtensible(subFormat, endianess)
             {
                 Channels = numberOfChannels,
                 SamplesPerSec = samplesPerSec,
@@ -210,7 +210,6 @@ namespace Fundamental.Core.Tests.AudioFormats
                 ValidBitsPerSample = samplesUnion,
                 SamplesPerBlock = samplesUnion,
                 ChannelMask = channelMask,
-                SubFormat = subFormat
             }.ToBytes();
 
             // -> ASSERT

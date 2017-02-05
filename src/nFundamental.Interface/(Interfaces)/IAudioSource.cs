@@ -1,5 +1,6 @@
 ﻿using System;
 using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 
 namespace Fundamental.Interface
 {

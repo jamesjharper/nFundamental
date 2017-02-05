@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Options;
 
