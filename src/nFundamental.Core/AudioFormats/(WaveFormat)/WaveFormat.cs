@@ -117,8 +117,12 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="sampleRate">The sample rate.</param>
         /// <param name="bitsPerSample">The bits per sample.</param>
         /// <param name="speakerConfiguration">The speaker configuration.</param>
+        /// <param name="bitConverter">The bit converter.</param>
         /// <returns></returns>
-        public static WaveFormat CreatePcm(int sampleRate, int bitsPerSample, Speakers speakerConfiguration)
+        public static WaveFormat CreatePcm(int sampleRate, 
+                                           int bitsPerSample, 
+                                           Speakers speakerConfiguration,
+                                           EndianBitConverter bitConverter)
         {
             if (UseOlderFormatType(speakerConfiguration))
             {
@@ -127,7 +131,8 @@ namespace Fundamental.Core.AudioFormats
                     WaveFormatTag.Pcm,
                     sampleRate,
                     bitsPerSample,
-                    speakerConfiguration.ChannelCount()
+                    speakerConfiguration.ChannelCount(),
+                    bitConverter
                 );
             }
 
@@ -136,7 +141,8 @@ namespace Fundamental.Core.AudioFormats
                 AudioMediaSubType.Pcm,
                 sampleRate,
                 bitsPerSample,
-                speakerConfiguration
+                speakerConfiguration,
+                bitConverter
             );
         }
 
@@ -147,8 +153,12 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="sampleRate">The sample rate.</param>
         /// <param name="bitsPerSample">The bits per sample.</param>
         /// <param name="speakerConfiguration">The speaker configuration.</param>
+        /// <param name="bitConverter">The bit converter.</param>
         /// <returns></returns>
-        public static WaveFormat CreateIeeeFloat(int sampleRate, int bitsPerSample, Speakers speakerConfiguration)
+        public static WaveFormat CreateIeeeFloat(int sampleRate, 
+                                                 int bitsPerSample, 
+                                                 Speakers speakerConfiguration,
+                                                 EndianBitConverter bitConverter)
         {
             if (UseOlderFormatType(speakerConfiguration))
             {
@@ -157,7 +167,8 @@ namespace Fundamental.Core.AudioFormats
                     WaveFormatTag.IeeeFloat,
                     sampleRate,
                     bitsPerSample,
-                    speakerConfiguration.ChannelCount()
+                    speakerConfiguration.ChannelCount(),
+                    bitConverter
                 );
 
             }
@@ -167,7 +178,8 @@ namespace Fundamental.Core.AudioFormats
                 AudioMediaSubType.IeeeFloat,
                 sampleRate,
                 bitsPerSample,
-                speakerConfiguration
+                speakerConfiguration,
+                bitConverter
             );
         }
 
@@ -179,17 +191,19 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="sampleRate">The sample rate.</param>
         /// <param name="bitsPerSample">The bits per sample.</param>
         /// <param name="numberOfChannels">The number of channels.</param>
+        /// <param name="bitConverter">The bit converter.</param>
         /// <returns></returns>
         public static WaveFormat CreateFormatEx(WaveFormatTag waveFormatTag,
-                                                 int sampleRate,
-                                                 int bitsPerSample,
-                                                 int numberOfChannels)
+                                                int sampleRate,
+                                                int bitsPerSample,
+                                                int numberOfChannels,
+                                                EndianBitConverter bitConverter)
         {
             // Calculate contain restricted block size (must be of 2^x)
             var blockAlign = numberOfChannels * bitsPerSample / 8;
             var avgBytesPerSec = blockAlign * sampleRate;
 
-            return CreateFormatEx(waveFormatTag, sampleRate, bitsPerSample, blockAlign, avgBytesPerSec, numberOfChannels);
+            return CreateFormatEx(waveFormatTag, sampleRate, bitsPerSample, blockAlign, avgBytesPerSec, numberOfChannels, bitConverter);
         }
 
         /// <summary>
@@ -201,25 +215,26 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="blockAlign">The block align.</param>
         /// <param name="avgBytesPerSec">The average bytes per sec.</param>
         /// <param name="numberOfChannels">The number of channels.</param>
+        /// <param name="bitConverter">The bit converter.</param>
         /// <returns></returns>
         public static WaveFormat CreateFormatEx(WaveFormatTag waveFormatTag,
                                                 int sampleRate,
                                                 int bitsPerSample,
                                                 int blockAlign,
                                                 int avgBytesPerSec,
-                                                int numberOfChannels)
+                                                int numberOfChannels,
+                                                EndianBitConverter bitConverter)
         {
-            return new WaveFormatEx
+            return new WaveFormatEx(bitConverter)
             {
-                FormatTag       = waveFormatTag,
-                SamplesPerSec   = checked((uint)bitsPerSample),
-                AvgBytesPerSec  = checked((uint)avgBytesPerSec),
-                BitsPerSample   = checked((ushort)bitsPerSample),
-                BlockAlign      = checked((ushort)blockAlign),
-                Channels        = checked((ushort)numberOfChannels)
+                FormatTag = waveFormatTag,
+                SamplesPerSec = checked((uint)sampleRate),
+                AvgBytesPerSec = checked((uint)avgBytesPerSec),
+                BitsPerSample = checked((ushort)bitsPerSample),
+                BlockAlign = checked((ushort)blockAlign),
+                Channels = checked((ushort)numberOfChannels)
             };
         }
-
 
         /// <summary>
         /// Creates the format extensible.
@@ -228,21 +243,41 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="sampleRate">The sample rate.</param>
         /// <param name="bitsPerSample">The bits per sample.</param>
         /// <param name="speakerConfig">The speaker configuration.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public static WaveFormat CreateFormatExtensible(Guid mediaSubType,
+                                                        int sampleRate,
+                                                        int bitsPerSample, 
+                                                        Speakers speakerConfig,
+                                                        EndianBitConverter bitConverter)
+        {
+            return CreateFormatExtensible(mediaSubType, sampleRate, bitsPerSample, speakerConfig.ChannelCount(), speakerConfig, bitConverter);
+        }
+
+        /// <summary>
+        /// Creates the format extensible.
+        /// </summary>
+        /// <param name="mediaSubType">Type of the media sub.</param>
+        /// <param name="sampleRate">The sample rate.</param>
+        /// <param name="bitsPerSample">The bits per sample.</param>
+        /// <param name="numberOfChannels">The number of channels.</param>
+        /// <param name="speakerConfig">The speaker configuration.</param>
+        /// <param name="bitConverter">The bit converter.</param>
         /// <returns></returns>
         public static WaveFormat CreateFormatExtensible(Guid mediaSubType,
                                                          int sampleRate,
                                                          int bitsPerSample,
-                                                         Speakers speakerConfig)
+                                                         int numberOfChannels,
+                                                         Speakers speakerConfig,
+                                                         EndianBitConverter bitConverter)
         {
-            var numberOfChannels = speakerConfig.ChannelCount();
-
             // Calculate contain restricted block size (must be of 2^x)
             var blockAlign = numberOfChannels * bitsPerSample / 8;
             var avgBytesPerSec = blockAlign * sampleRate;
 
-            return new WaveFormatExtensible(mediaSubType)
+            return new WaveFormatExtensible(mediaSubType, bitConverter)
             {
-                SamplesPerSec = checked((uint)bitsPerSample),
+                SamplesPerSec = checked((uint)sampleRate),
                 AvgBytesPerSec = checked((uint)avgBytesPerSec),
                 BitsPerSample = checked((ushort)bitsPerSample),
                 BlockAlign = checked((ushort)blockAlign),

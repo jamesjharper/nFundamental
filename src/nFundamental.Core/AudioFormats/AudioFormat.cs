@@ -48,6 +48,17 @@ namespace Fundamental.Core.AudioFormats
         }
 
         /// <summary>
+        /// Gets or sets the element with the specified key.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key.</param>
+        /// <returns></returns>
+        public T GetValue<T>(string key)
+        {
+            return (T)this[key];
+        }
+
+        /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1" /> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2" />.
         /// </summary>
         public IEnumerable<string> Keys => _dictionary.Keys;
@@ -91,6 +102,25 @@ namespace Fundamental.Core.AudioFormats
         /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2" /> contains an element with the specified key; otherwise, false.
         /// </returns>
         public bool TryGetValue(string key, out object value) => _dictionary.TryGetValue(key, out value);
+
+        /// <summary>
+        /// Tries the get value.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public bool TryGetValue<T>(string key, out T value)
+        {
+            object outvalue;
+            if (!TryGetValue(key, out outvalue) || !(outvalue is T))
+            {
+                value = default(T);
+                return false;
+            }
+            value = (T)outvalue;
+            return true;
+        }
 
 
         /// <summary>
