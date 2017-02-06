@@ -112,6 +112,27 @@ namespace Fundamental.Core.AudioFormats
         }
 
         /// <summary>
+        /// Reads the Wave format Ex from a bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <returns></returns>
+        public static WaveFormat FromBytes(byte[] bytes)
+        {
+            return WaveFormatEx.FromBytes(bytes);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public static WaveFormat FromBytes(byte[] bytes, EndianBitConverter bitConverter)
+        {
+            return WaveFormatEx.FromBytes(bytes);
+        }
+
+        /// <summary>
         /// Creates the PCM format.
         /// </summary>
         /// <param name="sampleRate">The sample rate.</param>
@@ -170,7 +191,6 @@ namespace Fundamental.Core.AudioFormats
                     speakerConfiguration.ChannelCount(),
                     bitConverter
                 );
-
             }
 
             return CreateFormatExtensible

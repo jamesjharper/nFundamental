@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface;
 
 namespace Fundamental.Console.DeviceInfo
@@ -76,11 +77,34 @@ namespace Fundamental.Console.DeviceInfo
                 System.Console.WriteLine($"    {group.Key}");
                 foreach (var deviceDetail in group)
                 {
-                    System.Console.WriteLine($"     - {deviceDetail.Name}: {deviceDetail.Value}");
+                    PrintDeviceProperty(deviceDetail.Name, deviceDetail.Value);
                 }
                 System.Console.WriteLine();
             }
 
+            System.Console.WriteLine();
+        }
+
+        private static void PrintDeviceProperty(string name, object value)
+        {
+            if (value is AudioFormat)
+            {
+                PrintDeviceProperty(name, (AudioFormat) value);
+            }
+            else
+            {
+                System.Console.WriteLine($"     - {name}: {value}");
+            }
+        }
+
+        private static void PrintDeviceProperty(string name, AudioFormat value)
+        {
+            System.Console.WriteLine($"     - {name}:");
+
+            foreach (var formatPropery in value)
+            {
+                System.Console.WriteLine($"       [{formatPropery.Key}]: {formatPropery.Value}");
+            }
             System.Console.WriteLine();
         }
     }

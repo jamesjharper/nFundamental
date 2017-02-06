@@ -1,4 +1,6 @@
 ﻿using System;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 
@@ -17,15 +19,23 @@ namespace Fundamental.Interface.Wasapi
         private readonly IWasapiPropertyNameTranslator _wasapiPropertyNameTranslator;
 
         /// <summary>
+        /// The wave format converter
+        /// </summary>
+        private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="WasapiDeviceInfoFactory" /> class.
         /// </summary>
         /// <param name="wasapiInterfaceNotifyClient">The WASAPI interface notify client.</param>
         /// <param name="wasapiPropertyNameTranslator">The WASAPI property name translator.</param>
+        /// <param name="waveFormatConverter"></param>
         public WasapiDeviceInfoFactory(IWasapiInterfaceNotifyClient wasapiInterfaceNotifyClient,
-                                       IWasapiPropertyNameTranslator wasapiPropertyNameTranslator)
+                                       IWasapiPropertyNameTranslator wasapiPropertyNameTranslator,
+                                       IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
             _wasapiInterfaceNotifyClient = wasapiInterfaceNotifyClient;
             _wasapiPropertyNameTranslator = wasapiPropertyNameTranslator;
+            _waveFormatConverter = waveFormatConverter;
         }
 
         /// <summary>
@@ -35,7 +45,7 @@ namespace Fundamental.Interface.Wasapi
         /// <returns></returns>
         public WasapiDeviceInfo GetInfoDevice(WasapiDeviceToken deviceToken)
         {
-            return new WasapiDeviceInfo(_wasapiInterfaceNotifyClient, _wasapiPropertyNameTranslator, deviceToken);
+            return new WasapiDeviceInfo(_wasapiInterfaceNotifyClient, _wasapiPropertyNameTranslator, _waveFormatConverter, deviceToken);
         }
 
         /// <summary>

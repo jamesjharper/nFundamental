@@ -1,4 +1,6 @@
-﻿using Fundamental.Interface.Wasapi.Internal;
+﻿using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
+using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using NSubstitute;
 using NUnit.Framework;
@@ -13,15 +15,18 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         private IWasapiInterfaceNotifyClient WasapiInterfaceNotifyClient { get; set; }
 
+        public IAudioFormatConverter<WaveFormat> AudioFormatConverterWaveFormat { get; set; }
+
         [SetUp]
         public void SetUp()
         {
             WasapiInterfaceNotifyClient = Substitute.For<IWasapiInterfaceNotifyClient>();
             WasapiPropertyNameTranslatorTestFixture = Substitute.For<IWasapiPropertyNameTranslator>();
+            AudioFormatConverterWaveFormat = Substitute.For<IAudioFormatConverter<WaveFormat>>();
         }
 
         private WasapiDeviceInfoFactory GetTestFixture() 
-            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslatorTestFixture);
+            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslatorTestFixture, AudioFormatConverterWaveFormat);
 
 
 

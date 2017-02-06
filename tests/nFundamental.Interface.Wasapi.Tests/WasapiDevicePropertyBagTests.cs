@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
@@ -17,6 +19,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         public IPropertyStore PropertyStoreTestFixture { get; set; }
 
+        public IAudioFormatConverter<WaveFormat> AudioFormatConverterWaveFormat { get; set; }
+
         public WasapiPropertyBagKey WasapiPropertyBagKey1 { get; set; }
         public WasapiPropertyBagKey WasapiPropertyBagKey2 { get; set; }
 
@@ -25,13 +29,15 @@ namespace Fundamental.Interface.Wasapi.Tests
         {
             WasapiPropertyNameTranslator = Substitute.For<IWasapiPropertyNameTranslator>();
             PropertyStoreTestFixture = Substitute.For<IPropertyStore>();
+            AudioFormatConverterWaveFormat = Substitute.For<IAudioFormatConverter<WaveFormat>>();
+
 
             WasapiPropertyBagKey1 = new WasapiPropertyBagKey("key9", "name1", "category2", 9, new Guid("AAEE33E2-48BA-44F3-8923-F7C3DAA8B17A"), /* is known */ true);
             WasapiPropertyBagKey2 = new WasapiPropertyBagKey("key2", "name4", "category3", 1, new Guid("4FF1D97C-1220-4FC7-B82C-0E78306B2805"), /* is known */ true);
         }
 
         private WasapiPropertyBag GetTestFixture()
-            => new WasapiPropertyBag(PropertyStoreTestFixture, WasapiPropertyNameTranslator);
+            => new WasapiPropertyBag(PropertyStoreTestFixture, WasapiPropertyNameTranslator, AudioFormatConverterWaveFormat);
 
 
         // Handling unknown property names

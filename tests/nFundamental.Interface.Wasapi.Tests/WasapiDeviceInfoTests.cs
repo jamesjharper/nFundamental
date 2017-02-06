@@ -1,4 +1,6 @@
 ﻿using System;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
@@ -17,6 +19,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         public IWasapiPropertyNameTranslator WasapiPropertyNameTranslatorTestFixture { get; set; }
 
+        public IAudioFormatConverter<WaveFormat> AudioFormatConverterWaveFormat { get; set; }
+
         public WasapiDeviceToken WasapiDeviceToken { get; set; }
 
 
@@ -27,10 +31,11 @@ namespace Fundamental.Interface.Wasapi.Tests
             WasapiDeviceToken = new WasapiDeviceToken("A63439A9-5928-4BEC-99EC-F39B0414278B", ImmDevice);
             WasapiInterfaceNotifyClient = Substitute.For<IWasapiInterfaceNotifyClient>();
             WasapiPropertyNameTranslatorTestFixture = Substitute.For<IWasapiPropertyNameTranslator>();
+            AudioFormatConverterWaveFormat = Substitute.For<IAudioFormatConverter<WaveFormat>>();
         }
 
         private WasapiDeviceInfo GetTestFixture()
-            => new WasapiDeviceInfo(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslatorTestFixture, WasapiDeviceToken);
+            => new WasapiDeviceInfo(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslatorTestFixture, AudioFormatConverterWaveFormat, WasapiDeviceToken);
 
 
         [Test]

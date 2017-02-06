@@ -226,6 +226,26 @@ namespace Fundamental.Core.AudioFormats
             Array.Copy(_waveFormatExBytes, 0, target, offset, _waveFormatExBytes.Length);
         }
 
+        /// <summary>
+        /// Reads the Wave format Ex from a bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromBytes(byte[] bytes)
+        {
+            return FromBytes(bytes, DefaultEndianness);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromBytes(byte[] bytes, EndianBitConverter bitConverter)
+        {
+            return new WaveFormatEx(bytes, bitConverter);
+        }
 
         /// <summary>
         /// Reads the Wave format Ex from a pointer.
@@ -249,6 +269,45 @@ namespace Fundamental.Core.AudioFormats
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx" /> class.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        private WaveFormatEx(byte[] bytes, EndianBitConverter bitConverter)
+        {
+            BitConverter = bitConverter;
+
+            var pcmWaveFormatSize = _waveformatBytes.Length - sizeof(ushort);
+
+            // Read all but the last 2 bytes of the pointer.
+            // This is to allow for support for formats written a very long time ago
+            // using the older PCMWAVEFORMAT struct, which is missing the
+            // extended bytes region
+            Array.Copy(bytes, 0, _waveformatBytes, 0, pcmWaveFormatSize);
+
+            // "wFormatTag = WAVE_FORMAT_PCM (because cbSize is implicitly zero)."
+            if (FormatTag == WaveFormatTag.Pcm)
+            {
+                ExtendedSize = 0;
+                return;
+            }
+
+            // Read the CbSize Value
+            Array.Copy(bytes, pcmWaveFormatSize, _waveformatBytes, pcmWaveFormatSize, sizeof(ushort));
+
+
+            if (ExtendedSize == 0)
+            {
+                // Make sure the waveformatEx struct is clean
+                ExtendedSize = 0;
+                return;
+            }
+
+            ExtendedBytes = new byte[ExtendedSize];
+            Array.Copy(bytes, WaveFormatExSize, ExtendedBytes, 0, ExtendedBytes.Length);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
         /// </summary>
         /// <param name="ptr">The PTR.</param>
@@ -262,8 +321,8 @@ namespace Fundamental.Core.AudioFormats
             // using the older PCMWAVEFORMAT struct, which is missing the
             // extended bytes region
 
-            var waveFormatSize = _waveformatBytes.Length - sizeof(ushort);
-            Marshal.Copy(ptr, _waveformatBytes, 0, waveFormatSize);
+            var pcmWaveFormatSize = _waveformatBytes.Length - sizeof(ushort);
+            Marshal.Copy(ptr, _waveformatBytes, 0, pcmWaveFormatSize);
 
             // "wFormatTag = WAVE_FORMAT_PCM (because cbSize is implicitly zero)."
             if (FormatTag == WaveFormatTag.Pcm)
@@ -273,7 +332,7 @@ namespace Fundamental.Core.AudioFormats
             }
 
             // Read the CbSize Value
-            Marshal.Copy(ptr + waveFormatSize, _waveformatBytes, waveFormatSize, sizeof(ushort));
+            Marshal.Copy(ptr + pcmWaveFormatSize, _waveformatBytes, pcmWaveFormatSize, sizeof(ushort));
             if (ExtendedSize == 0)
             {
                 // Make sure the waveformatEx struct is clean

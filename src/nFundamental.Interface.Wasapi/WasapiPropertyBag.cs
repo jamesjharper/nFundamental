@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
@@ -16,6 +18,17 @@ namespace Fundamental.Interface.Wasapi
         private readonly IWasapiPropertyNameTranslator _wasapiPropertyNameTranslator;
 
         /// <summary>
+        /// The special converters used for known value types
+        /// </summary>
+        private readonly Dictionary<PropertyKey, Func<object, object>> _specialConverters;
+
+
+        /// <summary>
+        /// The wave format converter used for converting WAVEFORMATEX objects in to readable structures
+        /// </summary>
+        private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
+
+        /// <summary>
         /// The underlying property store
         /// </summary>
         public IPropertyStore PropertyStore { get; }
@@ -25,12 +38,25 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <param name="propertyStore">The property store.</param>
         /// <param name="wasapiPropertyNameTranslator">The WASAPI property name translator.</param>
+        /// <param name="waveFormatConverter"></param>
         public WasapiPropertyBag(IPropertyStore propertyStore,
-                                       IWasapiPropertyNameTranslator wasapiPropertyNameTranslator)
+                                 IWasapiPropertyNameTranslator wasapiPropertyNameTranslator,
+                                 IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
             _wasapiPropertyNameTranslator = wasapiPropertyNameTranslator;
+            _waveFormatConverter = waveFormatConverter;
             PropertyStore = propertyStore;
+
+            _specialConverters = new Dictionary<PropertyKey, Func<object, object>>
+            {
+                [PropertyKeys.AudioEngineOemFormat]    = ConvertBytesToAudioFormat,
+                [PropertyKeys.AudioEngineDeviceFormat] = ConvertBytesToAudioFormat
+            };
+
+
         }
+
+     
 
         /// <summary>
         /// Gets the <see cref="System.Object"/> with the specified key.
@@ -90,7 +116,8 @@ namespace Fundamental.Interface.Wasapi
             if (!variant.IsVariantTypeSupported())
                 return false;
             
-            value = variant.ToObject();
+
+            value = ToValue(variant, propertyKey);
             return true;
         }
 
@@ -100,7 +127,7 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         public IEnumerable<IPropertyBagKey> Keys
         {
-            get { return GetPropertyKeyEnumerable().Select(x => _wasapiPropertyNameTranslator.ResolvePropertyKey(x)); }
+            get { return this.Select(x => x.Key); }
         }
 
         /// <summary>
@@ -108,7 +135,7 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         public IEnumerable<object> Values
         {
-            get { return GetPropertyKeyValueEnumerable().Select(x => x.Value); }
+            get { return this.Select(x => x.Value); }
         }
 
         /// <summary>
@@ -126,7 +153,9 @@ namespace Fundamental.Interface.Wasapi
                 // Filter out properties who's names we couldn't resolve
                 if(Equals(key, null))
                     continue;
-                yield return new KeyValuePair<IPropertyBagKey, object>(key, keyValuePair.Value);
+
+                var value = ToValue(keyValuePair.Value, keyValuePair.Key);
+                yield return new KeyValuePair<IPropertyBagKey, object>(key, value);
             }
         }
 
@@ -157,7 +186,7 @@ namespace Fundamental.Interface.Wasapi
             }
         }
 
-        private IEnumerable<KeyValuePair<PropertyKey, object>> GetPropertyKeyValueEnumerable()
+        private IEnumerable<KeyValuePair<PropertyKey, PropVariant>> GetPropertyKeyValueEnumerable()
         {
             foreach (var propertyKey in GetPropertyKeyEnumerable())
             {
@@ -166,10 +195,37 @@ namespace Fundamental.Interface.Wasapi
 
                 if(!variant.IsVariantTypeSupported())
                     continue;
-                
-                var value = variant.ToObject();
-                yield return new KeyValuePair<PropertyKey, object>(propertyKey, value);
+
+                yield return new KeyValuePair<PropertyKey, PropVariant>(propertyKey, variant);
             }
+        }
+
+        // Type Conversion methods 
+
+
+        private object ToValue(PropVariant value, PropertyKey key)
+        {
+            Func<object, object> convertFunc;
+            if (!_specialConverters.TryGetValue(key, out convertFunc))
+            {
+                return value.ToObject();
+            }
+
+            try
+            {
+                return convertFunc(value.ToObject());
+            }
+            catch (Exception)
+            {
+                // If we fail to convert, then we return the original value
+                return value.ToObject();
+            }
+        }
+
+        private object ConvertBytesToAudioFormat(object bytes)
+        {
+            var waveFormatEx = WaveFormat.FromBytes((byte[])bytes);
+            return _waveFormatConverter.Convert(waveFormatEx);
         }
     }
 }

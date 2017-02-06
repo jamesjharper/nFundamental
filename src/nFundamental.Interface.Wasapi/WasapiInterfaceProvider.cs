@@ -1,5 +1,6 @@
 ﻿using System;
 using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Options;
@@ -31,6 +32,19 @@ namespace Fundamental.Interface.Wasapi
         {
             _options?.Configure(configure);
         }
+
+        #endregion
+
+        #region WaveFormatToAudioFormatConverter Dependency
+
+
+        /// <summary>
+        /// Gets the audio format converter wave format.
+        /// </summary>
+        /// <value>
+        /// The audio format converter wave format.
+        /// </value>
+        private static IAudioFormatConverter<WaveFormat> AudioFormatConverterWaveFormat => WaveFormatInterfaceProvider.GetInterface<IAudioFormatConverter<WaveFormat>>();
 
         #endregion
 
@@ -129,7 +143,7 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <returns></returns>
         WasapiDeviceInfoFactory ISupportsInterface<WasapiDeviceInfoFactory>.GetAudioInterface() 
-            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslator);
+            => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslator, AudioFormatConverterWaveFormat);
 
     }
 }
