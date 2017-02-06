@@ -9,6 +9,16 @@
 Using dotnet core, nFundamental aims at providing a simple and easy **cross-platfrom** solution for implementing rich audio functionality into any dotnet application without the need of mono prerequisite. 
 This project is young and is not yet ready for production use. 
 
+## Mission
+  - Provide easy audio API to all dotnet developers.
+  - To not require specialist knowlage to use.
+
+## What will it be
+  - Be simple to use.
+  - Be as portable as possable.
+  - Be technology independance as possable. 
+  - Be Test Driven
+
 ## Project Heart beat 
 
   - WASAPI Device Enumeration support       - DONE
