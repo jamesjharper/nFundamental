@@ -1,4 +1,5 @@
 ﻿using System;
+using Fundamental.Core.Math;
 using MiscUtil.Conversion;
 
 namespace Fundamental.Core.AudioFormats
@@ -145,7 +146,7 @@ namespace Fundamental.Core.AudioFormats
                                            Speakers speakerConfiguration,
                                            EndianBitConverter bitConverter)
         {
-            if (UseOlderFormatType(speakerConfiguration))
+            if (UseOlderFormatType(speakerConfiguration, bitsPerSample))
             {
                 return CreateFormatEx
                 (
@@ -181,7 +182,7 @@ namespace Fundamental.Core.AudioFormats
                                                  Speakers speakerConfiguration,
                                                  EndianBitConverter bitConverter)
         {
-            if (UseOlderFormatType(speakerConfiguration))
+            if (UseOlderFormatType(speakerConfiguration, bitsPerSample))
             {
                 return CreateFormatEx
                 (
@@ -247,12 +248,12 @@ namespace Fundamental.Core.AudioFormats
         {
             return new WaveFormatEx(bitConverter)
             {
-                FormatTag = waveFormatTag,
-                SamplesPerSec = checked((uint)sampleRate),
-                AvgBytesPerSec = checked((uint)avgBytesPerSec),
-                BitsPerSample = checked((ushort)bitsPerSample),
-                BlockAlign = checked((ushort)blockAlign),
-                Channels = checked((ushort)numberOfChannels)
+                FormatTag       = waveFormatTag,
+                SamplesPerSec   = checked((uint)sampleRate),
+                AvgBytesPerSec  = checked((uint)avgBytesPerSec),
+                BitsPerSample   = checked((ushort)bitsPerSample),
+                BlockAlign      = checked((ushort)blockAlign),
+                Channels        = checked((ushort)numberOfChannels)
             };
         }
 
@@ -285,33 +286,75 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="bitConverter">The bit converter.</param>
         /// <returns></returns>
         public static WaveFormat CreateFormatExtensible(Guid mediaSubType,
-                                                         int sampleRate,
-                                                         int bitsPerSample,
-                                                         int numberOfChannels,
-                                                         Speakers speakerConfig,
-                                                         EndianBitConverter bitConverter)
+                                                        int sampleRate,
+                                                        int bitsPerSample,
+                                                        int numberOfChannels,
+                                                        Speakers speakerConfig,
+                                                        EndianBitConverter bitConverter)
         {
-            // Calculate contain restricted block size (must be of 2^x)
-            var blockAlign = numberOfChannels * bitsPerSample / 8;
+            // Calculate container restricted block size (must be of 2^x)
+            var samplePacking = GetContainerPackingSize(bitsPerSample);
+
+            return CreateFormatExtensible(mediaSubType, sampleRate, bitsPerSample, samplePacking, numberOfChannels, speakerConfig, bitConverter);
+        }
+
+
+        /// <summary>
+        /// Creates the format extensible.
+        /// </summary>
+        /// <param name="mediaSubType">Type of the media sub.</param>
+        /// <param name="sampleRate">The sample rate.</param>
+        /// <param name="bitsPerSample">The bits per sample.</param>
+        /// <param name="samplePacking">The sample packing.</param>
+        /// <param name="numberOfChannels">The number of channels.</param>
+        /// <param name="speakerConfig">The speaker configuration.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public static WaveFormat CreateFormatExtensible(Guid mediaSubType,
+                                                        int sampleRate,
+                                                        int bitsPerSample,
+                                                        int samplePacking,
+                                                        int numberOfChannels,
+                                                        Speakers speakerConfig,
+                                                        EndianBitConverter bitConverter)
+        {
+            
+            var blockAlign = numberOfChannels * samplePacking / 8;
             var avgBytesPerSec = blockAlign * sampleRate;
 
             return new WaveFormatExtensible(mediaSubType, bitConverter)
             {
-                SamplesPerSec = checked((uint)sampleRate),
-                AvgBytesPerSec = checked((uint)avgBytesPerSec),
-                BitsPerSample = checked((ushort)bitsPerSample),
-                BlockAlign = checked((ushort)blockAlign),
-                Channels = checked((ushort)numberOfChannels),
-                ValidBitsPerSample = checked((short)bitsPerSample),
-                ChannelMask = speakerConfig
+                SamplesPerSec       = checked((uint)sampleRate),
+                AvgBytesPerSec      = checked((uint)avgBytesPerSec),
+                BitsPerSample       = checked((ushort)samplePacking),
+                BlockAlign          = checked((ushort)blockAlign),
+                Channels            = checked((ushort)numberOfChannels),
+                ValidBitsPerSample  = checked((short)bitsPerSample),
+                ChannelMask         = speakerConfig
             };
         }
 
         // Private Methods
 
-        private static bool UseOlderFormatType(Speakers speakerConfiguration)
+        private static int GetContainerPackingSize( int bitsPerSample)
+        {           
+             // If the number of set bits is not equal to 1 then the bits per sample is not
+            // of 2^x, which means it does not pack completely into its container, which means
+            // we can not use the old wave format for storing this format  
+            return Bitwise.IsSquareOf2(bitsPerSample)
+                ? Bitwise.RoundDownToNearestBase2Power(bitsPerSample) * 2
+                : bitsPerSample;
+        }
+
+        private static bool UseOlderFormatType(Speakers speakerConfiguration, int bitsPerSample)
         {
-            // To improve backwards compatibility Mono and Stereo sources are created using the older WaveFormatEx Stuct. 
+            // If the number of set bits is not equal to 1 then the bits per sample is not
+            // of 2^x, which means it does not pack completely into its container, which means
+            // we can not use the old wave format for storing this format           
+            if (Bitwise.IsSquareOf2(bitsPerSample))
+                return false;
+            
+            // To improve backwards compatibility Mono and Stereo sources are created using the older WaveFormatEx stuct. 
            return speakerConfiguration == Speakers.Mono || speakerConfiguration == Speakers.Stereo;
         }
 

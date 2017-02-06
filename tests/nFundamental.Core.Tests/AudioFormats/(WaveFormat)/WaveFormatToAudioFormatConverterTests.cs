@@ -556,13 +556,14 @@ namespace Fundamental.Core.Tests.AudioFormats
                 { FormatKeys.Endianness,     Endianness.Little},
                 { FormatKeys.Encoding,       FormatKeys.Pcm.Format},
                 { FormatKeys.Pcm.Depth,      Depth.Bit16},
+                { FormatKeys.Pcm.Packing,    Depth.Bit32},
                 { FormatKeys.Pcm.SampleRate, SampleRate.Khz44},
                 { FormatKeys.Pcm.Channels,   Speakers.Surround5Point1.ChannelCount()},
                 { FormatKeys.Pcm.Speakers,   Speakers.Surround5Point1},
                 { FormatKeys.Pcm.DataType,   PcmDataType.Int},
             };
 
-            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Depth) / 8;
+            var expectedBlockAlign     = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Packing) / 8;
             var expectedAvgBytesPerSec = expectedBlockAlign * format.Value<int>(FormatKeys.Pcm.SampleRate);
 
             // -> ACT
@@ -574,7 +575,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             Assert.AreEqual(true, canConvert);
 
             Assert.AreEqual(EndianBitConverter.Little,  result.BitConverter);
-            Assert.AreEqual(16    /* Bits */ ,          result.BitsPerSample);
+            Assert.AreEqual(32    /* Bits */ ,          result.BitsPerSample);
             Assert.AreEqual(6     /* Channels */ ,      result.Channels);
             Assert.AreEqual(44100 /* Hz */ ,            result.SamplesPerSec);
             Assert.AreEqual(WaveFormatTag.Extensible,   result.FormatTag);
@@ -603,13 +604,14 @@ namespace Fundamental.Core.Tests.AudioFormats
                 { FormatKeys.Endianness,     Endianness.Big},
                 { FormatKeys.Encoding,       FormatKeys.Pcm.Format},
                 { FormatKeys.Pcm.Depth,      Depth.Bit16},
+                { FormatKeys.Pcm.Packing,    Depth.Bit16},
                 { FormatKeys.Pcm.SampleRate, SampleRate.Khz44},
                 { FormatKeys.Pcm.Channels,   Speakers.Surround5Point1.ChannelCount()},
                 { FormatKeys.Pcm.Speakers,   Speakers.Surround5Point1},
                 { FormatKeys.Pcm.DataType,   PcmDataType.Int},
             };
 
-            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Depth) / 8;
+            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Packing) / 8;
             var expectedAvgBytesPerSec = expectedBlockAlign * format.Value<int>(FormatKeys.Pcm.SampleRate);
 
             // -> ACT
@@ -651,13 +653,14 @@ namespace Fundamental.Core.Tests.AudioFormats
                 { FormatKeys.Endianness,     Endianness.Little},
                 { FormatKeys.Encoding,       FormatKeys.Pcm.Format},
                 { FormatKeys.Pcm.Depth,      Depth.Bit32},
+                { FormatKeys.Pcm.Packing,    Depth.Bit64},
                 { FormatKeys.Pcm.SampleRate, SampleRate.Khz44},
                 { FormatKeys.Pcm.Channels,   Speakers.Surround7Point1.ChannelCount()},
                 { FormatKeys.Pcm.Speakers,   Speakers.Surround7Point1},
                 { FormatKeys.Pcm.DataType,   PcmDataType.Ieee754},
             };
 
-            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Depth) / 8;
+            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Packing) / 8;
             var expectedAvgBytesPerSec = expectedBlockAlign * format.Value<int>(FormatKeys.Pcm.SampleRate);
 
             // -> ACT
@@ -669,7 +672,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             Assert.AreEqual(true, canConvert);
 
             Assert.AreEqual(EndianBitConverter.Little,  result.BitConverter);
-            Assert.AreEqual(32    /* Bits */ ,          result.BitsPerSample);
+            Assert.AreEqual(64    /* Bits */ ,          result.BitsPerSample);
             Assert.AreEqual(8     /* Channels */ ,      result.Channels);
             Assert.AreEqual(44100 /* Hz */ ,            result.SamplesPerSec);
             Assert.AreEqual(WaveFormatTag.Extensible,   result.FormatTag);
@@ -698,13 +701,14 @@ namespace Fundamental.Core.Tests.AudioFormats
                 { FormatKeys.Endianness,     Endianness.Big},
                 { FormatKeys.Encoding,       FormatKeys.Pcm.Format},
                 { FormatKeys.Pcm.Depth,      Depth.Bit64},
+                { FormatKeys.Pcm.Packing,    Depth.Bit64},
                 { FormatKeys.Pcm.SampleRate, SampleRate.Khz44},
                 { FormatKeys.Pcm.Channels,   Speakers.Surround7Point1.ChannelCount()},
                 { FormatKeys.Pcm.Speakers,   Speakers.Surround7Point1},
                 { FormatKeys.Pcm.DataType,   PcmDataType.Ieee754},
             };
 
-            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Depth) / 8;
+            var expectedBlockAlign = format.Value<int>(FormatKeys.Pcm.Channels) * format.Value<int>(FormatKeys.Pcm.Packing) / 8;
             var expectedAvgBytesPerSec = expectedBlockAlign * format.Value<int>(FormatKeys.Pcm.SampleRate);
 
             // -> ACT

@@ -1,4 +1,5 @@
 ﻿using System;
+using Fundamental.Core.Math;
 
 namespace Fundamental.Core.AudioFormats
 {
@@ -60,21 +61,9 @@ namespace Fundamental.Core.AudioFormats
         /// <returns></returns>
         public static int ChannelCount(this Speakers @this)
         {
-            return (int)NumberOfFlaggedBits((uint)@this);
+            return Bitwise.NumberOfSetBits((uint)@this);
         }
 
-        /// <summary>
-        /// Finds the numbers the of flagged bits using magic.
-        /// Thank Stack overflow
-        /// http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
-        /// </summary>
-        /// <param name="i">The i.</param>
-        /// <returns></returns>
-        private static uint NumberOfFlaggedBits(uint i)
-        {
-            i = i - ((i >> 1) & 0x55555555);
-            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-            return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
-        }
+
     }
 }
