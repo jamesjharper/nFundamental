@@ -53,7 +53,7 @@ namespace Fundamental.Core.AudioFormats
         /// <typeparam name="T"></typeparam>
         /// <param name="key">The key.</param>
         /// <returns></returns>
-        public T GetValue<T>(string key)
+        public T Value<T>(string key)
         {
             return (T)this[key];
         }

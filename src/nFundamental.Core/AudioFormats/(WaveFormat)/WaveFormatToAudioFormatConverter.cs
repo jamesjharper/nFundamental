@@ -14,7 +14,7 @@ namespace Fundamental.Core.AudioFormats
         /// <returns></returns>
         public bool TryConvert(IAudioFormat audioFormat, out WaveFormat result)
         {
-            // This will be re factored in to adapters once more wave
+            // This will be re factored into adapters once more wave
             // formats are supported 
 
             result = null;
@@ -75,11 +75,11 @@ namespace Fundamental.Core.AudioFormats
                 return false;
             }
 
-            var endianness  = audioFormat.GetValue<Endianness>(FormatKeys.Endianness);
-            var dataType    = audioFormat.GetValue<PcmDataType>(FormatKeys.Pcm.DataType);
-            var sampleRate  = audioFormat.GetValue<int>(FormatKeys.Pcm.SampleRate);
-            var channels    = audioFormat.GetValue<int>(FormatKeys.Pcm.Channels);
-            var depth       = audioFormat.GetValue<int>(FormatKeys.Pcm.Depth);
+            var endianness  = audioFormat.Value<Endianness>(FormatKeys.Endianness);
+            var dataType    = audioFormat.Value<PcmDataType>(FormatKeys.Pcm.DataType);
+            var sampleRate  = audioFormat.Value<int>(FormatKeys.Pcm.SampleRate);
+            var channels    = audioFormat.Value<int>(FormatKeys.Pcm.Channels);
+            var depth       = audioFormat.Value<int>(FormatKeys.Pcm.Depth);
 
             var bitConverter = GetBitConverter(endianness);
             var formatTag = dataType == PcmDataType.Int ? WaveFormatTag.Pcm : WaveFormatTag.IeeeFloat;
@@ -100,18 +100,18 @@ namespace Fundamental.Core.AudioFormats
             }
 
 
-            var endianness  = audioFormat.GetValue<Endianness>(FormatKeys.Endianness);
-            var dataType    = audioFormat.GetValue<PcmDataType>(FormatKeys.Pcm.DataType);
-            var sampleRate  = audioFormat.GetValue<int>(FormatKeys.Pcm.SampleRate);
-            var depth       = audioFormat.GetValue<int>(FormatKeys.Pcm.Depth);
-            var speakers    = audioFormat.GetValue<Speakers>(FormatKeys.Pcm.Speakers);
+            var endianness  = audioFormat.Value<Endianness>(FormatKeys.Endianness);
+            var dataType    = audioFormat.Value<PcmDataType>(FormatKeys.Pcm.DataType);
+            var sampleRate  = audioFormat.Value<int>(FormatKeys.Pcm.SampleRate);
+            var depth       = audioFormat.Value<int>(FormatKeys.Pcm.Depth);
+            var speakers    = audioFormat.Value<Speakers>(FormatKeys.Pcm.Speakers);
 
             var channels = speakers.ChannelCount();
 
             // Channel count is optional as it can be calculated from the speaker configuration 
             if (!audioFormat.ContainsKey(FormatKeys.Pcm.Channels))
             {
-                channels = audioFormat.GetValue<int>(FormatKeys.Pcm.Channels);
+                channels = audioFormat.Value<int>(FormatKeys.Pcm.Channels);
             }
 
             var bitConverter = GetBitConverter(endianness);
