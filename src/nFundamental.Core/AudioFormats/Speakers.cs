@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Fundamental.Core.Math;
 
 namespace Fundamental.Core.AudioFormats
 {
@@ -52,5 +50,20 @@ namespace Fundamental.Core.AudioFormats
         // 7Point1 = 5Point1 | FrontLeftOfCenter | FrontRightOfCenter,
         // 5Point1_Back = 5Point1,
         // 7Point1_Wide = 7Point1,
+    }
+
+    public static class SpeakersExtentions
+    {
+        /// <summary>
+        /// Finds the number of channels by calculating the number of flagged bits.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <returns></returns>
+        public static int ChannelCount(this Speakers @this)
+        {
+            return Bitwise.NumberOfSetBits((uint)@this);
+        }
+
+
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Fundamental.Core
+﻿using Fundamental.Core.AudioFormats;
+
+namespace Fundamental.Core
 {
     /// <summary>
     /// Format Negotiator 

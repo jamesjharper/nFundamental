@@ -7,23 +7,36 @@
 ### What's nFundamental?
 
 Using dotnet core, nFundamental aims at providing a simple and easy **cross-platfrom** solution for implementing rich audio functionality into any dotnet application without the need of mono prerequisite. 
-This project is in its infancy and is not yet ready for production use. 
+This project is young and is not yet ready for production use. 
+
+## Mission
+  - Provide easy audio API to all dotnet developers.
+  - To not require specialist knowlage to use.
+
+## What will it be
+  - Be simple to use.
+  - Be as portable as possable.
+  - Be technology independance as possable. 
+  - Be Test Driven
 
 ## Project Heart beat 
 
-
-  - WASAPI Device Enumeration support - DONE
-  - Running Travis build and tests - DONE
-  - WASAPI Device Streaming 
+  - WASAPI Device Enumeration support       - DONE
+  - Running Travis build and tests          - DONE
+  - Device Info command line app            - DONE (Pending refinement for APIs other then WASAPI)
+  - JSON serializable Audio format          - DONE
+  - Windows WAVEFORMAT to json convertion   - DONE
+  - WASAPI Device Redner/Capature  
   - *.wav envelope support 
   - Playback/Record support
   - Channel converter
   - Resampler
   - Bitness converter
-  - Universal Windows Platform Device Enumeration/Streaming support
+  - Universal Windows Platform support
   - WinMM Suport (For windows XP support)
-  - gstreamer support for native linux and OSx support
+  - Full/Safe ALSA support for native linux support.
+  - Transcoding (Possible support for Speex, Opus, MP3, FLAC ... )
+  - Native OSx support
   - Possible mobile platform support.
-  - Transcoding support (Possible support for Speex, Opus, MP3, FLAC ... )
   - Client/Server audio streaming support
-  - Transcoding Microservices
+  - Transcoding Microservices 

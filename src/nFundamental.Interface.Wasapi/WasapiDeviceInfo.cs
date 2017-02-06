@@ -1,4 +1,6 @@
 ﻿using System;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Extentions;
@@ -14,6 +16,11 @@ namespace Fundamental.Interface.Wasapi
         private readonly IWasapiPropertyNameTranslator _wasapiPropertyNameTranslator;
 
         /// <summary>
+        /// The wave format converter used for converting WAVEFORMATEX objects in to readable structures
+        /// </summary>
+        private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
+
+        /// <summary>
         /// The device property bag
         /// </summary>
         private WasapiPropertyBag _propertyBag;
@@ -23,12 +30,15 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <param name="wasapiInterfaceNotifyClient">The WASAPI interface notify client.</param>
         /// <param name="wasapiPropertyNameTranslator">The WASAPI property name translator.</param>
+        /// <param name="waveFormatConverter"></param>
         /// <param name="deviceToken">The device token.</param>
         public WasapiDeviceInfo(IWasapiInterfaceNotifyClient wasapiInterfaceNotifyClient,
                                 IWasapiPropertyNameTranslator wasapiPropertyNameTranslator,
+                                IAudioFormatConverter<WaveFormat> waveFormatConverter,
                                 WasapiDeviceToken deviceToken)
         {
             _wasapiPropertyNameTranslator = wasapiPropertyNameTranslator;
+            _waveFormatConverter = waveFormatConverter;
             DeviceToken = deviceToken;
 
             wasapiInterfaceNotifyClient.DevicePropertyChanged += OnDevicePropertyChanged;
@@ -85,7 +95,7 @@ namespace Fundamental.Interface.Wasapi
         {
             IPropertyStore propertyStore;
             DeviceToken.MmDevice.OpenPropertyStore(StorageAccess.Read, out propertyStore);
-            return new WasapiPropertyBag(propertyStore, _wasapiPropertyNameTranslator);
+            return new WasapiPropertyBag(propertyStore, _wasapiPropertyNameTranslator, _waveFormatConverter);
         }
 
         private DeviceState GetState()
@@ -95,7 +105,7 @@ namespace Fundamental.Interface.Wasapi
             return deviceState.ConvertToFundamentalDeviceState();
         }
 
-        private void OnDevicePropertyChanged(object sender, Internal.WasapiDevicePropertyChangedEventArgs args)
+        private void OnDevicePropertyChanged(object sender, WasapiDevicePropertyChangedEventArgs args)
         {
 
             // only do the work is anyone is listing

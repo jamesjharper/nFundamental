@@ -15,8 +15,20 @@ namespace Fundamental.Core.AudioFormats
         /// </summary>
         /// <param name="bitConverter">The bit converter.</param>
         /// <param name="waveFormatTag">The wave format tag.</param>
-        protected WaveFormatDecorator(EndianBitConverter bitConverter, WaveFormatTag waveFormatTag) :
-            this(new WaveFormatEx(bitConverter))
+        /// <param name="sbSize">Size of the extended segment.</param>
+        protected WaveFormatDecorator(EndianBitConverter bitConverter, WaveFormatTag waveFormatTag, int sbSize) :
+            this(new WaveFormatEx(bitConverter, sbSize))
+        {
+            _waveFormatInner.FormatTag = waveFormatTag;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatDecorator" /> class.
+        /// </summary>
+        /// <param name="waveFormatTag">The wave format tag.</param>
+        /// <param name="sbSize">Size of the sb.</param>
+        protected WaveFormatDecorator(WaveFormatTag waveFormatTag, int sbSize) :
+            this(new WaveFormatEx(sbSize))
         {
             _waveFormatInner.FormatTag = waveFormatTag;
         }
@@ -27,7 +39,7 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="ptr">The PTR.</param>
         /// <param name="bitConverter">The bit converter.</param>
         public WaveFormatDecorator(IntPtr ptr, EndianBitConverter bitConverter) :
-            this(new WaveFormatEx(ptr, bitConverter))
+            this( WaveFormatEx.FromPointer(ptr, bitConverter))
         {
         }
 
@@ -38,8 +50,25 @@ namespace Fundamental.Core.AudioFormats
         protected WaveFormatDecorator(WaveFormat waveFormatInner)
         {
             _waveFormatInner = waveFormatInner;
+            // ReSharper disable once VirtualMemberCallInConstructor
+            Vaidate();
         }
 
+        /// <summary>
+        /// Validates this instance.
+        /// </summary>
+        protected virtual void Vaidate()
+        {
+            
+        }
+
+
+        /// <summary>
+        /// Gets or sets the bit converter used to read and write this format instance.
+        /// </summary>
+        /// <value>
+        /// The bit converter.
+        /// </value>
         public override EndianBitConverter BitConverter => _waveFormatInner.BitConverter;
 
         /// <summary>

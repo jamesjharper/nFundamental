@@ -32,6 +32,11 @@ namespace Fundamental.Core.AudioFormats
         private const int WaveFormatExSize = 18 /* Bytes*/;
 
         /// <summary>
+        /// The default endianness
+        /// </summary>
+        public static EndianBitConverter DefaultEndianness = EndianBitConverter.Little;
+
+        /// <summary>
         /// The bytes
         /// </summary>
         private readonly byte[] _waveformatBytes = new byte[WaveFormatExSize];
@@ -132,11 +137,18 @@ namespace Fundamental.Core.AudioFormats
             get { return _waveFormatExBytes; }
             set
             {
-                _waveFormatExBytes = value;
                 // Ensure the extended size matches
-                checked { ExtendedSize = (ushort)ExtendedBytes.Length; }
+                checked { ExtendedSize = (ushort)value.Length; }
+                _waveFormatExBytes = value;
             }
         }
+
+
+        /// <summary>
+        /// Bytes the size.
+        /// </summary>
+        /// <returns></returns>
+        public override int ByteSize => _waveformatBytes.Length + ExtendedBytes.Length;
 
         /// <summary>
         /// Gets or sets the size of the extended segment.
@@ -150,48 +162,46 @@ namespace Fundamental.Core.AudioFormats
             set { BitConverter.CopyBytes(value, _waveformatBytes, 16 /* offset */); }
         }
 
-        public WaveFormatEx(EndianBitConverter bitConverter)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
+        /// </summary>
+        public WaveFormatEx() :
+            this(DefaultEndianness)
         {
-            BitConverter = bitConverter;
-        }
-
-        public WaveFormatEx(IntPtr ptr, EndianBitConverter bitConverter)
-        {
-            BitConverter = bitConverter;
-
-            // Read all but the last 2 bytes of the pointer.
-            // This is to allow for support for formats written a very long time ago
-            // using the older PCMWAVEFORMAT struct, which is missing the
-            // extended bytes region
-
-            var waveFormatSize = _waveformatBytes.Length - sizeof(ushort);
-            Marshal.Copy(ptr, _waveformatBytes, 0, waveFormatSize);
-
-            // "wFormatTag = WAVE_FORMAT_PCM (because cbSize is implicitly zero)."
-            if (FormatTag == WaveFormatTag.Pcm)
-            {
-                ExtendedSize = 0;
-                return;
-            }
-
-            // Read the CbSize Value
-            Marshal.Copy(ptr + waveFormatSize, _waveformatBytes, waveFormatSize, sizeof(ushort));
-            if (ExtendedSize == 0)
-            {
-                // Make sure the waveformatEx struct is clean
-                ExtendedSize = 0;
-                return;
-            }
-
-            ExtendedBytes = new byte[ExtendedSize];
-            Marshal.Copy(ptr + WaveFormatExSize, ExtendedBytes, 0, ExtendedBytes.Length);
         }
 
         /// <summary>
-        /// Bytes the size.
+        /// Initializes a new instance of the <see cref="WaveFormatEx" /> class.
         /// </summary>
-        /// <returns></returns>
-        public override int ByteSize => _waveformatBytes.Length + ExtendedBytes.Length;
+        /// <param name="bitConverter">The bit converter.</param>
+        public WaveFormatEx(EndianBitConverter bitConverter) :
+            this(bitConverter, /* extended byte size */0)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx" /> class.
+        /// </summary>
+        /// <param name="sbSize">Size of the extended portion of the wave format.</param>
+        public WaveFormatEx(int sbSize) :
+           this(DefaultEndianness, sbSize)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
+        /// </summary>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <param name="sbSize">Size of the extended portion of the wave format.</param>
+        public WaveFormatEx(EndianBitConverter bitConverter, int sbSize)
+        {
+            BitConverter = bitConverter;
+            _waveFormatExBytes = new byte[sbSize];
+            ExtendedSize = checked((ushort)sbSize);
+        }
+
+     
 
         /// <summary>
         /// To the bytes.
@@ -214,6 +224,124 @@ namespace Fundamental.Core.AudioFormats
             Array.Copy(_waveformatBytes, 0, target, offset, _waveformatBytes.Length);
             offset += _waveformatBytes.Length;
             Array.Copy(_waveFormatExBytes, 0, target, offset, _waveFormatExBytes.Length);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromBytes(byte[] bytes)
+        {
+            return FromBytes(bytes, DefaultEndianness);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromBytes(byte[] bytes, EndianBitConverter bitConverter)
+        {
+            return new WaveFormatEx(bytes, bitConverter);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a pointer.
+        /// </summary>
+        /// <param name="ptr">The source pointer.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromPointer(IntPtr ptr)
+        {
+            return FromPointer(ptr, DefaultEndianness);
+        }
+
+        /// <summary>
+        /// Reads the Wave format Ex from a pointer.
+        /// </summary>
+        /// <param name="ptr">The source pointer.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        /// <returns></returns>
+        public new static WaveFormatEx FromPointer(IntPtr ptr, EndianBitConverter bitConverter)
+        {
+            return new WaveFormatEx(ptr, bitConverter);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx" /> class.
+        /// </summary>
+        /// <param name="bytes">The bytes.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        private WaveFormatEx(byte[] bytes, EndianBitConverter bitConverter)
+        {
+            BitConverter = bitConverter;
+
+            var pcmWaveFormatSize = _waveformatBytes.Length - sizeof(ushort);
+
+            // Read all but the last 2 bytes of the pointer.
+            // This is to allow for support for formats written a very long time ago
+            // using the older PCMWAVEFORMAT struct, which is missing the
+            // extended bytes region
+            Array.Copy(bytes, 0, _waveformatBytes, 0, pcmWaveFormatSize);
+
+            // "wFormatTag = WAVE_FORMAT_PCM (because cbSize is implicitly zero)."
+            if (FormatTag == WaveFormatTag.Pcm)
+            {
+                ExtendedSize = 0;
+                return;
+            }
+
+            // Read the CbSize Value
+            Array.Copy(bytes, pcmWaveFormatSize, _waveformatBytes, pcmWaveFormatSize, sizeof(ushort));
+
+
+            if (ExtendedSize == 0)
+            {
+                // Make sure the waveformatEx struct is clean
+                ExtendedSize = 0;
+                return;
+            }
+
+            ExtendedBytes = new byte[ExtendedSize];
+            Array.Copy(bytes, WaveFormatExSize, ExtendedBytes, 0, ExtendedBytes.Length);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaveFormatEx"/> class.
+        /// </summary>
+        /// <param name="ptr">The PTR.</param>
+        /// <param name="bitConverter">The bit converter.</param>
+        private WaveFormatEx(IntPtr ptr, EndianBitConverter bitConverter)
+        {
+            BitConverter = bitConverter;
+
+            // Read all but the last 2 bytes of the pointer.
+            // This is to allow for support for formats written a very long time ago
+            // using the older PCMWAVEFORMAT struct, which is missing the
+            // extended bytes region
+
+            var pcmWaveFormatSize = _waveformatBytes.Length - sizeof(ushort);
+            Marshal.Copy(ptr, _waveformatBytes, 0, pcmWaveFormatSize);
+
+            // "wFormatTag = WAVE_FORMAT_PCM (because cbSize is implicitly zero)."
+            if (FormatTag == WaveFormatTag.Pcm)
+            {
+                ExtendedSize = 0;
+                return;
+            }
+
+            // Read the CbSize Value
+            Marshal.Copy(ptr + pcmWaveFormatSize, _waveformatBytes, pcmWaveFormatSize, sizeof(ushort));
+            if (ExtendedSize == 0)
+            {
+                // Make sure the waveformatEx struct is clean
+                ExtendedSize = 0;
+                return;
+            }
+
+            ExtendedBytes = new byte[ExtendedSize];
+            Marshal.Copy(ptr + WaveFormatExSize, ExtendedBytes, 0, ExtendedBytes.Length);
         }
     }
 }

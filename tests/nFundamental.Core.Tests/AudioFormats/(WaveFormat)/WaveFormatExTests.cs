@@ -220,7 +220,7 @@ namespace Fundamental.Core.Tests.AudioFormats
             fixed (byte* pFormat = formatBytes)
             {
                 // -> ACT
-                var waveFormat = new WaveFormatEx((IntPtr)pFormat, endianess);
+                var waveFormat = WaveFormat.FromPointer((IntPtr)pFormat, endianess);
 
                 // -> ASSERT
                 Assert.AreEqual(formatTag, waveFormat.FormatTag);
