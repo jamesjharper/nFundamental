@@ -3,7 +3,7 @@
     
     public enum AudioClientShareMode
     {
-        Shared,
-        Exclusive,
+        Shared = 0,
+        Exclusive = 1,
     }
 }
