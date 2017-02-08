@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
 
@@ -8,16 +10,53 @@ namespace Fundamental.Interface.Wasapi.Internal
     public class WasapiAudioClientFactory : IWasapiAudioClientFactory
     {
         /// <summary>
-        /// Create a new audio client COM instance.
+        /// The thread dispatch strategy
         /// </summary>
-        /// <param name="token">The token.</param>
-        /// <returns></returns>
-        public IAudioClient FactoryAudioClient(WasapiDeviceToken token)
+        private readonly IComThreadInterpoStrategy _comThreadInterpoStrategy;
+
+        /// <summary>
+        /// The wave format converter
+        /// </summary>
+        private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WasapiAudioClientFactory"/> class.
+        /// </summary>
+        /// <param name="comThreadInterpoStrategy">The thread dispatch strategy.</param>
+        /// <param name="waveFormatConverter">The wave format converter.</param>
+        public WasapiAudioClientFactory(IComThreadInterpoStrategy comThreadInterpoStrategy,
+                                        IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
-            var immDevice = token.MmDevice;
-            return Activate<IAudioClient>(immDevice);
+            _comThreadInterpoStrategy = comThreadInterpoStrategy;
+            _waveFormatConverter = waveFormatConverter;
         }
 
+        /// <summary>
+        /// Create a new audio client COM instance.
+        /// </summary>
+        /// <param name="deviceToken">The device token.</param>
+        /// <returns></returns>
+        /// <exception cref="UnsupportedTokenTypeException"></exception>
+        public IWasapiAudioClient FactoryAudioClient(IDeviceToken deviceToken)
+        {
+            var token = deviceToken as WasapiDeviceToken;
+            if (token != null)
+                return FactoryAudioClient(token);
+
+            var message = $"{nameof(WasapiAudioClientFactory)} can only except tokens of type {nameof(WasapiDeviceToken)}";
+            throw new UnsupportedTokenTypeException(message, typeof(WasapiDeviceToken));
+        }
+
+        /// <summary>
+        /// Factories the audio client.
+        /// </summary>
+        /// <param name="deviceToken">The device token.</param>
+        /// <returns></returns>
+        public IWasapiAudioClient FactoryAudioClient(WasapiDeviceToken deviceToken)
+        {
+            var iAudioClient = Activate<IAudioClient>(deviceToken.MmDevice);
+            return new WasapiAudioClient(iAudioClient, _comThreadInterpoStrategy, _waveFormatConverter);
+        }
 
         /// <summary>
         /// Activates a COM object from the specified device.
@@ -26,22 +65,41 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <param name="immDevice">The WASAPI device object.</param>
         /// <returns></returns>
         /// <exception cref="Fundamental.Interface.Wasapi.DeviceNotAccessableException"></exception>
-        private static T Activate<T>(IMMDevice immDevice) where T : class
+        private T Activate<T>(IMMDevice immDevice) where T : class
         {
             var interfaceId = typeof(T).GetTypeInfo().GUID;
+            var result = Activate(immDevice, interfaceId);
+            return ComObject.QuearyInterface<T>(result);
+        }
+
+
+        /// <summary>
+        /// Activates a COM object from the specified device.
+        /// </summary>
+        /// <param name="immDevice">The device.</param>
+        /// <param name="iid">The Interface Id.</param>
+        /// <returns></returns>
+        /// <exception cref="DeviceNotAccessableException"></exception>
+        private object Activate(IMMDevice immDevice, Guid iid)
+        {
+            if (_comThreadInterpoStrategy.RequiresInvoke())
+            {
+                return _comThreadInterpoStrategy.InvokeOnTargetThread(new Func<IMMDevice, Guid, object>(Activate), immDevice, iid);
+            }
+
             object result;
-            var hr = immDevice.Activate( 
-                /* Com interface requested    */ interfaceId,
+            var hr = immDevice.Activate(
+                /* Com interface requested    */ iid,
                 /* Com Server type            */ ClsCtx.LocalServer,
                 /* Activation Flags           */ IntPtr.Zero,
                 /* [out] resulting com object */ out result);
 
 
-            if(hr == HResult.AUDCLNT_E_DEVICE_INVALIDATED)
-                throw new DeviceNotAccessableException($"Failed to Activate WASAPI com object {typeof(T).Name}, as the target device is unplugged");
+            if (hr == HResult.AUDCLNT_E_DEVICE_INVALIDATED)
+                throw new DeviceNotAccessableException($"Failed to Activate WASAPI com object {iid}, as the target device is unplugged");
 
             hr.ThrowIfFailed();
-            return ComObject.QuearyInterface<T>(result);
+            return result;
         }
     }
 }

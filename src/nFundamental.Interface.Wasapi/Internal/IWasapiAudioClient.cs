@@ -4,6 +4,10 @@ using Fundamental.Interface.Wasapi.Interop;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
+    /// <summary>
+    /// An Anti corruption layer for the IAudioClient COM object. 
+    /// Interaction with IAudioClient can require pointer Manipulation, which is a little ugly in managed languages 
+    /// </summary>
     public interface IWasapiAudioClient
     {
         /// <summary>

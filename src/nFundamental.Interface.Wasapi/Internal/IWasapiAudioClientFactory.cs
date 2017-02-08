@@ -10,7 +10,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns></returns>
-        IAudioClient FactoryAudioClient(WasapiDeviceToken token);
+        IWasapiAudioClient FactoryAudioClient(IDeviceToken token);
 
     }
 }
