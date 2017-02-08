@@ -1,20 +1,10 @@
 ﻿using System;
 using Fundamental.Core;
-using Fundamental.Core.AudioFormats;
 
 namespace Fundamental.Interface
 {
-    public interface IAudioSource
+    public interface IAudioSource : IFormatSetable, IFormatGetable, IFormatNegotiable, IFormatChangable
     {
-        /// <summary>
-        /// Sets the format.
-        /// </summary>
-        void SetFormat(IAudioFormat audioFormat);
-
-        /// <summary>
-        /// Gets the current format.
-        /// </summary>
-        IAudioFormat GetFormat();
 
         /// <summary>
         /// Starts capturing audio.
@@ -37,11 +27,6 @@ namespace Fundamental.Interface
         /// Raised when actual capturing is stopped.
         /// </summary>
         event EventHandler<EventArgs> Stopped;
-
-        /// <summary>
-        /// Raised when source format changes.
-        /// </summary>
-        event EventHandler<EventArgs> FormatChanged;
 
         /// <summary>
         /// Raised when audio data is received from the source.

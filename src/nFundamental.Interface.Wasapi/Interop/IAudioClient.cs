@@ -36,8 +36,8 @@ namespace Fundamental.Interface.Wasapi.Interop
         HResult GetMixFormat([Out] [MarshalAs(UnmanagedType.SysInt)] out IntPtr format); 
 
         [PreserveSig]
-        HResult GetDevicePeriod([Out] [MarshalAs(UnmanagedType.U8)] out UInt64 processInterval,
-                                [Out] [MarshalAs(UnmanagedType.U8)] out UInt64 minimumInterval);
+        HResult GetDevicePeriod([Out] [MarshalAs(UnmanagedType.U8)] out UInt64 defaultDevicePeriod,
+                                [Out] [MarshalAs(UnmanagedType.U8)] out UInt64 minimumDevicePeriod);
 
         [PreserveSig]
         HResult Start();
