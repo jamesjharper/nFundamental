@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Fundamental.Core;
 using Fundamental.Core.AudioFormats;
+using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Options;
@@ -12,10 +12,12 @@ namespace Fundamental.Interface.Wasapi
 {
     public class WasapiAudioSource : IAudioSource
     {
+        // Dependents
+
         /// <summary>
         /// The WASAPI device token
         /// </summary>
-        private readonly WasapiDeviceToken _wasapiDeviceToken;
+        private readonly IDeviceToken _wasapiDeviceToken;
 
         /// <summary>
         /// The WASAPI audio client factory
@@ -40,6 +42,8 @@ namespace Fundamental.Interface.Wasapi
         /// </value>
         private WasapiOptions Options => _wasapiOptions.Value;
 
+        // Internal fields
+
         /// <summary>
         /// The is initialize flag
         /// </summary>
@@ -48,7 +52,13 @@ namespace Fundamental.Interface.Wasapi
         /// <summary>
         /// The audio client
         /// </summary>
-        private IAudioClient _audioClient;
+        private IWasapiAudioClient _audioClient;
+
+        /// <summary>
+        /// The audio format
+        /// Protected so we can get access to this value in test fixtures
+        /// </summary>
+        protected virtual IAudioFormat DesiredAudioFormat { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiAudioSource"/> class.
@@ -57,8 +67,8 @@ namespace Fundamental.Interface.Wasapi
         /// <param name="wasapiDeviceToken">The WASAPI device token.</param>
         /// <param name="wasapiAudioClientFactory"></param>
         /// <param name="waveFormatConverter"></param>
-        public WasapiAudioSource(IOptions<WasapiOptions> wasapiOptions, 
-                                 WasapiDeviceToken wasapiDeviceToken, 
+        public WasapiAudioSource(IOptions<WasapiOptions> wasapiOptions,
+                                 IDeviceToken wasapiDeviceToken, 
                                  IWasapiAudioClientFactory wasapiAudioClientFactory,
                                  IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
@@ -75,9 +85,15 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// The audio client.
         /// </value>
-        protected IAudioClient AudioClient => _audioClient ?? (_audioClient = FactoryAudioClient());
+        protected virtual IWasapiAudioClient AudioClient => _audioClient ?? (_audioClient = FactoryAudioClient());
 
-
+        /// <summary>
+        /// Gets the device access mode.
+        /// </summary>
+        /// <value>
+        /// The device access.
+        /// </value>
+        private AudioClientShareMode WasapiDeviceAccess => _wasapiOptions.Value.AudioSource.DeviceAccess.ConvertToWasapiAudioClientShareMode();
 
         /// <summary>
         /// Determines whether a given format is supported
@@ -88,15 +104,37 @@ namespace Fundamental.Interface.Wasapi
         /// </returns>
         public bool IsAudioFormatSupported(IAudioFormat audioFormat)
         {
-            AudioClient.IsFormatSupported()
+            IEnumerable<IAudioFormat> closestMatchingFormats;
+            return IsAudioFormatSupported(audioFormat, out closestMatchingFormats);
         }
 
+        /// <summary>
+        /// Determines whether a given format is supported and returns a list of alternatives
+        /// </summary>
+        /// <param name="audioFormat">The audio format.</param>
+        /// <param name="closestMatchingFormats">The closest matching formats.</param>
+        /// <returns>
+        /// <c>true</c> if [is audio format supported] [the specified audio format]; otherwise, <c>false</c>.
+        /// </returns>
         public bool IsAudioFormatSupported(IAudioFormat audioFormat, out IEnumerable<IAudioFormat> closestMatchingFormats)
         {
-            // AudioClient.IsFormatSupported()
-            closestMatchingFormats = null;
+            IAudioFormat outFormat;
+            var result = IsAudioFormatSupported(audioFormat, out outFormat);
+            closestMatchingFormats = outFormat != null? new [] {outFormat} : new IAudioFormat[] {  };
+            return result;
+        }
 
-            return false;
+        /// <summary>
+        /// Determines whether a given format is supported and return an alternative
+        /// </summary>
+        /// <param name="audioFormat">The audio format.</param>
+        /// <param name="closestMatchingFormat">The closest matching format.</param>
+        /// <returns>
+        ///   <c>true</c> if [is audio format supported] [the specified audio format]; otherwise, <c>false</c>.
+        /// </returns>
+        public bool IsAudioFormatSupported(IAudioFormat audioFormat, out IAudioFormat closestMatchingFormat)
+        {
+            return AudioClient.IsFormatSupported(WasapiDeviceAccess, audioFormat, out closestMatchingFormat);
         }
 
         /// <summary>
@@ -107,26 +145,76 @@ namespace Fundamental.Interface.Wasapi
         /// <returns></returns>
         public IEnumerable<IAudioFormat> SuggestFormats(params IAudioFormat[] dontSuggestTheseFormats)
         {
-            var waveFormatEx = GetMixerFormatEx();
+            return SuggestFormats().Where(x => !dontSuggestTheseFormats.Contains(x));
+        }
 
-            var audioFormat = _waveFormatConverter.Convert(waveFormatEx);
+        /// <summary>
+        /// Suggests the formats.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<IAudioFormat> SuggestFormats()
+        {     
+            var mixerFormat = AudioClient.GetMixFormat();
+            IEnumerable<IAudioFormat> closestMatchingFormats;
 
             // yield the mixer format, if it was not in the "don't suggest these formats" list
-            if (!dontSuggestTheseFormats.Contains(audioFormat))
-                yield return audioFormat;
+            if (IsAudioFormatSupported(mixerFormat, out closestMatchingFormats))
+            {
+                 yield return mixerFormat;
+            }
+            else
+            {
+                foreach (var match in closestMatchingFormats)
+                    yield return match;
+            }
 
+            // NOTE:
+            // Me might be able to parse the device info to try finding driver information such as the engine format 
+            // Might be worth while consideration in the future, as in shared mode WASAPI always upsamples to 32bit float
+            // which can be a waist.
+
+            // Make sure to use "yield return" that way we can keep 
+            // the resolution lazy instead of resolving an entire list of formats when we only need on
         }
 
-
-
+        /// <summary>
+        /// Sets the format.
+        /// </summary>
+        /// <param name="audioFormat">The audio format.</param>
+        /// <exception cref="Fundamental.Core.FormatNotSupportedException">Target device does not support the given format</exception>
         public void SetFormat(IAudioFormat audioFormat)
         {
-            throw new NotImplementedException();
+            if (!IsAudioFormatSupported(audioFormat))
+                throw new FormatNotSupportedException("Target device does not support the given format");
+            DesiredAudioFormat = audioFormat;
         }
 
+        /// <summary>
+        /// Gets the format.
+        /// </summary>
+        /// <returns></returns>
         public IAudioFormat GetFormat()
         {
-            throw new NotImplementedException();
+            // If no format has been set, we use the default format
+            return GetDesiredFormat() ?? GetDefaultFormat();
+        }
+
+        /// <summary>
+        /// Gets the desired format.
+        /// </summary>
+        /// <returns></returns>
+        public IAudioFormat GetDesiredFormat()
+        {
+            return DesiredAudioFormat;
+        }
+
+        /// <summary>
+        /// Gets the default format.
+        /// </summary>
+        /// <returns></returns>
+        public IAudioFormat GetDefaultFormat()
+        {
+            return SuggestFormats().FirstOrDefault();
         }
 
         public void Start()
@@ -192,19 +280,7 @@ namespace Fundamental.Interface.Wasapi
         /// Gets the audio client.
         /// </summary>
         /// <returns></returns>
-        protected IAudioClient FactoryAudioClient() => _wasapiAudioClientFactory.FactoryAudioClient(_wasapiDeviceToken);
-
-
-        /// <summary>
-        /// Gets the mixer format.
-        /// </summary>
-        /// <returns></returns>
-        private WaveFormat GetMixerFormatEx()
-        {
-            IntPtr waveFormatExPtr;
-            AudioClient.GetMixFormat(out waveFormatExPtr);
-            return WaveFormatEx.FromPointer(waveFormatExPtr);
-        }
+        protected virtual IWasapiAudioClient FactoryAudioClient() => _wasapiAudioClientFactory.FactoryAudioClient(_wasapiDeviceToken);
 
 
     }
