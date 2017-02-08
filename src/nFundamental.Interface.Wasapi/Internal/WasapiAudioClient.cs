@@ -8,35 +8,42 @@ using System.Reflection;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
-
-    
-
     /// <summary>
-    /// An Anti corruption layer for the IAudioClient COM object. 
-    /// Interaction with IAudioClient can require pointer Manipulation, which is a little ugly in managed languages 
+    /// An Anti corruption layer for the IAudioClient COM object.
+    /// Interaction with IAudioClient can require pointer Manipulation, which is a little ugly in managed languages
     /// </summary>
-    public class WasapiAudioClient
+    public class WasapiAudioClient : IWasapiAudioClient
     {
         /// <summary>
-        /// The audio client
+        /// The thread dispatcher
         /// </summary>
-        private readonly IAudioClient _audioClient;
+        private readonly IComThreadInterpoStrategy _comThreadInterpoStrategy;
 
         /// <summary>
         /// The wave format converter
         /// </summary>
         private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
 
+        /// <summary>
+        /// Gets the COM instance.
+        /// </summary>
+        /// <value>
+        /// The COM instance.
+        /// </value>
+        public IAudioClient ComInstance { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiAudioClient"/> class.
         /// </summary>
         /// <param name="audioClient">The audio client.</param>
+        /// <param name="comThreadInterpoStrategy"></param>
         /// <param name="waveFormatConverter">The wave format converter.</param>
         public WasapiAudioClient(IAudioClient audioClient,
+                                 IComThreadInterpoStrategy comThreadInterpoStrategy,
                                  IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
-            _audioClient = audioClient;
+            ComInstance = audioClient;
+            _comThreadInterpoStrategy = comThreadInterpoStrategy;
             _waveFormatConverter = waveFormatConverter;
         }
 
@@ -49,8 +56,8 @@ namespace Fundamental.Interface.Wasapi.Internal
         public int GetBufferSize()
         {
             uint outInt;
-            _audioClient.GetBufferSize(out outInt).ThrowIfFailed();
-            return checked ((int)outInt);
+             ComInstance.GetBufferSize(out outInt).ThrowIfFailed();
+            return checked((int)outInt);
         }
 
 
@@ -61,7 +68,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         public TimeSpan GetStreamLatency()
         {
             ulong outuLong;
-            _audioClient.GetStreamLatency(out outuLong).ThrowIfFailed();
+            ComInstance.GetStreamLatency(out outuLong).ThrowIfFailed();
             return TimeSpan.FromTicks(checked((long)outuLong));
         }
 
@@ -72,7 +79,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         public int GetCurrentPadding()
         {
             uint outInt;
-            _audioClient.GetCurrentPadding(out outInt).ThrowIfFailed();
+            ComInstance.GetCurrentPadding(out outInt).ThrowIfFailed();
             return checked((int)outInt);
         }
 
@@ -85,7 +92,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <returns>
         ///   <c>true</c> if [is format supported] [the specified share mode]; otherwise, <c>false</c>.
         /// </returns>
-        public bool IsFormatSupported(AudioClientShareMode shareMode, AudioFormat format, out IAudioFormat closestMatch)
+        public bool IsFormatSupported(AudioClientShareMode shareMode, IAudioFormat format, out IAudioFormat closestMatch)
         {
             var waveFormatEx = _waveFormatConverter.Convert(format);
 
@@ -95,7 +102,7 @@ namespace Fundamental.Interface.Wasapi.Internal
                 // ReSharper disable once RedundantAssignment
                 var ppClosestMatchOut = ppClosestMatch.Ptr;
 
-                var hresult = _audioClient.IsFormatSupported(shareMode, pWaveFormatEx, out ppClosestMatchOut);
+                var hresult = ComInstance.IsFormatSupported(shareMode, pWaveFormatEx, out ppClosestMatchOut);
 
                 // Try reading the closest match from the pointer to the pointer
                 closestMatch = ReadAudioFormat(ppClosestMatch);
@@ -125,11 +132,10 @@ namespace Fundamental.Interface.Wasapi.Internal
                 // ReSharper disable once RedundantAssignment
                 var ppFormatOut = ppFormat.Ptr;
 
-                _audioClient.GetMixFormat(out ppFormatOut).ThrowIfFailed();
+                ComInstance.GetMixFormat(out ppFormatOut).ThrowIfFailed();
 
                 // Try reading the format from the pointer to the pointer
                 return ReadAudioFormat(ppFormat);
-
             }
         }
 
@@ -143,16 +149,14 @@ namespace Fundamental.Interface.Wasapi.Internal
             ulong phnsDefaultDevicePeriod;
             ulong phnsMinimumDevicePeriod;
 
-            _audioClient.GetDevicePeriod(out phnsDefaultDevicePeriod, out phnsMinimumDevicePeriod).ThrowIfFailed();
+            ComInstance.GetDevicePeriod(out phnsDefaultDevicePeriod, out phnsMinimumDevicePeriod).ThrowIfFailed();
 
             return new DevicePeriod
             (
-                TimeSpan.FromTicks(checked((long) phnsDefaultDevicePeriod)),
-                TimeSpan.FromTicks(checked((long) phnsDefaultDevicePeriod))
+                TimeSpan.FromTicks(checked((long)phnsDefaultDevicePeriod)),
+                TimeSpan.FromTicks(checked((long)phnsDefaultDevicePeriod))
             );
         }
-
-
 
 
         /// <summary>
@@ -169,12 +173,18 @@ namespace Fundamental.Interface.Wasapi.Internal
                                TimeSpan devicePeriod,
                                AudioFormat format)
         {
-            Initialize(shareMode, streamFlags, bufferDuration, devicePeriod, format, Guid.Empty);
+            Initialize(shareMode, streamFlags, bufferDuration, devicePeriod, format, Guid.Empty); 
         }
 
         /// <summary>
         /// Initializes the audio stream.
         /// </summary>
+        /// <param name="shareMode">The share mode.</param>
+        /// <param name="streamFlags">The stream flags.</param>
+        /// <param name="bufferDuration">Duration of the buffer.</param>
+        /// <param name="devicePeriod">The device period.</param>
+        /// <param name="format">The format.</param>
+        /// <param name="sessionId">The session identifier.</param>
         public void Initialize(AudioClientShareMode shareMode,
                                AudioClientStreamFlags streamFlags,
                                TimeSpan bufferDuration,
@@ -182,14 +192,44 @@ namespace Fundamental.Interface.Wasapi.Internal
                                AudioFormat format,
                                Guid sessionId)
         {
+
             var waveFormatEx = _waveFormatConverter.Convert(format);
+            Initialize(shareMode, streamFlags, bufferDuration, devicePeriod, waveFormatEx, sessionId);
+        }
+
+        /// <summary>
+        /// Initializes the specified share mode.
+        /// </summary>
+        /// <param name="shareMode">The share mode.</param>
+        /// <param name="streamFlags">The stream flags.</param>
+        /// <param name="bufferDuration">Duration of the buffer.</param>
+        /// <param name="devicePeriod">The device period.</param>
+        /// <param name="format">The format.</param>
+        /// <param name="sessionId">The session identifier.</param>
+        private void Initialize(AudioClientShareMode shareMode,
+                                AudioClientStreamFlags streamFlags,
+                                TimeSpan bufferDuration,
+                                TimeSpan devicePeriod,
+                                WaveFormat format,
+                                Guid sessionId)
+        {
+            // Check to see if we need to jump threads
+            if (_comThreadInterpoStrategy.RequiresInvoke())
+            {
+                _comThreadInterpoStrategy.InvokeOnTargetThread
+                    (
+                        new Action<AudioClientShareMode, AudioClientStreamFlags, TimeSpan, TimeSpan, WaveFormatEx, Guid>(Initialize),
+                        shareMode, streamFlags, bufferDuration, devicePeriod, format, sessionId
+                    );
+                return;
+            }
 
             var bufferDurationTicks = checked((uint)bufferDuration.Ticks);
             var devicePeriodTicks = checked((uint)devicePeriod.Ticks);
 
-            using (var pWaveFormatEx = CoTaskMemPtr.CopyToPtr(waveFormatEx.ToBytes()))
+            using (var pWaveFormatEx = CoTaskMemPtr.CopyToPtr(format.ToBytes()))
             {
-                _audioClient.Initialize(shareMode, streamFlags, bufferDurationTicks, devicePeriodTicks, pWaveFormatEx, sessionId).ThrowIfFailed();
+                ComInstance.Initialize(shareMode, streamFlags, bufferDurationTicks, devicePeriodTicks, pWaveFormatEx, sessionId).ThrowIfFailed();
             }
         }
 
@@ -199,7 +239,14 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         public void Start()
         {
-            _audioClient.Start().ThrowIfFailed();
+            // Check to see if we need to jump threads
+            if (_comThreadInterpoStrategy.RequiresInvoke())
+            {
+                _comThreadInterpoStrategy.InvokeOnTargetThread(new Action(Start));
+                return;
+            }
+
+            ComInstance.Start().ThrowIfFailed();
         }
 
         /// <summary>
@@ -207,7 +254,14 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         public void Stop()
         {
-            _audioClient.Start().ThrowIfFailed();
+            // Check to see if we need to jump threads
+            if (_comThreadInterpoStrategy.RequiresInvoke())
+            {
+                _comThreadInterpoStrategy.InvokeOnTargetThread(new Action(Stop));
+                return;
+            }
+
+            ComInstance.Stop().ThrowIfFailed();
         }
 
 
@@ -216,7 +270,15 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         public void Reset()
         {
-            _audioClient.Reset().ThrowIfFailed();
+            // Check to see if we need to jump threads
+            if (_comThreadInterpoStrategy.RequiresInvoke())
+            {
+                _comThreadInterpoStrategy.InvokeOnTargetThread(new Action(Reset));
+                return;
+            }
+
+            ComInstance.Reset().ThrowIfFailed();
+    
         }
 
 
@@ -226,9 +288,8 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <param name="handle">The handle.</param>
         public void SetEventHandle(IntPtr handle)
         {
-            _audioClient.SetEventHandle(handle).ThrowIfFailed();
+            ComInstance.SetEventHandle(handle).ThrowIfFailed();
         }
-
 
 
         /// <summary>
@@ -250,9 +311,15 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <returns></returns>
         public object GetService(Guid interfaceId)
         {
+            // Check to see if we need to jump threads
+            if (_comThreadInterpoStrategy.RequiresInvoke())
+                return _comThreadInterpoStrategy.InvokeOnTargetThread(new Func<Guid,object>(GetService), interfaceId);
+
+
             object outObject;
-            _audioClient.GetService(interfaceId, out outObject).ThrowIfFailed();
+            ComInstance.GetService(interfaceId, out outObject).ThrowIfFailed();
             return outObject;
+      
         }
 
         // Private Methods
