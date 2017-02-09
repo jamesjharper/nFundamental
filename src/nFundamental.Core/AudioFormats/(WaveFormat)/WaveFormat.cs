@@ -90,6 +90,12 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="offset">The offset.</param>
         public abstract void Write(byte[] target, int offset);
 
+        /// <summary>
+        /// Writes wave format ex stuct to the given pointer
+        /// </summary>
+        /// <param name="pTarget">The target pointer.</param>
+        public abstract void Write(IntPtr pTarget);
+
 
         /// <summary>
         /// Reads the Wave format Ex from a pointer.

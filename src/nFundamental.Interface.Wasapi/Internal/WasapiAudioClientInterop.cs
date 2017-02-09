@@ -12,7 +12,7 @@ namespace Fundamental.Interface.Wasapi.Internal
     /// An Anti corruption layer for the IAudioClient COM object.
     /// Interaction with IAudioClient can require pointer Manipulation, which is a little ugly in managed languages
     /// </summary>
-    public class WasapiAudioClient : IWasapiAudioClient
+    public class WasapiAudioClientInterop : IWasapiAudioClientInterop
     {
         /// <summary>
         /// The thread dispatcher
@@ -33,12 +33,12 @@ namespace Fundamental.Interface.Wasapi.Internal
         public IAudioClient ComInstance { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiAudioClient"/> class.
+        /// Initializes a new instance of the <see cref="WasapiAudioClientInterop"/> class.
         /// </summary>
         /// <param name="audioClient">The audio client.</param>
         /// <param name="comThreadInterpoStrategy"></param>
         /// <param name="waveFormatConverter">The wave format converter.</param>
-        public WasapiAudioClient(IAudioClient audioClient,
+        public WasapiAudioClientInterop(IAudioClient audioClient,
                                  IComThreadInterpoStrategy comThreadInterpoStrategy,
                                  IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
@@ -96,9 +96,11 @@ namespace Fundamental.Interface.Wasapi.Internal
         {
             var waveFormatEx = _waveFormatConverter.Convert(format);
 
-            using (var pWaveFormatEx = CoTaskMemPtr.CopyToPtr(waveFormatEx.ToBytes()))
+            using (var pWaveFormatEx = CoTaskMemPtr.Alloc(waveFormatEx.ByteSize))
             using (var ppClosestMatch = CoTaskMemPtr.Alloc(IntPtr.Size))
             {
+                waveFormatEx.Write(pWaveFormatEx);
+
                 // ReSharper disable once RedundantAssignment
                 var ppClosestMatchOut = ppClosestMatch.Ptr;
 
@@ -171,7 +173,7 @@ namespace Fundamental.Interface.Wasapi.Internal
                                AudioClientStreamFlags streamFlags,
                                TimeSpan bufferDuration,
                                TimeSpan devicePeriod,
-                               AudioFormat format)
+                               IAudioFormat format)
         {
             Initialize(shareMode, streamFlags, bufferDuration, devicePeriod, format, Guid.Empty); 
         }
@@ -189,7 +191,7 @@ namespace Fundamental.Interface.Wasapi.Internal
                                AudioClientStreamFlags streamFlags,
                                TimeSpan bufferDuration,
                                TimeSpan devicePeriod,
-                               AudioFormat format,
+                               IAudioFormat format,
                                Guid sessionId)
         {
 
@@ -227,8 +229,9 @@ namespace Fundamental.Interface.Wasapi.Internal
             var bufferDurationTicks = checked((uint)bufferDuration.Ticks);
             var devicePeriodTicks = checked((uint)devicePeriod.Ticks);
 
-            using (var pWaveFormatEx = CoTaskMemPtr.CopyToPtr(format.ToBytes()))
+            using (var pWaveFormatEx = CoTaskMemPtr.Alloc(format.ByteSize))
             {
+                format.Write(pWaveFormatEx);
                 ComInstance.Initialize(shareMode, streamFlags, bufferDurationTicks, devicePeriodTicks, pWaveFormatEx, sessionId).ThrowIfFailed();
             }
         }

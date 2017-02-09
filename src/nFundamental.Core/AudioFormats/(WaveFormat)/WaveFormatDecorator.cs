@@ -172,5 +172,11 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="target">The target.</param>
         /// <param name="offset">The offset.</param>
         public override void Write(byte[] target, int offset) => _waveFormatInner.Write(target, offset);
+
+        /// <summary>
+        /// Writes wave format ex stuct to the given pointer
+        /// </summary>
+        /// <param name="pTarget">The target pointer.</param>
+        public override void Write(IntPtr pTarget) => _waveFormatInner.Write(pTarget);
     }
 }

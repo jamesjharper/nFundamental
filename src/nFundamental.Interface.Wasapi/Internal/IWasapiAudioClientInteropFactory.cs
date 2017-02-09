@@ -2,7 +2,7 @@
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
-    public interface IWasapiAudioClientFactory
+    public interface IWasapiAudioClientInteropFactory
     {
 
         /// <summary>
@@ -10,7 +10,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns></returns>
-        IWasapiAudioClient FactoryAudioClient(IDeviceToken token);
+        IWasapiAudioClientInterop FactoryAudioClient(IDeviceToken token);
 
     }
 }
