@@ -227,6 +227,17 @@ namespace Fundamental.Core.AudioFormats
         }
 
         /// <summary>
+        /// Writes wave format ex stuct to the given pointer
+        /// </summary>
+        /// <param name="pTarget">The target pointer.</param>
+        public override void Write(IntPtr pTarget)
+        {
+            Marshal.Copy(_waveformatBytes, 0, pTarget, _waveformatBytes.Length);
+            var extendedPostion = pTarget + _waveformatBytes.Length;
+            Marshal.Copy(_waveFormatExBytes, 0, extendedPostion, _waveFormatExBytes.Length);
+        }
+
+        /// <summary>
         /// Reads the Wave format Ex from a bytes.
         /// </summary>
         /// <param name="bytes">The bytes.</param>
