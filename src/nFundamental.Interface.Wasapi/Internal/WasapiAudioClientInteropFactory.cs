@@ -7,7 +7,7 @@ using Fundamental.Interface.Wasapi.Win32;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
-    public class WasapiAudioClientFactory : IWasapiAudioClientFactory
+    public class WasapiAudioClientInteropFactory : IWasapiAudioClientInteropFactory
     {
         /// <summary>
         /// The thread dispatch strategy
@@ -20,11 +20,11 @@ namespace Fundamental.Interface.Wasapi.Internal
         private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiAudioClientFactory"/> class.
+        /// Initializes a new instance of the <see cref="WasapiAudioClientInteropFactory"/> class.
         /// </summary>
         /// <param name="comThreadInterpoStrategy">The thread dispatch strategy.</param>
         /// <param name="waveFormatConverter">The wave format converter.</param>
-        public WasapiAudioClientFactory(IComThreadInterpoStrategy comThreadInterpoStrategy,
+        public WasapiAudioClientInteropFactory(IComThreadInterpoStrategy comThreadInterpoStrategy,
                                         IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
             _comThreadInterpoStrategy = comThreadInterpoStrategy;
@@ -37,13 +37,13 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <param name="deviceToken">The device token.</param>
         /// <returns></returns>
         /// <exception cref="UnsupportedTokenTypeException"></exception>
-        public IWasapiAudioClient FactoryAudioClient(IDeviceToken deviceToken)
+        public IWasapiAudioClientInterop FactoryAudioClient(IDeviceToken deviceToken)
         {
             var token = deviceToken as WasapiDeviceToken;
             if (token != null)
                 return FactoryAudioClient(token);
 
-            var message = $"{nameof(WasapiAudioClientFactory)} can only except tokens of type {nameof(WasapiDeviceToken)}";
+            var message = $"{nameof(WasapiAudioClientInteropFactory)} can only except tokens of type {nameof(WasapiDeviceToken)}";
             throw new UnsupportedTokenTypeException(message, typeof(WasapiDeviceToken));
         }
 
@@ -52,10 +52,10 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         /// <param name="deviceToken">The device token.</param>
         /// <returns></returns>
-        public IWasapiAudioClient FactoryAudioClient(WasapiDeviceToken deviceToken)
+        public IWasapiAudioClientInterop FactoryAudioClient(WasapiDeviceToken deviceToken)
         {
             var iAudioClient = Activate<IAudioClient>(deviceToken.MmDevice);
-            return new WasapiAudioClient(iAudioClient, _comThreadInterpoStrategy, _waveFormatConverter);
+            return new WasapiAudioClientInterop(iAudioClient, _comThreadInterpoStrategy, _waveFormatConverter);
         }
 
         /// <summary>

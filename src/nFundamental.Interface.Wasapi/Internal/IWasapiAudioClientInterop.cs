@@ -8,7 +8,7 @@ namespace Fundamental.Interface.Wasapi.Internal
     /// An Anti corruption layer for the IAudioClient COM object. 
     /// Interaction with IAudioClient can require pointer Manipulation, which is a little ugly in managed languages 
     /// </summary>
-    public interface IWasapiAudioClient
+    public interface IWasapiAudioClientInterop
     {
         /// <summary>
         /// Gets the number of audio frames that the buffer can hold.
@@ -61,7 +61,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <param name="bufferDuration">Duration of the buffer.</param>
         /// <param name="devicePeriod">The device period.</param>
         /// <param name="format">The format.</param>
-        void Initialize(AudioClientShareMode shareMode, AudioClientStreamFlags streamFlags, TimeSpan bufferDuration, TimeSpan devicePeriod, AudioFormat format);
+        void Initialize(AudioClientShareMode shareMode, AudioClientStreamFlags streamFlags, TimeSpan bufferDuration, TimeSpan devicePeriod, IAudioFormat format);
 
         /// <summary>
         /// Initializes the audio stream.
@@ -72,7 +72,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <param name="devicePeriod">The device period.</param>
         /// <param name="format">The format.</param>
         /// <param name="sessionId">The session identifier.</param>
-        void Initialize(AudioClientShareMode shareMode, AudioClientStreamFlags streamFlags, TimeSpan bufferDuration, TimeSpan devicePeriod, AudioFormat format, Guid sessionId);
+        void Initialize(AudioClientShareMode shareMode, AudioClientStreamFlags streamFlags, TimeSpan bufferDuration, TimeSpan devicePeriod, IAudioFormat format, Guid sessionId);
 
         /// <summary>
         /// The IsFormatSupported method indicates whether the audio endpoint device supports a particular stream format

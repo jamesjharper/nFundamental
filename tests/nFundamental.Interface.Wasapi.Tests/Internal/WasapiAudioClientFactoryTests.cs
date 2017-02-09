@@ -31,7 +31,7 @@ namespace Fundamental.Interface.Wasapi.Tests.Internal
             ComThreadInterpoStrategyFixture = Substitute.For<IComThreadInterpoStrategy>();
         }
 
-        private WasapiAudioClientFactory GetTestFixture() => new WasapiAudioClientFactory(ComThreadInterpoStrategyFixture, AudioFormatConverterWaveFormatFixture);
+        private WasapiAudioClientInteropFactory GetTestFixture() => new WasapiAudioClientInteropFactory(ComThreadInterpoStrategyFixture, AudioFormatConverterWaveFormatFixture);
 
 
         [Test]
@@ -68,7 +68,7 @@ namespace Fundamental.Interface.Wasapi.Tests.Internal
             
 
             // -> ASSERT
-            var asWasapiAudioClient = audioClient as WasapiAudioClient;
+            var asWasapiAudioClient = audioClient as WasapiAudioClientInterop;
 
 
             Assert.AreEqual(expectedAudioClient, asWasapiAudioClient.ComInstance);
@@ -129,7 +129,7 @@ namespace Fundamental.Interface.Wasapi.Tests.Internal
 
 
             // -> ASSERT
-            var asWasapiAudioClient = audioClient as WasapiAudioClient;
+            var asWasapiAudioClient = audioClient as WasapiAudioClientInterop;
 
 
             Assert.AreEqual(expectedAudioClient, asWasapiAudioClient.ComInstance);
