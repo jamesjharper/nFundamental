@@ -11,5 +11,9 @@ namespace Fundamental.Interface.Wasapi.Interop
 
         public static Guid IAudioClientGuid = Guid.Parse(IAudioClient);
 
+
+        public const string IAudioCaptureClient = "C8ADBD64-E71E-48a0-A4DE-185C395CD317";
+
+        public static Guid IAudioCaptureClientGuid = Guid.Parse(IAudioCaptureClient);
     }
 }

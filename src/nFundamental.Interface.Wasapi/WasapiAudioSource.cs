@@ -40,6 +40,14 @@ namespace Fundamental.Interface.Wasapi
         /// </value>
         protected override AudioClientShareMode DeviceAccessMode => _wasapiOptions.Value.AudioSource.DeviceAccess.ConvertToWasapiAudioClientShareMode();
 
+        /// <summary>
+        /// Gets the length of the buffer.
+        /// </summary>
+        /// <value>
+        /// The length of the buffer.
+        /// </value>
+        protected override TimeSpan BufferLength => _wasapiOptions.Value.AudioSource.BufferLength;
+
         public void Start()
         {
             throw new NotImplementedException();

@@ -47,6 +47,10 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             public AudioClientShareMode WasapiDeviceAccessOverride { get; set; }
             public IWasapiAudioClientInterop ActualAudioClientInterop => base.AudioClientInterop;
+
+            protected override TimeSpan BufferLength => BufferLengthOverride;
+
+            public TimeSpan BufferLengthOverride { get; }
         }
 
 
