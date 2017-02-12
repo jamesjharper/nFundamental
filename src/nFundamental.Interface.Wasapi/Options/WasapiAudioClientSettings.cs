@@ -2,7 +2,7 @@
 
 namespace Fundamental.Interface.Wasapi.Options
 {
-    public class WasapiAudioSourceSettings
+    public class WasapiAudioClientSettings
     {
         /// <summary>
         /// Gets or sets the device access.

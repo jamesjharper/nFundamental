@@ -9,13 +9,16 @@ namespace Fundamental.Interface.Wasapi.Interop
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IMMDevice 
     {
-
+        [PreserveSig]
         HResult Activate([In] Guid iid, [In] ClsCtx clsctx, [In] IntPtr activationParams /*zero*/, [Out, MarshalAs(UnmanagedType.IUnknown)] out object interfacePointer);
 
+        [PreserveSig]
         HResult OpenPropertyStore([In] StorageAccess access, [Out] out IPropertyStore propertystore);
 
+        [PreserveSig]
         HResult GetId([Out, MarshalAs(UnmanagedType.LPWStr)] out string deviceId);
 
+        [PreserveSig]
         HResult GetState([Out] out DeviceState state);
     }
 }

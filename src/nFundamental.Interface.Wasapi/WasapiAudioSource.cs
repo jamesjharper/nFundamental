@@ -32,8 +32,14 @@ namespace Fundamental.Interface.Wasapi
         private IWasapiAudioCaptureClientInterop _captureClientInterop;
 
 
+        /// <summary>
+        /// The audio pump thread
+        /// </summary>
         private Thread _audioPumpThread;
 
+        /// <summary>
+        /// The is running
+        /// </summary>
         private int _isRunning;
 
         /// <summary>
@@ -56,7 +62,7 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// The device access.
         /// </value>
-        protected override AudioClientShareMode DeviceAccessMode => _wasapiOptions.Value.AudioSource.DeviceAccess.ConvertToWasapiAudioClientShareMode();
+        protected override AudioClientShareMode DeviceAccessMode => _wasapiOptions.Value.AudioCapture.DeviceAccess.ConvertToWasapiAudioClientShareMode();
 
         /// <summary>
         /// Gets the length of the buffer.
@@ -64,7 +70,7 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// The length of the buffer.
         /// </value>
-        protected override TimeSpan ManualSyncLatency => _wasapiOptions.Value.AudioSource.ManualSyncLatency;
+        protected override TimeSpan ManualSyncLatency => _wasapiOptions.Value.AudioCapture.ManualSyncLatency;
      
         /// <summary>
         /// Gets a value indicating whether [use hardware synchronize].
@@ -72,7 +78,7 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// <c>true</c> if [use hardware synchronize]; otherwise, <c>false</c>.
         /// </value>
-        protected override bool UseHardwareSync => _wasapiOptions.Value.AudioSource.UseHardwareSync;
+        protected override bool UseHardwareSync => _wasapiOptions.Value.AudioCapture.UseHardwareSync;
 
         /// <summary>
         /// Starts capturing audio.
@@ -143,6 +149,11 @@ namespace Fundamental.Interface.Wasapi
         public event EventHandler<EventArgs> Stopped;
 
         /// <summary>
+        /// Raised when an error occurs during streaming.
+        /// </summary>
+        public event EventHandler<ErrorEventArgs> ErrorOccurred;
+
+        /// <summary>
         /// Occurs when data available from the source.
         /// </summary>
         public event EventHandler<DataAvailableEventArgs> DataAvailable;
@@ -167,9 +178,9 @@ namespace Fundamental.Interface.Wasapi
                 AudioClientInterop.Stop();
                 AudioClientInterop.Reset();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // What should we do with error?
+                ErrorOccurred?.Invoke(this, new ErrorEventArgs(ex));
             }
             finally
             {

@@ -20,6 +20,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// Return code Description:
         /// E_POINTER = Parameter pcDevices is NULL.
         /// </returns>
+        [PreserveSig]
         HResult GetCount([Out] out int deviceCount);
 
         /// <summary>
@@ -42,6 +43,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// E_POINTER    = Parameter ppDevice is NULL.
         /// E_INVALIDARG = Parameter nDevice is not a valid device number.
         ///</returns>
+        [PreserveSig]
         HResult Item([In]int deviceIndex, [Out] out IMMDevice device);
     }
 }
