@@ -39,11 +39,11 @@ namespace Fundamental.Interface.Wasapi
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiAudioSource" /> class.
         /// </summary>
-        /// <param name="wasapiOptions">The WASAPI options.</param>
         /// <param name="wasapiDeviceToken">The WASAPI device token.</param>
+        /// <param name="wasapiOptions">The WASAPI options.</param>
         /// <param name="wasapiAudioClientInteropFactory">The WASAPI audio client inter-operations factory.</param>
-        public WasapiAudioSource(IOptions<WasapiOptions> wasapiOptions,
-                                 IDeviceToken wasapiDeviceToken,
+        public WasapiAudioSource(IDeviceToken wasapiDeviceToken, 
+                                 IOptions<WasapiOptions> wasapiOptions,
                                  IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory) : base(wasapiDeviceToken, wasapiAudioClientInteropFactory)
         {
             _wasapiOptions = wasapiOptions;
@@ -85,18 +85,23 @@ namespace Fundamental.Interface.Wasapi
 
             try
             {
-
-                var waitUnitThreadStarts = new ManualResetEventSlim();
-                _captureClientInterop = FactoryAudioCaptureClient();
-
-                _audioPumpThread = new Thread(() =>
+                using (var waitForAudioPumpToStart = new ManualResetEventSlim(false))
                 {
-                    waitUnitThreadStarts.Set();
-                    StartAudioPump();
-                });
+                    _captureClientInterop = FactoryAudioCaptureClient();
+                    _audioPumpThread = new Thread(() =>
+                        {
+                            // ReSharper disable once AccessToDisposedClosure
+                            waitForAudioPumpToStart.Set();
+                            StartAudioPump();
+                        });
 
-                _audioPumpThread.Start();
-                waitUnitThreadStarts.Wait(1000);
+                    _audioPumpThread.Start();
+
+                    if (!waitForAudioPumpToStart.Wait(1000))
+                        throw new FailedToStartAudioPumpException("Starting audio pump timed out.");
+                }
+               
+              
             }
             catch (Exception)
             {
@@ -137,13 +142,12 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         public event EventHandler<EventArgs> Stopped;
 
-        // Private methods
-
         /// <summary>
         /// Occurs when data available from the source.
         /// </summary>
         public event EventHandler<DataAvailableEventArgs> DataAvailable;
 
+        // Private methods
 
         /// <summary>
         /// Starts the audio pump.
@@ -153,11 +157,15 @@ namespace Fundamental.Interface.Wasapi
             try
             {
                 Started?.Invoke(this, EventArgs.Empty);
-
+                AudioClientInterop.Start();
+        
                 if (SupportsEventHandle)
                     HardwareSyncAudioPump();
                 else
                     ManualSyncAudioPump();
+
+                AudioClientInterop.Stop();
+                AudioClientInterop.Reset();
             }
             catch (Exception)
             {
@@ -170,25 +178,38 @@ namespace Fundamental.Interface.Wasapi
             }
         }
 
+        /// <summary>
+        /// Pumps the current audio content audio.
+        /// </summary>
         private void PumpAudio()
         {
             _captureClientInterop.UpdateBuffer();
             var bufferSize = _captureClientInterop.GetBufferByteSize();
+
+            if (bufferSize == 0)
+                return;
+
             DataAvailable?.Invoke(this, new DataAvailableEventArgs(bufferSize));
+
+            // Drop any remaining frames if they where not consumed from the read method
+            _captureClientInterop.ReleaseBuffer();
         }
 
+        /// <summary>
+        /// Runs the audio pump using hardware interrupt audio synchronization
+        /// </summary>
         private void HardwareSyncAudioPump()
         {
-            var latency = AudioClientInterop.GetStreamLatency();
-            var timeoutLatency = TimeSpan.FromTicks(latency.Ticks * 2);
+            var bufferSize = AudioClientInterop.GetBufferSize();
+            var latency = _captureClientInterop.FramesToLatency(bufferSize);
             var bufferUnderrunCount = 0;
 
             while (_isRunning == 1)
             {
-                if (bufferUnderrunCount < MaxBufferUnderruns)
+                if (bufferUnderrunCount > MaxBufferUnderruns)
                     break;
 
-                if (!HardwareSyncEvent.WaitOne(timeoutLatency))
+                if (!HardwareSyncEvent.WaitOne(latency))
                 {
                     bufferUnderrunCount++;
                     continue;
@@ -198,9 +219,13 @@ namespace Fundamental.Interface.Wasapi
             }
         }
 
+        /// <summary>
+        /// Runs the audio pump using Manual audio synchronization
+        /// </summary>
         private void ManualSyncAudioPump()
         {
-            var latency = AudioClientInterop.GetStreamLatency();
+            var bufferSize = AudioClientInterop.GetBufferSize();
+            var latency = _captureClientInterop.FramesToLatency(bufferSize);
             var pollRate = TimeSpan.FromTicks(latency.Ticks / 2);
 
             while (_isRunning == 1)

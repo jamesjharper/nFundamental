@@ -12,7 +12,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <summary>
         /// The thread dispatch strategy
         /// </summary>
-        private readonly IComThreadInterpoStrategy _comThreadInterpoStrategy;
+        private readonly IComThreadInteropStrategy _comThreadInteropStrategy;
 
         /// <summary>
         /// The wave format converter
@@ -22,12 +22,12 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiAudioClientInteropFactory"/> class.
         /// </summary>
-        /// <param name="comThreadInterpoStrategy">The thread dispatch strategy.</param>
+        /// <param name="comThreadInteropStrategy">The thread dispatch strategy.</param>
         /// <param name="waveFormatConverter">The wave format converter.</param>
-        public WasapiAudioClientInteropFactory(IComThreadInterpoStrategy comThreadInterpoStrategy,
-                                        IAudioFormatConverter<WaveFormat> waveFormatConverter)
+        public WasapiAudioClientInteropFactory(IComThreadInteropStrategy comThreadInteropStrategy,
+                                               IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
-            _comThreadInterpoStrategy = comThreadInterpoStrategy;
+            _comThreadInteropStrategy = comThreadInteropStrategy;
             _waveFormatConverter = waveFormatConverter;
         }
 
@@ -55,7 +55,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         public IWasapiAudioClientInterop FactoryAudioClient(WasapiDeviceToken deviceToken)
         {
             var iAudioClient = Activate<IAudioClient>(deviceToken.MmDevice);
-            return new WasapiAudioClientInterop(iAudioClient, _comThreadInterpoStrategy, _waveFormatConverter);
+            return new WasapiAudioClientInterop(iAudioClient, _comThreadInteropStrategy, _waveFormatConverter);
         }
 
         /// <summary>
@@ -82,9 +82,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <exception cref="DeviceNotAccessableException"></exception>
         private object Activate(IMMDevice immDevice, Guid iid)
         {
-            if (_comThreadInterpoStrategy.RequiresInvoke())
+            if (_comThreadInteropStrategy.RequiresInvoke())
             {
-                return _comThreadInterpoStrategy.InvokeOnTargetThread(new Func<IMMDevice, Guid, object>(Activate), immDevice, iid);
+                return _comThreadInteropStrategy.InvokeOnTargetThread(new Func<IMMDevice, Guid, object>(Activate), immDevice, iid);
             }
 
             object result;

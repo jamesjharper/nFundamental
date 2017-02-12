@@ -31,6 +31,16 @@ namespace Fundamental.Interface.Wasapi
         /// <summary>
         /// Gets the default device for the operating system
         /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        public WasapiDeviceToken GetDefaultDevice(DeviceType type)
+        {
+            return GetDefaultDevice(type, DeviceRole.Multimedia);
+        }
+
+        /// <summary>
+        /// Gets the default device for the operating system
+        /// </summary>
         /// <param name="type">The type of device.</param>
         /// <param name="deviceRole">The device role.</param>
         /// <returns>
@@ -61,6 +71,16 @@ namespace Fundamental.Interface.Wasapi
         IDeviceToken IDefaultDeviceProvider.GetDefaultDevice(DeviceType type, DeviceRole deviceRole)
         {
             return GetDefaultDevice(type, deviceRole);
+        }
+
+        /// <summary>
+        /// Gets the default device for the operating system
+        /// </summary>
+        /// <param name="type">The device type.</param>
+        /// <returns></returns>
+        IDeviceToken IDefaultDeviceProvider.GetDefaultDevice(DeviceType type)
+        {
+            return GetDefaultDevice(type);
         }
 
         #endregion

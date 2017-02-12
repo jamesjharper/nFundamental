@@ -17,7 +17,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <summary>
         /// The thread dispatcher
         /// </summary>
-        private readonly IComThreadInterpoStrategy _comThreadInterpoStrategy;
+        private readonly IComThreadInteropStrategy _comThreadInteropStrategy;
 
         /// <summary>
         /// The wave format converter
@@ -42,14 +42,14 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// Initializes a new instance of the <see cref="WasapiAudioClientInterop"/> class.
         /// </summary>
         /// <param name="audioClient">The audio client.</param>
-        /// <param name="comThreadInterpoStrategy"></param>
+        /// <param name="comThreadInteropStrategy"></param>
         /// <param name="waveFormatConverter">The wave format converter.</param>
         public WasapiAudioClientInterop(IAudioClient audioClient,
-                                        IComThreadInterpoStrategy comThreadInterpoStrategy,
+                                        IComThreadInteropStrategy comThreadInteropStrategy,
                                         IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
             ComInstance = audioClient;
-            _comThreadInterpoStrategy = comThreadInterpoStrategy;
+            _comThreadInteropStrategy = comThreadInteropStrategy;
             _waveFormatConverter = waveFormatConverter;
         }
 
@@ -101,17 +101,15 @@ namespace Fundamental.Interface.Wasapi.Internal
             var waveFormatEx = _waveFormatConverter.Convert(format);
 
             using (var pWaveFormatEx = CoTaskMemPtr.Alloc(waveFormatEx.ByteSize))
-            using (var ppClosestMatch = CoTaskMemPtr.Alloc(IntPtr.Size))
             {
                 waveFormatEx.Write(pWaveFormatEx);
 
                 // ReSharper disable once RedundantAssignment
-                var ppClosestMatchOut = ppClosestMatch.Ptr;
-
-                var hresult = ComInstance.IsFormatSupported(shareMode, pWaveFormatEx, out ppClosestMatchOut);
+                IntPtr pClosestMatchOut;
+                var hresult = ComInstance.IsFormatSupported(shareMode, pWaveFormatEx, out pClosestMatchOut);
 
                 // Try reading the closest match from the pointer to the pointer
-                closestMatch = ReadAudioFormat(ppClosestMatch);
+                closestMatch = ReadAudioFormat(pClosestMatchOut);
 
                 // Succeeded with a closest match to the specified format.
                 if (hresult == HResult.E_FAIL)
@@ -133,16 +131,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         public IAudioFormat GetMixFormat()
         {
-            using (var ppFormat = CoTaskMemPtr.Alloc(IntPtr.Size))
-            {
-                // ReSharper disable once RedundantAssignment
-                var ppFormatOut = ppFormat.Ptr;
-
-                ComInstance.GetMixFormat(out ppFormatOut).ThrowIfFailed();
-
-                // Try reading the format from the pointer to the pointer
-                return ReadAudioFormat(ppFormat);
-            }
+            IntPtr format;
+            ComInstance.GetMixFormat(out format).ThrowIfFailed();
+            return ReadAudioFormat(format);
         }
 
 
@@ -220,9 +211,9 @@ namespace Fundamental.Interface.Wasapi.Internal
                                 Guid sessionId)
         {
             // Check to see if we need to jump threads
-            if (_comThreadInterpoStrategy.RequiresInvoke())
+            if (_comThreadInteropStrategy.RequiresInvoke())
             {
-                _comThreadInterpoStrategy.InvokeOnTargetThread
+                _comThreadInteropStrategy.InvokeOnTargetThread
                     (
                         new Action<AudioClientShareMode, AudioClientStreamFlags, TimeSpan, TimeSpan, WaveFormatEx, Guid>(Initialize),
                         shareMode, streamFlags, bufferDuration, devicePeriod, format, sessionId
@@ -248,9 +239,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         public void Start()
         {
             // Check to see if we need to jump threads
-            if (_comThreadInterpoStrategy.RequiresInvoke())
+            if (_comThreadInteropStrategy.RequiresInvoke())
             {
-                _comThreadInterpoStrategy.InvokeOnTargetThread(new Action(Start));
+                _comThreadInteropStrategy.InvokeOnTargetThread(new Action(Start));
                 return;
             }
 
@@ -263,9 +254,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         public void Stop()
         {
             // Check to see if we need to jump threads
-            if (_comThreadInterpoStrategy.RequiresInvoke())
+            if (_comThreadInteropStrategy.RequiresInvoke())
             {
-                _comThreadInterpoStrategy.InvokeOnTargetThread(new Action(Stop));
+                _comThreadInteropStrategy.InvokeOnTargetThread(new Action(Stop));
                 return;
             }
 
@@ -279,9 +270,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         public void Reset()
         {
             // Check to see if we need to jump threads
-            if (_comThreadInterpoStrategy.RequiresInvoke())
+            if (_comThreadInteropStrategy.RequiresInvoke())
             {
-                _comThreadInterpoStrategy.InvokeOnTargetThread(new Action(Reset));
+                _comThreadInteropStrategy.InvokeOnTargetThread(new Action(Reset));
                 return;
             }
 
@@ -311,7 +302,8 @@ namespace Fundamental.Interface.Wasapi.Internal
             var audioCaptureClientComInstance = GetService<IAudioCaptureClient>();
 
             var blockAlignment = _initializedWavFormat.BlockAlign;
-            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment);
+            var sampleRate = (int)_initializedWavFormat.SamplesPerSec;
+            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment, sampleRate);
         }
 
 
@@ -335,8 +327,8 @@ namespace Fundamental.Interface.Wasapi.Internal
         public object GetService(Guid interfaceId)
         {
             // Check to see if we need to jump threads
-            if (_comThreadInterpoStrategy.RequiresInvoke())
-                return _comThreadInterpoStrategy.InvokeOnTargetThread(new Func<Guid,object>(GetService), interfaceId);
+            if (_comThreadInteropStrategy.RequiresInvoke())
+                return _comThreadInteropStrategy.InvokeOnTargetThread(new Func<Guid,object>(GetService), interfaceId);
 
 
             object outObject;
@@ -347,20 +339,16 @@ namespace Fundamental.Interface.Wasapi.Internal
 
         // Private Methods
 
-        private IAudioFormat ReadAudioFormat(NativePtr pp)
+        private IAudioFormat ReadAudioFormat(IntPtr pointer)
         {
-            if (pp == NativePtr.Null)
-                return null;
-
-            using (var p = pp.AttachPointerAtPointer())
+            using (var safePointer = CoTaskMemPtr.Attach(pointer))
             {
-                if (p != NativePtr.Null)
-                    return null;
 
-                var formatEx = WaveFormatEx.FromPointer(p);
+                if (safePointer == NativePtr.Null)
+                    return null;
+                var formatEx = WaveFormatEx.FromPointer(safePointer.Ptr);
                 return _waveFormatConverter.Convert(formatEx);
             }
         }
-
     }
 }

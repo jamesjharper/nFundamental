@@ -5,8 +5,8 @@ namespace Fundamental.Interface.Wasapi.Internal
     /// <summary>
     /// IComThreadInterpoStrategy which simply Invokes on the calling thread
     /// </summary>
-    /// <seealso cref="Fundamental.Interface.Wasapi.IComThreadInterpoStrategy" />
-    public class CallingThreadComThreadInterpoStrategy : IComThreadInterpoStrategy
+    /// <seealso cref="IComThreadInteropStrategy" />
+    public class CallingThreadComThreadInteropStrategy : IComThreadInteropStrategy
     {
         /// <summary>
         /// check to see if the current thread requires  invoke.

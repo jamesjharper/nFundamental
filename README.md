@@ -26,7 +26,8 @@ This project is young and is not yet ready for production use.
   - Device Info command line app            - DONE (Pending refinement for APIs other then WASAPI)
   - JSON serializable Audio format          - DONE
   - Windows WAVEFORMAT to json convertion   - DONE
-  - WASAPI Device Redner/Capature  
+  - WASAPI Device Capature                  - DONE
+  - WASAPI Device Render
   - *.wav envelope support 
   - Playback/Record support
   - Channel converter

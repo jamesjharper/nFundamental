@@ -60,7 +60,7 @@ namespace Fundamental.Interface.Wasapi
         /// <value>
         /// The event handle.
         /// </value>
-        protected ManualResetEvent HardwareSyncEvent { get; }
+        protected AutoResetEvent HardwareSyncEvent { get; }
 
         #region Required Settings 
 
@@ -101,7 +101,7 @@ namespace Fundamental.Interface.Wasapi
             _wasapiDeviceToken = wasapiDeviceToken;
             _wasapiAudioClientInteropFactory = wasapiAudioClientInteropFactory;
             SupportsEventHandle = true;
-            HardwareSyncEvent = new ManualResetEvent(false);
+            HardwareSyncEvent = new AutoResetEvent(false);
         }
 
         /// <summary>

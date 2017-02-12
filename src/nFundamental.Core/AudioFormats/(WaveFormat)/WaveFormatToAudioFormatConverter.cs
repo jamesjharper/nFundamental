@@ -164,10 +164,10 @@ namespace Fundamental.Core.AudioFormats
             {
                 { FormatKeys.Endianness,     GetEndianness(audioFormat)},
                 { FormatKeys.Encoding,       FormatKeys.Pcm.Format},
-                { FormatKeys.Pcm.Depth,      audioFormat.ValidBitsPerSample},
-                { FormatKeys.Pcm.Packing,    audioFormat.BitsPerSample},
-                { FormatKeys.Pcm.SampleRate, audioFormat.SamplesPerSec},
-                { FormatKeys.Pcm.Channels,   audioFormat.Channels},
+                { FormatKeys.Pcm.Depth,      (int)audioFormat.ValidBitsPerSample},
+                { FormatKeys.Pcm.Packing,    (int)audioFormat.BitsPerSample},
+                { FormatKeys.Pcm.SampleRate, (int)audioFormat.SamplesPerSec},
+                { FormatKeys.Pcm.Channels,   (int)audioFormat.Channels},
                 { FormatKeys.Pcm.Speakers,   audioFormat.ChannelMask},
                 { FormatKeys.Pcm.DataType,   GetDataType(audioFormat)},
             };
@@ -189,10 +189,10 @@ namespace Fundamental.Core.AudioFormats
             {
                 { FormatKeys.Endianness,     GetEndianness(audioFormat)},
                 { FormatKeys.Encoding,       FormatKeys.Pcm.Format},
-                { FormatKeys.Pcm.Depth,      audioFormat.BitsPerSample},
-                { FormatKeys.Pcm.Packing,    audioFormat.BitsPerSample}, // Packing and depth are the same when using WAVEFORMATEX
-                { FormatKeys.Pcm.SampleRate, audioFormat.SamplesPerSec},
-                { FormatKeys.Pcm.Channels,   audioFormat.Channels},
+                { FormatKeys.Pcm.Depth,      (int)audioFormat.BitsPerSample},
+                { FormatKeys.Pcm.Packing,    (int)audioFormat.BitsPerSample}, // Packing and depth are the same when using WAVEFORMATEX
+                { FormatKeys.Pcm.SampleRate, (int)audioFormat.SamplesPerSec},
+                { FormatKeys.Pcm.Channels,   (int)audioFormat.Channels},
                 { FormatKeys.Pcm.DataType,   GetDataType(audioFormat)},
             };
 
