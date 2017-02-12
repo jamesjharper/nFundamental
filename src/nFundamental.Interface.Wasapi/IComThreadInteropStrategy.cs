@@ -5,7 +5,7 @@ namespace Fundamental.Interface.Wasapi
     /// <summary>
     /// 
     /// </summary>
-    public interface IComThreadInterpoStrategy
+    public interface IComThreadInteropStrategy
     {
 
         /// <summary>

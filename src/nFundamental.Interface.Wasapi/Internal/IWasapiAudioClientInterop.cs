@@ -8,7 +8,7 @@ namespace Fundamental.Interface.Wasapi.Internal
     /// An Anti corruption layer for the IAudioClient COM object. 
     /// Interaction with IAudioClient can require pointer Manipulation, which is a little ugly in managed languages 
     /// </summary>
-    public interface IWasapiAudioClientInterop
+    public interface IWasapiAudioClientInterop 
     {
         /// <summary>
         /// Gets the number of audio frames that the buffer can hold.
@@ -105,5 +105,11 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// Stops the audio stream.
         /// </summary>
         void Stop();
+
+        /// <summary>
+        /// Gets the capture client.
+        /// </summary>
+        /// <returns></returns>
+        IWasapiAudioCaptureClientInterop GetCaptureClient();
     }
 }

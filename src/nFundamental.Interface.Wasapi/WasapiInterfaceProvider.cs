@@ -13,8 +13,8 @@ namespace Fundamental.Interface.Wasapi
             ISupportsInterface<WasapiDefaultDeviceProvider>,
             ISupportsInterface<WasapiInterfaceNotifyClient>,
             ISupportsInterface<WasapiDeviceEnumerator>,
-            ISupportsInterface<WasapiDeviceInfoFactory>
-
+            ISupportsInterface<WasapiDeviceInfoFactory>,
+            ISupportsInterface<WasapiDeviceAudioSourceFactory>
     {
 
         #region WASAPI Options
@@ -35,8 +35,21 @@ namespace Fundamental.Interface.Wasapi
 
         #endregion
 
-        #region WaveFormatToAudioFormatConverter Dependency
+        #region IComThreadInterpoStrategy Dependency
 
+        /// <summary>
+        /// Gets or sets the COM thread strategy.
+        /// By default WASAPI com object are create on the calling thread.
+        /// This be overridden by setting a custom IComThreadInteropStrategy instance here. 
+        /// </summary>
+        /// <value>
+        /// The COM inter-operations thread strategy.
+        /// </value>
+        public IComThreadInteropStrategy ComThreadInteropStrategy { get; set; } = new CallingThreadComThreadInteropStrategy();
+
+        #endregion
+
+        #region WaveFormatToAudioFormatConverter Dependency
 
         /// <summary>
         /// Gets the audio format converter wave format.
@@ -45,6 +58,19 @@ namespace Fundamental.Interface.Wasapi
         /// The audio format converter wave format.
         /// </value>
         private static IAudioFormatConverter<WaveFormat> AudioFormatConverterWaveFormat => WaveFormatInterfaceProvider.GetInterface<IAudioFormatConverter<WaveFormat>>();
+
+        #endregion
+
+        #region WasapiAudioClientInteropFactory Dependency
+
+        private WasapiAudioClientInteropFactory _wasapiAudioClientInteropFactory;
+
+        private WasapiAudioClientInteropFactory WasapiAudioClientInteropFactory => _wasapiAudioClientInteropFactory ?? (_wasapiAudioClientInteropFactory = GetWasapiAudioClientInteropFactory());
+     
+        protected virtual WasapiAudioClientInteropFactory GetWasapiAudioClientInteropFactory()
+        {
+            return new WasapiAudioClientInteropFactory(ComThreadInteropStrategy, AudioFormatConverterWaveFormat);
+        }
 
         #endregion
 
@@ -144,6 +170,14 @@ namespace Fundamental.Interface.Wasapi
         /// <returns></returns>
         WasapiDeviceInfoFactory ISupportsInterface<WasapiDeviceInfoFactory>.GetAudioInterface() 
             => new WasapiDeviceInfoFactory(WasapiInterfaceNotifyClient, WasapiPropertyNameTranslator, AudioFormatConverterWaveFormat);
+
+
+        /// <summary>
+        /// Gets the audio interface used for sending audio to hardware devices.
+        /// </summary>
+        /// <returns></returns>
+        WasapiDeviceAudioSourceFactory ISupportsInterface<WasapiDeviceAudioSourceFactory>.GetAudioInterface()
+            => new WasapiDeviceAudioSourceFactory(_options, WasapiAudioClientInteropFactory);
 
     }
 }

@@ -18,6 +18,14 @@ namespace Fundamental.Interface.Wasapi.Options
         /// <value>
         /// The length of the buffer.
         /// </value>
-        public TimeSpan BufferLength { get; set; } = TimeSpan.FromMilliseconds(100);
+        public TimeSpan ManualSyncLatency { get; set; } = TimeSpan.FromMilliseconds(100);
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [use event synchronize].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [use event synchronize]; otherwise, <c>false</c>.
+        /// </value>
+        public bool UseHardwareSync { get; set; } = true;
     }
 }

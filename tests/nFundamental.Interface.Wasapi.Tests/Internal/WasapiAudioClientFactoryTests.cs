@@ -18,7 +18,7 @@ namespace Fundamental.Interface.Wasapi.Tests.Internal
 
         private IAudioFormatConverter<WaveFormat> AudioFormatConverterWaveFormatFixture { get; set; }
 
-        private IComThreadInterpoStrategy ComThreadInterpoStrategyFixture { get; set; }
+        private IComThreadInteropStrategy ComThreadInterpoStrategyFixture { get; set; }
 
 
 
@@ -28,7 +28,7 @@ namespace Fundamental.Interface.Wasapi.Tests.Internal
         {
             ImmDevice = Substitute.For<IMMDevice>();
             AudioFormatConverterWaveFormatFixture = Substitute.For<IAudioFormatConverter<WaveFormat>>();
-            ComThreadInterpoStrategyFixture = Substitute.For<IComThreadInterpoStrategy>();
+            ComThreadInterpoStrategyFixture = Substitute.For<IComThreadInteropStrategy>();
         }
 
         private WasapiAudioClientInteropFactory GetTestFixture() => new WasapiAudioClientInteropFactory(ComThreadInterpoStrategyFixture, AudioFormatConverterWaveFormatFixture);
