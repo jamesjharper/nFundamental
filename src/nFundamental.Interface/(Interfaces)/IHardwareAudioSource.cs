@@ -3,7 +3,7 @@ using Fundamental.Core;
 
 namespace Fundamental.Interface
 {
-    public interface IAudioSource : IFormatSetable, IFormatGetable, IFormatNegotiable, IFormatChangable
+    public interface IHardwareAudioSource : ISynchronizedAudioSource
     {
 
         /// <summary>
@@ -28,9 +28,5 @@ namespace Fundamental.Interface
         /// </summary>
         event EventHandler<EventArgs> Stopped;
 
-        /// <summary>
-        /// Raised when audio data is received from the source.
-        /// </summary>
-        event EventHandler<SourceDataReceivedEventArgs> DataRecived;
     }
 }

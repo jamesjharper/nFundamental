@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Fundamental.Core;
 using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
@@ -8,7 +9,11 @@ using Fundamental.Interface.Wasapi.Interop;
 
 namespace Fundamental.Interface.Wasapi
 {
-    public abstract class WasapiAudioClient
+    public abstract class WasapiAudioClient : 
+        IFormatGetable, 
+        IFormatSetable,
+        IIsFormatSupported,
+        IFormatChangeNotifiable
     {
         // Dependents
 
@@ -27,12 +32,7 @@ namespace Fundamental.Interface.Wasapi
         /// <summary>
         /// The is initialize flag
         /// </summary>
-        private bool _isInitialize;
-
-        /// <summary>
-        /// The initialize lock
-        /// </summary>
-        private readonly object _initializeLock = new object();
+        private int _isInitialize;
 
         /// <summary>
         /// The audio client
@@ -46,6 +46,22 @@ namespace Fundamental.Interface.Wasapi
         protected virtual IAudioFormat DesiredAudioFormat { get; set; }
 
 
+        /// <summary>
+        /// Gets a value indicating whether [supports event handle].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [supports event handle]; otherwise, <c>false</c>.
+        /// </value>
+        protected bool SupportsEventHandle { get; private set; }
+
+        /// <summary>
+        /// Gets the event handle.
+        /// </summary>
+        /// <value>
+        /// The event handle.
+        /// </value>
+        protected ManualResetEvent HardwareSyncEvent { get; }
+
         #region Required Settings 
 
         /// <summary>
@@ -56,18 +72,23 @@ namespace Fundamental.Interface.Wasapi
         /// </value>
         protected abstract AudioClientShareMode DeviceAccessMode { get; }
 
-
         /// <summary>
         /// Gets the length of the buffer.
         /// </summary>
         /// <value>
         /// The length of the buffer.
         /// </value>
-        protected abstract TimeSpan BufferLength { get; }
+        protected abstract TimeSpan ManualSyncLatency { get; }
 
+        /// <summary>
+        /// Gets a value indicating whether to use hardware sampling synchronization. 
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [use hardware synchronize]; otherwise, <c>false</c>.
+        /// </value>
+        protected abstract bool UseHardwareSync { get; }
 
         #endregion
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Fundamental.Interface.Wasapi.WasapiAudioSource" /> class.
@@ -79,8 +100,14 @@ namespace Fundamental.Interface.Wasapi
         {
             _wasapiDeviceToken = wasapiDeviceToken;
             _wasapiAudioClientInteropFactory = wasapiAudioClientInteropFactory;
+            SupportsEventHandle = true;
+            HardwareSyncEvent = new ManualResetEvent(false);
         }
 
+        /// <summary>
+        /// Raised when source format changes.
+        /// </summary>
+        public event EventHandler<EventArgs> FormatChanged;
 
         /// <summary>
         /// Gets the audio client.
@@ -182,6 +209,8 @@ namespace Fundamental.Interface.Wasapi
             if (!IsAudioFormatSupported(audioFormat))
                 throw new FormatNotSupportedException("Target device does not support the given format");
             DesiredAudioFormat = audioFormat;
+            // Raise format changed event
+            FormatChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -212,7 +241,6 @@ namespace Fundamental.Interface.Wasapi
             return SuggestFormats().FirstOrDefault();
         }
 
-
         // Private methods
 
         /// <summary>
@@ -220,19 +248,19 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         public void EnsureIsInitialize()
         {
-            if (_isInitialize)
+            if (Interlocked.Exchange(ref _isInitialize, 1) == 1)
                 return;
 
-            lock (_initializeLock)
+            try
             {
-                if (_isInitialize)
-                    return;
-
                 Initialize();
-                _isInitialize = true;
+            }
+            catch (Exception)
+            {
+                _isInitialize = 0;
+                throw;
             }
         }
-
 
         /// <summary>
         /// Initializes this instance.
@@ -240,7 +268,50 @@ namespace Fundamental.Interface.Wasapi
         protected void Initialize()
         {
             var format = GetFormat();
-            AudioClientInterop.Initialize(DeviceAccessMode, AudioClientStreamFlags.None, BufferLength, TimeSpan.Zero, format);
+
+            if (UseHardwareSync)
+                InitializeForHardwareSync(format);
+            else
+                InitializeForManualSync(format);
+        }
+
+
+        private void InitializeForHardwareSync(IAudioFormat format)
+        {
+            // Try Initializing using hardware sync
+            if (TryInitializeForHardwareSync(format))
+                return;
+
+            // If it fails then fall back to manual sync
+            InitializeForManualSync(format);
+        }
+
+
+        private bool TryInitializeForHardwareSync(IAudioFormat format)
+        {
+            AudioClientInterop.Initialize(DeviceAccessMode, AudioClientStreamFlags.EventCallback, TimeSpan.Zero, TimeSpan.Zero, format);
+
+            try
+            {
+                HardwareSyncEvent.Reset();
+                var handle = HardwareSyncEvent.GetSafeWaitHandle().DangerousGetHandle();
+                AudioClientInterop.SetEventHandle(handle);
+                SupportsEventHandle = true;
+            }
+            catch (Exception)
+            {
+                // reset the current interop instance.
+                _audioClientInterop = null;
+                SupportsEventHandle = false;
+                return false;
+            }
+
+            return true;
+        }
+        private void InitializeForManualSync(IAudioFormat format)
+        {
+            AudioClientInterop.Initialize(DeviceAccessMode, AudioClientStreamFlags.None, ManualSyncLatency, TimeSpan.Zero, format);
+            SupportsEventHandle = false;
         }
 
 
@@ -249,5 +320,15 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <returns></returns>
         protected virtual IWasapiAudioClientInterop FactoryAudioClient() => _wasapiAudioClientInteropFactory.FactoryAudioClient(_wasapiDeviceToken);
+
+        /// <summary>
+        /// Factories the capture client.
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IWasapiAudioCaptureClientInterop FactoryAudioCaptureClient()
+        {
+           EnsureIsInitialize();
+           return AudioClientInterop.GetCaptureClient();
+        }
     }
 }

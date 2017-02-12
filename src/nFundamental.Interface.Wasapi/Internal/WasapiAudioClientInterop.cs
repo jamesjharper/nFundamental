@@ -24,6 +24,12 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         private readonly IAudioFormatConverter<WaveFormat> _waveFormatConverter;
 
+
+        /// <summary>
+        /// The initialized wave format
+        /// </summary>
+        private WaveFormat _initializedWavFormat;
+
         /// <summary>
         /// Gets the COM instance.
         /// </summary>
@@ -39,15 +45,13 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <param name="comThreadInterpoStrategy"></param>
         /// <param name="waveFormatConverter">The wave format converter.</param>
         public WasapiAudioClientInterop(IAudioClient audioClient,
-                                 IComThreadInterpoStrategy comThreadInterpoStrategy,
-                                 IAudioFormatConverter<WaveFormat> waveFormatConverter)
+                                        IComThreadInterpoStrategy comThreadInterpoStrategy,
+                                        IAudioFormatConverter<WaveFormat> waveFormatConverter)
         {
             ComInstance = audioClient;
             _comThreadInterpoStrategy = comThreadInterpoStrategy;
             _waveFormatConverter = waveFormatConverter;
         }
-
-
 
         /// <summary>
         /// Gets the number of audio frames that the buffer can hold.
@@ -233,6 +237,7 @@ namespace Fundamental.Interface.Wasapi.Internal
             {
                 format.Write(pWaveFormatEx);
                 ComInstance.Initialize(shareMode, streamFlags, bufferDurationTicks, devicePeriodTicks, pWaveFormatEx, sessionId).ThrowIfFailed();
+                _initializedWavFormat = format;
             }
         }
 
@@ -292,6 +297,21 @@ namespace Fundamental.Interface.Wasapi.Internal
         public void SetEventHandle(IntPtr handle)
         {
             ComInstance.SetEventHandle(handle).ThrowIfFailed();
+        }
+
+        /// <summary>
+        /// Gets the capture client.
+        /// </summary>
+        /// <returns></returns>
+        public IWasapiAudioCaptureClientInterop GetCaptureClient()
+        {
+            if (_initializedWavFormat == null)
+                throw new DeviceNotInitializedException("Unable to get a capture client as device is not currently initialized.");
+
+            var audioCaptureClientComInstance = GetService<IAudioCaptureClient>();
+
+            var blockAlignment = _initializedWavFormat.BlockAlign;
+            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment);
         }
 
 

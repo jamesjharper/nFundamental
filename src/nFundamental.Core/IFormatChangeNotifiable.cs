@@ -2,7 +2,7 @@
 
 namespace Fundamental.Core
 {
-    public interface IFormatChangable
+    public interface IFormatChangeNotifiable
     {
         /// <summary>
         /// Raised when source format changes.

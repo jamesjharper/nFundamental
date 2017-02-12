@@ -286,6 +286,8 @@ namespace Fundamental.Core.AudioFormats
         /// <param name="bitConverter">The bit converter.</param>
         private WaveFormatEx(byte[] bytes, EndianBitConverter bitConverter)
         {
+            // TODO: dont repeat your self, find a way of refactoring these two methods together
+
             BitConverter = bitConverter;
 
             var pcmWaveFormatSize = _waveformatBytes.Length - sizeof(ushort);
