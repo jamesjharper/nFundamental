@@ -111,5 +111,11 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         /// <returns></returns>
         IWasapiAudioCaptureClientInterop GetCaptureClient();
+
+        /// <summary>
+        /// Gets the render client.
+        /// </summary>
+        /// <returns></returns>
+        IWasapiAudioRenderClientInterop GetRenderClient();
     }
 }

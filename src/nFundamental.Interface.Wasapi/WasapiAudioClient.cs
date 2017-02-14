@@ -393,13 +393,6 @@ namespace Fundamental.Interface.Wasapi
         {
         }
 
-        /// <summary>
-        /// Called when the instance de-initializes.
-        /// </summary>
-        protected virtual void DeinitializeImpl()
-        {
-        }
-
         // Private methods
 
         public IEnumerable<IAudioFormat> CalculateSuggestFormats()
@@ -481,7 +474,6 @@ namespace Fundamental.Interface.Wasapi
             }
         }
 
-
         private void Initialize()
         {
             var format = GetFormat();
@@ -498,7 +490,6 @@ namespace Fundamental.Interface.Wasapi
         private void Deinitialize()
         {
             _audioClientInterop = null;
-            DeinitializeImpl();
         }
 
         private void InitializeForHardwareSync(IAudioFormat format)

@@ -27,7 +27,7 @@ namespace Fundamental.Interface.Wasapi
         // Internal fields
 
         /// <summary>
-        /// The currnent audio capture client interop
+        /// The current audio capture client interop
         /// </summary>
         private IWasapiAudioCaptureClientInterop _audioCaptureClientInterop;
 
@@ -112,22 +112,24 @@ namespace Fundamental.Interface.Wasapi
         /// <summary>
         /// Pumps the current audio content audio.
         /// </summary>
-        private void PumpAudio(IWasapiAudioCaptureClientInterop captureClientInterop)
+        private bool PumpAudio()
         {
-            captureClientInterop.UpdateBuffer();
+            var captureClientInterop = _audioCaptureClientInterop;
+
+            _audioCaptureClientInterop.UpdateBuffer();
+
             var bufferSize = captureClientInterop.GetBufferByteSize();
 
             if (bufferSize == 0)
-                return;
+                return false;
 
             DataAvailable?.Invoke(this, new DataAvailableEventArgs(bufferSize));
 
             // Drop any remaining frames if they where not consumed from the read method
             captureClientInterop.ReleaseBuffer();
+
+            return true;
         }
-
-       
-
 
         /// <summary>
         /// Runs the audio pump using hardware interrupt audio synchronization
@@ -151,8 +153,7 @@ namespace Fundamental.Interface.Wasapi
                     bufferUnderrunCount++;
                     continue;
                 }
-
-                PumpAudio(_audioCaptureClientInterop);
+                while (PumpAudio()) { }
             }
         }
 
@@ -171,7 +172,7 @@ namespace Fundamental.Interface.Wasapi
             while (IsRunning)
             {
                 Thread.Sleep(pollRate);
-                PumpAudio(_audioCaptureClientInterop);
+                while (PumpAudio()) { }
             }
         }
     }

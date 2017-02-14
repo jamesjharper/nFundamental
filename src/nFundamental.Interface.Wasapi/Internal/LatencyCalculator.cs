@@ -55,7 +55,6 @@ namespace Fundamental.Interface.Wasapi.Internal
         public TimeSpan FramesToLatency(uint frameCount)
         {
             const ulong ticksPerSecond = TimeSpan.TicksPerSecond;
-
             var samplePeriod = ticksPerSecond / _sampleRate;
 
             var numberOfTicks = samplePeriod * frameCount;

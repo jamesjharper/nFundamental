@@ -65,8 +65,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         public void UpdateBuffer()
         {
             // Get the available data in the shared buffer.
-            _audioCaptureClient.GetBuffer(out _pData, out _currentAudioFramesInBuffer, out _currentBufferFlags,
-                out _devicePosition, out _qpcPosition).ThrowIfFailed();
+            _audioCaptureClient.GetBuffer(out _pData, out _currentAudioFramesInBuffer, out _currentBufferFlags,  out _devicePosition, out _qpcPosition).ThrowIfFailed();
             _pDataOffset = 0;
             if ((_currentBufferFlags & AudioClientBufferFlags.Silent) != 0)
             {
@@ -110,14 +109,11 @@ namespace Fundamental.Interface.Wasapi.Internal
             var lengthInFrames = length /_frameSize;
 
             var framesWritten = Math.Min(lengthInFrames, (int) _currentAudioFramesInBuffer);
-            var bytesWritten = framesWritten*_frameSize;
+            var bytesWritten = framesWritten * _frameSize;
 
             Marshal.Copy(_pData + _pDataOffset, buffer, offset, bytesWritten);
 
             _pDataOffset += bytesWritten;
-
-            // Release the number of frames read from the buffer
-            _audioCaptureClient.ReleaseBuffer((uint) framesWritten);
 
             return bytesWritten;
         }
@@ -139,8 +135,5 @@ namespace Fundamental.Interface.Wasapi.Internal
         {
             return checked((int) _currentAudioFramesInBuffer * _frameSize);
         }
-
-
-       
     }
 }

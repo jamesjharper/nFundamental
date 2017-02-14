@@ -26,14 +26,14 @@ namespace Fundamental.Interface.Wasapi.Options
         /// <value>
         ///   <c>true</c> if [use event synchronize]; otherwise, <c>false</c>.
         /// </value>
-        public bool UseHardwareSync { get; set; } = true;
+        public bool UseHardwareSync { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets a value indicating whether to prefer device native format over WASAPI up sampled format.
+        /// Gets or sets a value indicating whether to prefer device native format over the WASAPI up sampled format.
         /// </summary>
         /// <value>
         /// <c>true</c> if [prefer device native format]; otherwise, <c>false</c>.
         /// </value>
-        public bool PreferDeviceNativeFormat { get; set; } = true;
+        public bool PreferDeviceNativeFormat { get; set; } = false;
     }
 }

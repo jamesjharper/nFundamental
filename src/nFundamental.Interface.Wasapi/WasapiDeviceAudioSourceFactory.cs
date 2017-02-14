@@ -4,7 +4,7 @@ using Fundamental.Interface.Wasapi.Options;
 
 namespace Fundamental.Interface.Wasapi
 {
-    public class WasapiDeviceAudioSourceFactory : IDeviceAudioSourceFactory
+    public class WasapiDeviceAudioSourceFactory : IDeviceAudioSourceFactory, IDeviceAudioSinkFactory
     {
         /// <summary>
         /// The WASAPI options
@@ -42,9 +42,21 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <param name="deviceToken">The device token.</param>
         /// <returns></returns>
-        IHardwareAudioSource IDeviceAudioSourceFactory.GetAudioSource(IDeviceToken deviceToken)
+        public WasapiAudioSource GetAudioSource(IDeviceToken deviceToken)
         {
-            return GetAudioSource(deviceToken);
+            var deviceInfo = _deviceInfoFactory.GetInfoDevice(deviceToken);
+            return new WasapiAudioSource(deviceToken, deviceInfo, _wasapiOptions, _wasapiAudioClientInteropFactory);
+        }
+
+        /// <summary>
+        /// Gets a sink client for the given device token instance.
+        /// </summary>
+        /// <param name="deviceToken">The device token.</param>
+        /// <returns></returns>
+        public WasapiAudioSink GetAudioSink(IDeviceToken deviceToken)
+        {
+            var deviceInfo = _deviceInfoFactory.GetInfoDevice(deviceToken);
+            return new WasapiAudioSink(deviceToken, deviceInfo, _wasapiOptions, _wasapiAudioClientInteropFactory);
         }
 
         /// <summary>
@@ -52,10 +64,19 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <param name="deviceToken">The device token.</param>
         /// <returns></returns>
-        public WasapiAudioSource GetAudioSource(IDeviceToken deviceToken)
+        IHardwareAudioSource IDeviceAudioSourceFactory.GetAudioSource(IDeviceToken deviceToken)
         {
-            var deviceInfo = _deviceInfoFactory.GetInfoDevice(deviceToken);
-            return new WasapiAudioSource(deviceToken, deviceInfo, _wasapiOptions, _wasapiAudioClientInteropFactory);
+            return GetAudioSource(deviceToken);
+        }
+
+        /// <summary>
+        /// Gets a sink client for the given device token instance.
+        /// </summary>
+        /// <param name="deviceToken">The device token.</param>
+        /// <returns></returns>
+        IHardwareAudioSink IDeviceAudioSinkFactory.GetAudioSink(IDeviceToken deviceToken)
+        {
+            return GetAudioSink(deviceToken);
         }
     }
 }
