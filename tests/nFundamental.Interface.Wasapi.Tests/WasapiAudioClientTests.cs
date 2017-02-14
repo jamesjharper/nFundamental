@@ -22,10 +22,11 @@ namespace Fundamental.Interface.Wasapi.Tests
             public WasapiAudioSourceTestFixture
                 (
                     IDeviceToken wasapiDeviceToken,
+                    IDeviceInfo deviceInfo,
                     IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory,
                     IWasapiAudioClientInterop wasapiAudioClientInterop
                 )
-                : base(wasapiDeviceToken, wasapiAudioClientInteropFactory)
+                : base(wasapiDeviceToken, deviceInfo, wasapiAudioClientInteropFactory)
             {
                 AudioClientInterop = wasapiAudioClientInterop;
             }
@@ -37,15 +38,10 @@ namespace Fundamental.Interface.Wasapi.Tests
                 set { DesiredAudioFormat = value; }
             }
 
-            /// <summary>
-            /// Gets the device access mode.
-            /// </summary>
-            /// <value>
-            /// The device access.
-            /// </value>
             protected override AudioClientShareMode DeviceAccessMode => WasapiDeviceAccessOverride;
 
             public AudioClientShareMode WasapiDeviceAccessOverride { get; set; }
+
             public IWasapiAudioClientInterop ActualAudioClientInterop => base.AudioClientInterop;
 
             protected override TimeSpan ManualSyncLatency => ManualSyncLatencyOverride;
@@ -55,6 +51,15 @@ namespace Fundamental.Interface.Wasapi.Tests
             protected override bool UseHardwareSync => UseHardwareSyncOverride;
 
             protected bool UseHardwareSyncOverride { get; set; }
+
+            protected override bool PreferDeviceNativeFormat => PreferDeviceNativeFormatOverride;
+
+            protected bool PreferDeviceNativeFormatOverride { get; set; }
+
+
+            protected override void HardwareSyncAudioPump() { }
+
+            protected override void ManualSyncAudioPump() { }
         }
 
 
@@ -64,6 +69,7 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         private IWasapiAudioClientInterop WasapiAudioClientInteropFixture { get; set; }
 
+        private IDeviceInfo DeviceInfoFixture { get; set; }
 
         [SetUp]
         public void SetUp()
@@ -71,10 +77,11 @@ namespace Fundamental.Interface.Wasapi.Tests
             DeviceTokenFixture = Substitute.For<IDeviceToken>();
             WasapiAudioClientInteropFactoryFixture = Substitute.For<IWasapiAudioClientInteropFactory>();
             WasapiAudioClientInteropFixture = Substitute.For<IWasapiAudioClientInterop>();
+            DeviceInfoFixture = Substitute.For<IDeviceInfo>();
         }
 
         private WasapiAudioSourceTestFixture GetTestFixture()
-            => new WasapiAudioSourceTestFixture(DeviceTokenFixture, WasapiAudioClientInteropFactoryFixture, WasapiAudioClientInteropFixture);
+            => new WasapiAudioSourceTestFixture(DeviceTokenFixture, DeviceInfoFixture, WasapiAudioClientInteropFactoryFixture, WasapiAudioClientInteropFixture);
 
         #region Factory Audio Client tests
 
@@ -443,7 +450,6 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var desiredFormat = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
 
-
             // Epect a call to check that is format is supported in the current mode 
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
@@ -467,7 +473,6 @@ namespace Fundamental.Interface.Wasapi.Tests
             var fixture = GetTestFixture();
 
             var desiredFormat = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
-
 
             // Epect a call to check that is format is supported in the current mode 
             IAudioFormat outFormat;
@@ -572,7 +577,6 @@ namespace Fundamental.Interface.Wasapi.Tests
 
 
         #endregion
-
 
     }
 }

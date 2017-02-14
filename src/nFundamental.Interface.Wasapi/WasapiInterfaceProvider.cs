@@ -177,7 +177,7 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         /// <returns></returns>
         WasapiDeviceAudioSourceFactory ISupportsInterface<WasapiDeviceAudioSourceFactory>.GetAudioInterface()
-            => new WasapiDeviceAudioSourceFactory(_options, WasapiAudioClientInteropFactory);
+            => new WasapiDeviceAudioSourceFactory(_options, Get<IDeviceInfoFactory>(), WasapiAudioClientInteropFactory);
 
     }
 }

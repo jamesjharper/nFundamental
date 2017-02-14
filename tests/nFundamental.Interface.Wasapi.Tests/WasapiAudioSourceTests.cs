@@ -22,11 +22,12 @@ namespace Fundamental.Interface.Wasapi.Tests
             public WasapiAudioSourceTestFixture
                 (
                     IDeviceToken wasapiDeviceToken,
+                    IDeviceInfo deviceInfoFixture,
                     IOptions<WasapiOptions> wasapiOptions,
                     IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory,
                     IWasapiAudioClientInterop wasapiAudioClientInterop
                 )
-                : base(wasapiDeviceToken, wasapiOptions, wasapiAudioClientInteropFactory)
+                : base(wasapiDeviceToken, deviceInfoFixture, wasapiOptions, wasapiAudioClientInteropFactory)
             {
                 AudioClientInterop = wasapiAudioClientInterop;
             }
@@ -50,6 +51,7 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         private IWasapiAudioClientInterop WasapiAudioClientInteropFixture { get; set; }
 
+        private IDeviceInfo DeviceInfoFixture { get; set; }
 
         [SetUp]
         public void SetUp()
@@ -59,10 +61,11 @@ namespace Fundamental.Interface.Wasapi.Tests
             DeviceTokenFixture = Substitute.For<IDeviceToken>();
             WasapiAudioClientInteropFactoryFixture = Substitute.For<IWasapiAudioClientInteropFactory>();
             WasapiAudioClientInteropFixture = Substitute.For<IWasapiAudioClientInterop>();
+            DeviceInfoFixture = Substitute.For<IDeviceInfo>();
         }
 
         private WasapiAudioSourceTestFixture GetTestFixture()
-            => new WasapiAudioSourceTestFixture(DeviceTokenFixture, WasapiOptionsFixture, WasapiAudioClientInteropFactoryFixture, WasapiAudioClientInteropFixture);
+            => new WasapiAudioSourceTestFixture(DeviceTokenFixture, DeviceInfoFixture, WasapiOptionsFixture, WasapiAudioClientInteropFactoryFixture, WasapiAudioClientInteropFixture);
 
         //#region Factory Audio Client tests
  

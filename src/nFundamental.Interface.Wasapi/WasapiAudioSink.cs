@@ -15,15 +15,17 @@ namespace Fundamental.Interface.Wasapi
         private readonly IOptions<WasapiOptions> _wasapiOptions;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiAudioSink"/> class.
+        /// Initializes a new instance of the <see cref="WasapiAudioSink" /> class.
         /// </summary>
         /// <param name="wasapiDeviceToken">The WASAPI device token.</param>
-        /// <param name="wasapiOptions"></param>
+        /// <param name="deviceInfo">The device information.</param>
+        /// <param name="wasapiOptions">The WASAPI options.</param>
         /// <param name="wasapiAudioClientInteropFactory">The WASAPI audio client inter-operation factory.</param>
         public WasapiAudioSink(IDeviceToken wasapiDeviceToken,
+                               IDeviceInfo deviceInfo,
                                IOptions<WasapiOptions> wasapiOptions,
                                IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory) 
-            : base(wasapiDeviceToken, wasapiAudioClientInteropFactory)
+            : base(wasapiDeviceToken, deviceInfo, wasapiAudioClientInteropFactory)
         {
             _wasapiOptions = wasapiOptions;
         }
@@ -52,6 +54,24 @@ namespace Fundamental.Interface.Wasapi
         /// </value>
         protected override bool UseHardwareSync => _wasapiOptions.Value.AudioCapture.UseHardwareSync;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to prefer device native format over WASAPI up sampled format.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [prefer device native format]; otherwise, <c>false</c>.
+        /// </value>
+        protected override bool PreferDeviceNativeFormat => _wasapiOptions.Value.AudioCapture.PreferDeviceNativeFormat;
+
+        protected override void HardwareSyncAudioPump()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void ManualSyncAudioPump()
+        {
+            throw new NotImplementedException();
+        }
+
 
         public int Write(byte[] buffer, int offset, int length)
         {
@@ -59,17 +79,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         public event EventHandler<DataRequestedEventArgs> DataRequested;
-        public void Start()
-        {
-            throw new NotImplementedException();
-        }
 
-        public void Stop()
-        {
-            throw new NotImplementedException();
-        }
-
-        public event EventHandler<EventArgs> Started;
-        public event EventHandler<EventArgs> Stopped;
+       
     }
 }

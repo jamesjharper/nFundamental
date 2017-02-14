@@ -302,8 +302,7 @@ namespace Fundamental.Interface.Wasapi.Internal
             var audioCaptureClientComInstance = GetService<IAudioCaptureClient>();
 
             var blockAlignment = _initializedWavFormat.BlockAlign;
-            var sampleRate = (int)_initializedWavFormat.SamplesPerSec;
-            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment, sampleRate);
+            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment);
         }
 
 

@@ -18,11 +18,6 @@ namespace Fundamental.Interface.Wasapi.Internal
         private readonly int _frameSize;
 
         /// <summary>
-        /// The sample size
-        /// </summary>
-        private readonly int _sampleRate;
-
-        /// <summary>
         /// The p data
         /// </summary>
         private IntPtr _pData;
@@ -53,16 +48,14 @@ namespace Fundamental.Interface.Wasapi.Internal
         private UInt64 _qpcPosition;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiAudioCaptureClientInterop"/> class.
+        /// Initializes a new instance of the <see cref="WasapiAudioCaptureClientInterop" /> class.
         /// </summary>
         /// <param name="audioCaptureClient">The audio capture client.</param>
-        /// <param name="frameSize"></param>
-        /// <param name="sampleRate"></param>
-        public WasapiAudioCaptureClientInterop(IAudioCaptureClient audioCaptureClient, int frameSize, int sampleRate)
+        /// <param name="frameSize">Size of the frame.</param>
+        public WasapiAudioCaptureClientInterop(IAudioCaptureClient audioCaptureClient, int frameSize)
         {
             _audioCaptureClient = audioCaptureClient;
             _frameSize = frameSize;
-            _sampleRate = sampleRate;
         }
 
 
@@ -114,7 +107,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <returns></returns>
         public int Read(byte[] buffer, int offset, int length)
         {
-            var lengthInFrames = length/_frameSize;
+            var lengthInFrames = length /_frameSize;
 
             var framesWritten = Math.Min(lengthInFrames, (int) _currentAudioFramesInBuffer);
             var bytesWritten = framesWritten*_frameSize;
@@ -148,30 +141,6 @@ namespace Fundamental.Interface.Wasapi.Internal
         }
 
 
-        /// <summary>
-        /// Gets the length of the buffer as a time span.
-        /// </summary>
-        /// <param name="byteSize">Size of the byte.</param>
-        /// <returns></returns>
-        public TimeSpan BytesToLatency(int byteSize)
-        {
-            var sampleCount = byteSize /_frameSize;
-            return FramesToLatency(sampleCount);
-        }
-
-        /// <summary>
-        /// Gets the length of the buffer as a time span.
-        /// </summary>
-        /// <param name="frameCount">Size of the buffer in frames.</param>
-        /// <returns></returns>
-        public TimeSpan FramesToLatency(int frameCount)
-        {
-            const ulong ticksPerSecond = TimeSpan.TicksPerSecond;
-
-            var samplePeriod = ticksPerSecond / (ulong)_sampleRate;
-
-            var numberOfTicks = samplePeriod * (ulong)frameCount;
-            return TimeSpan.FromTicks(checked((long)numberOfTicks));
-        }
+       
     }
 }

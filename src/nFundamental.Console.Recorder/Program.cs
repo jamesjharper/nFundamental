@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using Fundamental.Core.AudioFormats;
 using Fundamental.Interface;
 
-namespace Fundamental.Console.DeviceInfo
+namespace Fundamental.Console.Recorder
 {
     public class Program
     {
@@ -21,6 +18,7 @@ namespace Fundamental.Console.DeviceInfo
                 var device = deviceSourceFactory.GetAudioSource(defaultDevice);
 
                 device.DataAvailable += OnDataAvailable;
+                device.Start();
             }
             catch (Exception ex)
             {
