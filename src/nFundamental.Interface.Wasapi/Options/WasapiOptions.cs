@@ -16,6 +16,15 @@
         /// <value>
         /// The audio source settings.
         /// </value>
-        public WasapiAudioSourceSettings AudioSource { get; set; } = new WasapiAudioSourceSettings();
+        public WasapiAudioClientSettings AudioCapture { get; set; } = new WasapiAudioClientSettings();
+
+
+        /// <summary>
+        /// Gets or sets the audio sink settings.
+        /// </summary>
+        /// <value>
+        /// The audio render.
+        /// </value>
+        public WasapiAudioClientSettings AudioRender { get; set; } = new WasapiAudioClientSettings();
     }
 }

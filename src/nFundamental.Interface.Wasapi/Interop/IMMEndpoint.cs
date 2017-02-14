@@ -7,6 +7,7 @@ namespace Fundamental.Interface.Wasapi.Interop
     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IMMEndpoint
     {
+        [PreserveSig]
         HResult GetDataFlow(out DataFlow dataFlow);
     }
 }

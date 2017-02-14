@@ -38,6 +38,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <returns>
         /// returns S_OK on success, even if the file has no properties.
         /// </returns>
+        [PreserveSig]
         HResult GetCount([Out] out int propCount);
 
         /// <summary>
@@ -52,6 +53,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <returns>
         /// If this method succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.
         /// </returns>
+        [PreserveSig]
         HResult GetAt([In] int index, [Out] out PropertyKey key);
 
         /// <summary>
@@ -72,6 +74,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// If the PROPERTYKEY referenced in key is not present in the property store, this method returns S_OK and the vt member of the structure 
         /// pointed to by pv is set to VT_EMPTY.
         /// </returns>
+        [PreserveSig]
         HResult GetValue([In] ref PropertyKey key, [Out] out PropVariant value);
 
         /// <summary>
@@ -84,6 +87,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// A reference to a PROPVARIANT structure that contains the new property data.
         /// </param>
         /// <returns></returns>
+        [PreserveSig]
         HResult SetValue([In] ref PropertyKey key, [In] ref PropVariant value);
 
         /// <summary>
@@ -108,6 +112,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// E_FAIL:
         /// Some or all of the changes could not be written to the file.Another appropriate error code can be used in place of E_FAIL.
         /// </returns>
+        [PreserveSig]
         HResult Commit();
     }
 }

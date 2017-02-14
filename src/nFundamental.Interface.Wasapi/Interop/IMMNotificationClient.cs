@@ -26,6 +26,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <returns>
         /// If the method succeeds, it returns S_OK. If it fails, it returns an error code.
         /// </returns>
+        [PreserveSig]
         HResult OnDeviceStateChanged([In, MarshalAs(UnmanagedType.LPWStr)] string deviceId, [In] Wasapi.Interop.DeviceState deviceState);
 
         /// <summary>
@@ -36,6 +37,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// wide-character string containing the endpoint ID. The string remains valid for the duration of the call.
         /// </param>
         /// <returns></returns>
+        [PreserveSig]
         HResult OnDeviceAdded([In, MarshalAs(UnmanagedType.LPWStr)] string deviceId);
 
         /// <summary>
@@ -48,6 +50,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <returns>
         /// If the method succeeds, it returns S_OK. If it fails, it returns an error code.
         /// </returns>
+        [PreserveSig]
         HResult OnDeviceRemoved([In, MarshalAs(UnmanagedType.LPWStr)] string deviceId);
 
         /// <summary>
@@ -72,6 +75,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <returns>
         /// If the method succeeds, it returns S_OK. If it fails, it returns an error code.
         /// </returns>
+        [PreserveSig]
         HResult OnDefaultDeviceChanged([In] DataFlow dataFlow, [In] Role role, [In, MarshalAs(UnmanagedType.LPWStr)] string deviceId);
 
         /// <summary>
@@ -89,6 +93,7 @@ namespace Fundamental.Interface.Wasapi.Interop
         /// <returns>
         /// If the method succeeds, it returns S_OK. If it fails, it returns an error code.
         /// </returns>
+        [PreserveSig]
         HResult OnPropertyValueChanged([In, MarshalAs(UnmanagedType.LPWStr)] string deviceId, [In] PropertyKey key);
     }
 }

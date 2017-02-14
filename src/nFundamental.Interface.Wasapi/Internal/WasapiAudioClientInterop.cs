@@ -302,8 +302,22 @@ namespace Fundamental.Interface.Wasapi.Internal
             var audioCaptureClientComInstance = GetService<IAudioCaptureClient>();
 
             var blockAlignment = _initializedWavFormat.BlockAlign;
-            var sampleRate = (int)_initializedWavFormat.SamplesPerSec;
-            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment, sampleRate);
+            return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment);
+        }
+
+        /// <summary>
+        /// Gets the render client.
+        /// </summary>
+        /// <returns></returns>
+        public IWasapiAudioRenderClientInterop GetRenderClient()
+        {
+            if (_initializedWavFormat == null)
+                throw new DeviceNotInitializedException("Unable to get a capture client as device is not currently initialized.");
+
+            var audioRenderClientComInstance = GetService<IAudioRenderClient>();
+
+            var blockAlignment = _initializedWavFormat.BlockAlign;
+            return new WasapiAudioRenderClientInterop(audioRenderClientComInstance, ComInstance, blockAlignment);
         }
 
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
-
 using Fundamental.Core;
-
 using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
@@ -10,10 +8,8 @@ using Fundamental.Interface.Wasapi.Options;
 
 namespace Fundamental.Interface.Wasapi
 {
-    public class WasapiAudioSource : WasapiAudioClient, IHardwareAudioSource
+    public class WasapiAudioSink : WasapiAudioClient, IHardwareAudioSink
     {
-        // Dependents
-
         /// <summary>
         /// The maximum buffer under-runs before capture assumes failure and terminates capture process 
         /// </summary>
@@ -24,47 +20,26 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         private readonly IOptions<WasapiOptions> _wasapiOptions;
 
-        // Internal fields
-
         /// <summary>
         /// The current audio capture client interop
         /// </summary>
-        private IWasapiAudioCaptureClientInterop _audioCaptureClientInterop;
+        private IWasapiAudioRenderClientInterop _audioRenderClientInterop;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WasapiAudioSource" /> class.
+        /// Initializes a new instance of the <see cref="WasapiAudioSink" /> class.
         /// </summary>
         /// <param name="wasapiDeviceToken">The WASAPI device token.</param>
         /// <param name="deviceInfo">The device information.</param>
         /// <param name="wasapiOptions">The WASAPI options.</param>
-        /// <param name="wasapiAudioClientInteropFactory">The WASAPI audio client inter-operations factory.</param>
-        public WasapiAudioSource(IDeviceToken wasapiDeviceToken,
-                                 IDeviceInfo deviceInfo,
-                                 IOptions<WasapiOptions> wasapiOptions,
-                                 IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory) 
+        /// <param name="wasapiAudioClientInteropFactory">The WASAPI audio client inter-operation factory.</param>
+        public WasapiAudioSink(IDeviceToken wasapiDeviceToken,
+                               IDeviceInfo deviceInfo,
+                               IOptions<WasapiOptions> wasapiOptions,
+                               IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory) 
             : base(wasapiDeviceToken, deviceInfo, wasapiAudioClientInteropFactory)
         {
             _wasapiOptions = wasapiOptions;
         }
-
-        /// <summary>
-        /// Reads the specified buffer.
-        /// </summary>
-        /// <param name="buffer">The buffer.</param>
-        /// <param name="offset">The offset.</param>
-        /// <param name="length">The length.</param>
-        /// <returns></returns>
-        public int Read(byte[] buffer, int offset, int length)
-        {
-            return _audioCaptureClientInterop?.Read(buffer, offset, length) ?? 0;
-        }
-
-        /// <summary>
-        /// Occurs when data available from the source.
-        /// </summary>
-        public event EventHandler<DataAvailableEventArgs> DataAvailable;
-
-        // Protected methods
 
         /// <summary>
         /// Gets the device access mode.
@@ -103,37 +78,30 @@ namespace Fundamental.Interface.Wasapi
         /// </summary>
         protected override void InitializeImpl()
         {
-            _audioCaptureClientInterop = AudioClientInterop.GetCaptureClient(); 
+            _audioRenderClientInterop = AudioClientInterop.GetRenderClient();
         }
-
-
-        // Private methods
 
         /// <summary>
         /// Pumps the current audio content audio.
         /// </summary>
-        private bool PumpAudio()
+        private void PumpAudio()
         {
-            var captureClientInterop = _audioCaptureClientInterop;
+            var bufferSize = _audioRenderClientInterop.GetFreeBufferByteSize();
 
-            _audioCaptureClientInterop.UpdateBuffer();
+            if (bufferSize != 0)
+            {
+                DataRequested?.Invoke(this, new DataRequestedEventArgs(bufferSize));
+            }
 
-            var bufferSize = captureClientInterop.GetBufferByteSize();
-
-            if (bufferSize == 0)
-                return false;
-
-            DataAvailable?.Invoke(this, new DataAvailableEventArgs(bufferSize));
 
             // Drop any remaining frames if they where not consumed from the read method
-            captureClientInterop.ReleaseBuffer();
-
-            return true;
+            _audioRenderClientInterop.ReleaseBuffer();
         }
 
         /// <summary>
         /// Runs the audio pump using hardware interrupt audio synchronization
         /// </summary>
+        /// <exception cref="System.NotImplementedException"></exception>
         protected override void HardwareSyncAudioPump()
         {
             // Save out the current capture client, just to be sure we are 
@@ -153,13 +121,15 @@ namespace Fundamental.Interface.Wasapi
                     bufferUnderrunCount++;
                     continue;
                 }
-                while (PumpAudio()) { }
+
+                PumpAudio();
             }
         }
 
         /// <summary>
         /// Runs the audio pump using Manual audio synchronization
         /// </summary>
+        /// <exception cref="System.NotImplementedException"></exception>
         protected override void ManualSyncAudioPump()
         {
             // Save out the current capture client, just to be sure we are 
@@ -170,10 +140,31 @@ namespace Fundamental.Interface.Wasapi
             var pollRate = TimeSpan.FromTicks(latency.Ticks / 2);
 
             while (IsRunning)
-            {
+            {  
+                PumpAudio();
                 Thread.Sleep(pollRate);
-                while (PumpAudio()) { }
             }
         }
+
+
+        /// <summary>
+        /// Writes the specified buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="offset">The offset.</param>
+        /// <param name="length">The length.</param>
+        /// <returns></returns>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public int Write(byte[] buffer, int offset, int length)
+        {
+            return _audioRenderClientInterop?.Write(buffer, offset, length) ?? 0;
+        }
+
+        /// <summary>
+        /// Occurs when data requested from the sink.
+        /// </summary>
+        public event EventHandler<DataRequestedEventArgs> DataRequested;
+
+       
     }
 }

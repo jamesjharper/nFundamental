@@ -9,18 +9,15 @@ namespace Fundamental.Interface.Wasapi
     {
 
         /// <summary>
-        /// check to see if the current thread requires  invoke.
+        /// Check to see if the current thread requires invoke.
         /// </summary>
-        /// <returns></returns>
+        /// <returns> true if invoke is require </returns>
         bool RequiresInvoke();
-
         /// <summary>
-        /// Invokes the specified method.
+        /// Invokes the given method.
         /// </summary>
         /// <param name="method">The method.</param>
         /// <param name="args">The arguments.</param>
         object InvokeOnTargetThread(Delegate method, params object[] args);
-
-
     }
 }
