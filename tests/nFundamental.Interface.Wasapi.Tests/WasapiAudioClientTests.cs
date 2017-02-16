@@ -23,43 +23,34 @@ namespace Fundamental.Interface.Wasapi.Tests
                 (
                     IDeviceToken wasapiDeviceToken,
                     IDeviceInfo deviceInfo,
+                    WasapiAudioClientSettings wasapiAudioClientSettings,
                     IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory,
                     IWasapiAudioClientInterop wasapiAudioClientInterop
                 )
-                : base(wasapiDeviceToken, deviceInfo, wasapiAudioClientInteropFactory)
+                : base(wasapiDeviceToken, deviceInfo, wasapiAudioClientSettings, wasapiAudioClientInteropFactory)
             {
-                AudioClientInterop = wasapiAudioClientInterop;
+                WasapiClient = wasapiAudioClientInterop;
             }
 
-            protected override IWasapiAudioClientInterop AudioClientInterop { get; }
+            protected override IWasapiAudioClientInterop WasapiClient { get; }
 
             public IAudioFormat DesiredAudioFormatOverride
             {
                 set { DesiredAudioFormat = value; }
             }
 
-            protected override AudioClientShareMode DeviceAccessMode => WasapiDeviceAccessOverride;
+           
+            public IWasapiAudioClientInterop ActualAudioClientInterop => base.WasapiClient;
 
-            public AudioClientShareMode WasapiDeviceAccessOverride { get; set; }
+            protected override bool PumpAudioManunalSync(TimeSpan pollRate)
+            {
+                return true;
+            }
 
-            public IWasapiAudioClientInterop ActualAudioClientInterop => base.AudioClientInterop;
-
-            protected override TimeSpan ManualSyncLatency => ManualSyncLatencyOverride;
-
-            public TimeSpan ManualSyncLatencyOverride { get; }
-
-            protected override bool UseHardwareSync => UseHardwareSyncOverride;
-
-            protected bool UseHardwareSyncOverride { get; set; }
-
-            protected override bool PreferDeviceNativeFormat => PreferDeviceNativeFormatOverride;
-
-            protected bool PreferDeviceNativeFormatOverride { get; set; }
-
-
-            protected override void HardwareSyncAudioPump() { }
-
-            protected override void ManualSyncAudioPump() { }
+            protected override bool PumpAudioHardwareSync(TimeSpan latency)
+            {
+                return true;
+            }
         }
 
 
@@ -71,6 +62,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         private IDeviceInfo DeviceInfoFixture { get; set; }
 
+        private WasapiAudioClientSettings Settings { get; set; } = new WasapiAudioClientSettings();
+
         [SetUp]
         public void SetUp()
         {
@@ -81,7 +74,7 @@ namespace Fundamental.Interface.Wasapi.Tests
         }
 
         private WasapiAudioSourceTestFixture GetTestFixture()
-            => new WasapiAudioSourceTestFixture(DeviceTokenFixture, DeviceInfoFixture, WasapiAudioClientInteropFactoryFixture, WasapiAudioClientInteropFixture);
+            => new WasapiAudioSourceTestFixture(DeviceTokenFixture, DeviceInfoFixture, Settings, WasapiAudioClientInteropFactoryFixture, WasapiAudioClientInteropFixture);
 
         #region Factory Audio Client tests
 
@@ -115,17 +108,18 @@ namespace Fundamental.Interface.Wasapi.Tests
             var fixture = GetTestFixture();
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
-            var accessmode = AudioClientShareMode.Shared;
+            var accessmode = DeviceAccess.Shared;
 
             IAudioFormat outFormat; // We don't care what the output is
             WasapiAudioClientInteropFixture
-                .IsFormatSupported(accessmode, format, out outFormat)
+                .IsFormatSupported(AudioClientShareMode.Shared, format, out outFormat)
                 .Returns(true);
 
             // -> ACT:
 
             // Make sure the setting is set to Shared mode
-            fixture.WasapiDeviceAccessOverride = accessmode;
+            Settings.DeviceAccess = accessmode;
+            Settings.PreferDeviceNativeFormat = false;
 
             var isAudioFormatSupported = fixture.IsAudioFormatSupported(format);
 
@@ -142,17 +136,17 @@ namespace Fundamental.Interface.Wasapi.Tests
             var fixture = GetTestFixture();
 
             var format = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
-            var accessmode = AudioClientShareMode.Exclusive;
+            var accessmode = DeviceAccess.Exclusive;
 
             IAudioFormat outFormat; // We don't care what the output is
             WasapiAudioClientInteropFixture
-                .IsFormatSupported(accessmode, format, out outFormat)
+                .IsFormatSupported(AudioClientShareMode.Exclusive, format, out outFormat)
                 .Returns(true);
 
             // -> ACT:
 
             // Make sure the setting is set to Shared mode
-            fixture.WasapiDeviceAccessOverride = accessmode;
+            Settings.DeviceAccess = accessmode;
 
             var isAudioFormatSupported = fixture.IsAudioFormatSupported(format);
 
@@ -193,11 +187,11 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var suggestedFormat = AudioFormatHelper.Pcm16Bit44KhzMonoLittle;
-            var accessmode = AudioClientShareMode.Shared;
+            var accessmode = DeviceAccess.Shared;
 
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
-                .IsFormatSupported(accessmode, format, out outFormat)
+                .IsFormatSupported(AudioClientShareMode.Shared, format, out outFormat)
                 .Returns((p) =>
                 {
                     p[2] = suggestedFormat;
@@ -207,7 +201,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ACT:
 
             // Make sure the setting is set to Shared mode
-            fixture.WasapiDeviceAccessOverride = accessmode;
+            Settings.DeviceAccess = accessmode;
 
             IEnumerable<IAudioFormat> outSuggestions;
             var isAudioFormatSupported = fixture.IsAudioFormatSupported(format, out outSuggestions);
@@ -229,11 +223,11 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var suggestedFormat = AudioFormatHelper.Pcm16Bit44KhzMonoLittle;
-            var accessmode = AudioClientShareMode.Exclusive;
+            var accessmode = DeviceAccess.Exclusive;
 
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
-                .IsFormatSupported(accessmode, format, out outFormat)
+                .IsFormatSupported(AudioClientShareMode.Exclusive, format, out outFormat)
                 .Returns((p) =>
                 {
                     p[2] = suggestedFormat;
@@ -243,7 +237,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ACT:
 
             // Make sure the setting is set to Shared mode
-            fixture.WasapiDeviceAccessOverride = accessmode;
+            Settings.DeviceAccess = accessmode;
 
             IEnumerable<IAudioFormat> outSuggestions;
             var isAudioFormatSupported = fixture.IsAudioFormatSupported(format, out outSuggestions);
@@ -298,8 +292,7 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
-            var accessmode = AudioClientShareMode.Exclusive;
-
+            var accessmode = DeviceAccess.Exclusive;
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
                 .GetMixFormat()
@@ -308,7 +301,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // Expect a call to check that is format is supported in the current mode 
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
-                .IsFormatSupported(accessmode, mixerFormat, out outFormat)
+                .IsFormatSupported(AudioClientShareMode.Exclusive, mixerFormat, out outFormat)
                 .Returns((p) =>
                 {
                     return true;
@@ -317,7 +310,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ACT:
 
             // Make sure the setting is set to Shared mode
-            fixture.WasapiDeviceAccessOverride = accessmode;
+            Settings.DeviceAccess = accessmode;
 
             IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats(format);
             var closestMatchingFormats = outSuggestions.ToList();
@@ -336,7 +329,7 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
-            var accessmode = AudioClientShareMode.Shared;
+            var accessmode = DeviceAccess.Shared;
 
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
@@ -346,7 +339,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // Expect a call to check that is format is supported in the current mode 
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
-                .IsFormatSupported(accessmode, mixerFormat, out outFormat)
+                .IsFormatSupported(AudioClientShareMode.Shared, mixerFormat, out outFormat)
                 .Returns((p) =>
                 {
                     return true;
@@ -355,7 +348,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ACT:
 
             // Make sure the setting is set to Shared mode
-            fixture.WasapiDeviceAccessOverride = accessmode;
+            Settings.DeviceAccess = accessmode;
 
             IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats(format);
             var closestMatchingFormats = outSuggestions.ToList();

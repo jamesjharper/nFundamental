@@ -2,34 +2,27 @@
 using System.Threading;
 
 using Fundamental.Core;
-
-using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Internal;
-using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Options;
 
 namespace Fundamental.Interface.Wasapi
 {
     public class WasapiAudioSource : WasapiAudioClient, IHardwareAudioSource
     {
-        // Dependents
-
-        /// <summary>
-        /// The maximum buffer under-runs before capture assumes failure and terminates capture process 
-        /// </summary>
-        private const int MaxBufferUnderruns = 2;
-
-        /// <summary>
-        /// The WASAPI options
-        /// </summary>
-        private readonly IOptions<WasapiOptions> _wasapiOptions;
-
-        // Internal fields
-
         /// <summary>
         /// The current audio capture client interop
         /// </summary>
         private IWasapiAudioCaptureClientInterop _audioCaptureClientInterop;
+
+        /// <summary>
+        /// The maximum buffer under-runs before capture assumes failure and terminates capture process 
+        /// </summary>
+        private readonly TimeSpan _maxBufferUnderrunTime = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// The buffer under-run time
+        /// </summary>
+        private TimeSpan _bufferUnderrunTime;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WasapiAudioSource" /> class.
@@ -42,9 +35,8 @@ namespace Fundamental.Interface.Wasapi
                                  IDeviceInfo deviceInfo,
                                  IOptions<WasapiOptions> wasapiOptions,
                                  IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory) 
-            : base(wasapiDeviceToken, deviceInfo, wasapiAudioClientInteropFactory)
+            : base(wasapiDeviceToken, deviceInfo, wasapiOptions.Value.AudioCapture, wasapiAudioClientInteropFactory)
         {
-            _wasapiOptions = wasapiOptions;
         }
 
         /// <summary>
@@ -67,113 +59,69 @@ namespace Fundamental.Interface.Wasapi
         // Protected methods
 
         /// <summary>
-        /// Gets the device access mode.
-        /// </summary>
-        /// <value>
-        /// The device access.
-        /// </value>
-        protected override AudioClientShareMode DeviceAccessMode => _wasapiOptions.Value.AudioCapture.DeviceAccess.ConvertToWasapiAudioClientShareMode();
-
-        /// <summary>
-        /// Gets the length of the buffer.
-        /// </summary>
-        /// <value>
-        /// The length of the buffer.
-        /// </value>
-        protected override TimeSpan ManualSyncLatency => _wasapiOptions.Value.AudioCapture.ManualSyncLatency;
-
-        /// <summary>
-        /// Gets a value indicating whether [use hardware synchronize].
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if [use hardware synchronize]; otherwise, <c>false</c>.
-        /// </value>
-        protected override bool UseHardwareSync => _wasapiOptions.Value.AudioCapture.UseHardwareSync;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to prefer device native format over WASAPI up sampled format.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if [prefer device native format]; otherwise, <c>false</c>.
-        /// </value>
-        protected override bool PreferDeviceNativeFormat => _wasapiOptions.Value.AudioCapture.PreferDeviceNativeFormat;
-
-        /// <summary>
         /// Called when the instance Initializes.
         /// </summary>
         protected override void InitializeImpl()
         {
-            _audioCaptureClientInterop = AudioClientInterop.GetCaptureClient(); 
+            _audioCaptureClientInterop = WasapiClient.GetCaptureClient(); 
         }
 
 
         // Private methods
 
         /// <summary>
-        /// Pumps the current audio content audio.
+        /// Pumps the current audio content audio using a manual sync
+        /// </summary>
+        /// <param name="pollRate"></param>
+        /// <returns></returns>
+        protected override bool PumpAudioManunalSync(TimeSpan pollRate)
+        {
+            Thread.Sleep(pollRate);
+            return PumpAudio();
+        }
+
+        /// <summary>
+        /// Pumps the current audio content audio using hardware sync
+        /// </summary>
+        /// <param name="latency">The latency.</param>
+        /// <returns></returns>
+        protected override bool PumpAudioHardwareSync(TimeSpan latency)
+        {
+            if (HardwareSyncEvent.WaitOne(latency))
+            {
+                _bufferUnderrunTime = TimeSpan.Zero; // reset under run time
+                return PumpAudio();
+            }
+
+            _bufferUnderrunTime += latency;
+
+            // Stop the pump if we under-run for too long
+            return _bufferUnderrunTime <= _maxBufferUnderrunTime;
+        }
+
+        /// <summary>
+        /// Pumps content from the device as captured audio.
         /// </summary>
         private bool PumpAudio()
         {
             var captureClientInterop = _audioCaptureClientInterop;
 
-            _audioCaptureClientInterop.UpdateBuffer();
-
-            var bufferSize = captureClientInterop.GetBufferByteSize();
-
-            if (bufferSize == 0)
-                return false;
-
-            DataAvailable?.Invoke(this, new DataAvailableEventArgs(bufferSize));
-
-            // Drop any remaining frames if they where not consumed from the read method
-            captureClientInterop.ReleaseBuffer();
-
-            return true;
-        }
-
-        /// <summary>
-        /// Runs the audio pump using hardware interrupt audio synchronization
-        /// </summary>
-        protected override void HardwareSyncAudioPump()
-        {
-            // Save out the current capture client, just to be sure we are 
-            // always operating on the same instance. 
-            var latencyCaculator = GetAudioFormatLatencyCalculator();
-            var bufferSize = AudioClientInterop.GetBufferSize();
-            var latency = latencyCaculator.FramesToLatency(bufferSize);
-            var bufferUnderrunCount = 0;
-
             while (IsRunning)
             {
-                if (bufferUnderrunCount > MaxBufferUnderruns)
-                    break;
+                _audioCaptureClientInterop.UpdateBuffer();
 
-                if (!HardwareSyncEvent.WaitOne(latency))
-                {
-                    bufferUnderrunCount++;
-                    continue;
-                }
-                while (PumpAudio()) { }
+                var bufferSize = captureClientInterop.GetBufferByteSize();
+
+                if (bufferSize == 0)
+                    return true;
+
+                DataAvailable?.Invoke(this, new DataAvailableEventArgs(bufferSize));
+
+                // Drop any remaining frames if they where not consumed from the read method
+                captureClientInterop.ReleaseBuffer();
             }
-        }
 
-        /// <summary>
-        /// Runs the audio pump using Manual audio synchronization
-        /// </summary>
-        protected override void ManualSyncAudioPump()
-        {
-            // Save out the current capture client, just to be sure we are 
-            // always operating on the same instance. 
-            var latencyCaculator = GetAudioFormatLatencyCalculator();
-            var bufferSize = AudioClientInterop.GetBufferSize();
-            var latency = latencyCaculator.FramesToLatency(bufferSize);
-            var pollRate = TimeSpan.FromTicks(latency.Ticks / 2);
-
-            while (IsRunning)
-            {
-                Thread.Sleep(pollRate);
-                while (PumpAudio()) { }
-            }
+            return false;
         }
     }
 }
