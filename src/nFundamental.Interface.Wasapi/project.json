@@ -12,10 +12,11 @@
             "imports": [
                 "dnxcore50",
                 "portable-net40+sl50+netcore45+wpa81+wp8"
-            ]
+            ],
         },
-        "net46": {
-
+        "net45": {
+        },
+        "net40": {
         }
     }
 }

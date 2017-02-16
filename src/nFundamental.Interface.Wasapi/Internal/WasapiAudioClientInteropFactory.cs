@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using Fundamental.Core;
 using Fundamental.Core.AudioFormats;
 using Fundamental.Interface.Wasapi.Interop;
@@ -54,7 +53,7 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// <returns></returns>
         public IWasapiAudioClientInterop FactoryAudioClient(WasapiDeviceToken deviceToken)
         {
-            var iAudioClient = Activate<IAudioClient>(deviceToken.MmDevice);
+            var iAudioClient = Activate<IAudioClient>(deviceToken.MmDevice, IIds.IAudioClientGuid);
             return new WasapiAudioClientInterop(iAudioClient, _comThreadInteropStrategy, _waveFormatConverter);
         }
 
@@ -63,12 +62,12 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="immDevice">The WASAPI device object.</param>
+        /// <param name="iid">The iid.</param>
         /// <returns></returns>
         /// <exception cref="Fundamental.Interface.Wasapi.DeviceNotAccessableException"></exception>
-        private T Activate<T>(IMMDevice immDevice) where T : class
+        private T Activate<T>(IMMDevice immDevice, Guid iid) where T : class
         {
-            var interfaceId = typeof(T).GetTypeInfo().GUID;
-            var result = Activate(immDevice, interfaceId);
+            var result = Activate(immDevice, iid);
             return ComObject.QuearyInterface<T>(result);
         }
 

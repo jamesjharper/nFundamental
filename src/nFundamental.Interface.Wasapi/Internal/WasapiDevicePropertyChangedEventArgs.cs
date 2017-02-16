@@ -1,8 +1,9 @@
-﻿using Fundamental.Interface.Wasapi.Interop;
+﻿using System;
+using Fundamental.Interface.Wasapi.Interop;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {
-    public class WasapiDevicePropertyChangedEventArgs
+    public class WasapiDevicePropertyChangedEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the device identifier token.

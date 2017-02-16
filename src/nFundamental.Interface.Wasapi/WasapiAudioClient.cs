@@ -545,7 +545,12 @@ namespace Fundamental.Interface.Wasapi
             try
             {
                 HardwareSyncEvent.Reset();
+
+#if (NET45 || NET40)
+                var handle = HardwareSyncEvent.Handle;
+#else
                 var handle = HardwareSyncEvent.GetSafeWaitHandle().DangerousGetHandle();
+#endif
                 WasapiClient.SetEventHandle(handle);
                 SupportsEventHandle = true;
             }
@@ -568,9 +573,9 @@ namespace Fundamental.Interface.Wasapi
             SupportsEventHandle = false;
         }
 
-        #endregion
+#endregion
 
-        #region Latency Calculating methods
+#region Latency Calculating methods
 
         private static ILatencyCalculator FactoryLatencyCaculator(IAudioFormat format)
         {
@@ -598,14 +603,14 @@ namespace Fundamental.Interface.Wasapi
             return latencyCaculator.FramesToLatency(bufferSize);
         }
 
-        #endregion
+#endregion
 
-        #region Factory methods
+#region Factory methods
 
         protected virtual IWasapiAudioClientInterop FactoryWasapiAudioClient() => _wasapiAudioClientInteropFactory.FactoryAudioClient(_wasapiDeviceToken);
 
         protected virtual IWasapiAudioClientInterop WasapiClient => _audioClientInterop ?? (_audioClientInterop = FactoryWasapiAudioClient());
 
-        #endregion
+#endregion
     }
 }

@@ -1,9 +1,17 @@
-﻿
+﻿#if (NET45 || NET40)
+#define SUPPORTS_WASAPI 
+#endif
+
+#if (NET45 || NET40)
+#define SUPPORTS_WINMM 
+#endif
+
 using System;
 using System.Runtime.InteropServices;
 using Fundamental.Core;
 
-#if NET46
+
+#if SUPPORTS_WASAPI
 using Fundamental.Interface.Wasapi;
 using Fundamental.Interface.Wasapi.Options;
 #endif
@@ -11,10 +19,10 @@ using Fundamental.Interface.Wasapi.Options;
 namespace Fundamental
 {
     public class AudioInterfaceProvider : InterfaceProvider,
-            #if NET46
+#if SUPPORTS_WASAPI
             IInterfaceOptions<WasapiOptions>,
             ISupportsInterface<WasapiInterfaceProvider>,
-            #endif
+#endif
             // Default provider for the running system
             ISupportsInterface<InterfaceProvider>
     {
@@ -101,7 +109,7 @@ namespace Fundamental
 
             // TODO: Detect windows universal Application
 
-#if NET46
+#if SUPPORTS_WINMM || SUPPORTS_WASAPI
             // Check if windows XP environment
             if (IsWindowsXpEnvironment())
             {
@@ -112,9 +120,10 @@ namespace Fundamental
             // This will only work in Linux and OSx environments if mono is installed
             return Get<WasapiInterfaceProvider>();
 
-#elif NETSTANDARD1_6
+#elif (NETSTANDARD1_0 || NETSTANDARD1_1) 
+
             if (IsWindowEnvironment())
-                 throw new NotSupportedException("Dotnet Core is not supported when running in windows environment. Please run as .net 4.6 application.");
+                 throw new NotSupportedException("Dotnet Core is not supported when running in windows environment. Please run as .net 4.x application.");
 
              // TODO: add native support for Linux and OSx
             if (IsNonWindowEnvironment())
@@ -127,11 +136,11 @@ namespace Fundamental
         }
 
 
-        #endregion 
+        #endregion
 
         #region WASAPI Support
 
-#if NET46
+#if SUPPORTS_WASAPI
 
         /// <summary>
         /// The underlying WASAPI interface provider
@@ -166,14 +175,14 @@ namespace Fundamental
 
 #endif
 
-      
+
         #endregion
 
         // Private Methods 
 
         private static bool IsWindowsXpEnvironment()
         {
-#if NET46
+#if (NET45 || NET40)
             return IsWindowEnvironment() && Environment.OSVersion.Version.Major < 6;
 #else
             return false;
@@ -183,7 +192,12 @@ namespace Fundamental
 
         private static bool IsWindowEnvironment()
         {
+#if (NET40 || NETSTANDARD1_0)
+            // TODO: detect mono
+            return true;
+#else
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
         }
 
         private static bool IsNonWindowEnvironment()

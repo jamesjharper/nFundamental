@@ -1,9 +1,11 @@
-﻿namespace Fundamental.Core
+﻿using System;
+
+namespace Fundamental.Core
 {
     /// <summary>
     /// Source Data Received Event arguments 
     /// </summary>
-    public class DataAvailableEventArgs
+    public class DataAvailableEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the size of the byte.

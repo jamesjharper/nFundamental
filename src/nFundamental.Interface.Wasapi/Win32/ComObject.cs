@@ -7,11 +7,11 @@ namespace Fundamental.Interface.Wasapi.Win32
 
         public static T CreateInstance<T>(Guid clsId) where T : class
         {
-            #if NET46
+#if (NET40 || NET45 || NET46)
             var clsType = Type.GetTypeFromCLSID(clsId, /* throwOnError */ true);
             var obj = Activator.CreateInstance(clsType);
             return QuearyInterface<T>(obj);
-            #else
+#else
             throw new NotSupportedException("Only supported in windows environment.");
             #endif
          

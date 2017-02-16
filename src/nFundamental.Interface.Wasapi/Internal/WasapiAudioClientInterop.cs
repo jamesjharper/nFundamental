@@ -299,7 +299,7 @@ namespace Fundamental.Interface.Wasapi.Internal
             if (_initializedWavFormat == null)
                 throw new DeviceNotInitializedException("Unable to get a capture client as device is not currently initialized.");
 
-            var audioCaptureClientComInstance = GetService<IAudioCaptureClient>();
+            var audioCaptureClientComInstance = GetService<IAudioCaptureClient>(IIds.IAudioCaptureClientGuid);
 
             var blockAlignment = _initializedWavFormat.BlockAlign;
             return new WasapiAudioCaptureClientInterop(audioCaptureClientComInstance, blockAlignment);
@@ -314,7 +314,7 @@ namespace Fundamental.Interface.Wasapi.Internal
             if (_initializedWavFormat == null)
                 throw new DeviceNotInitializedException("Unable to get a capture client as device is not currently initialized.");
 
-            var audioRenderClientComInstance = GetService<IAudioRenderClient>();
+            var audioRenderClientComInstance = GetService<IAudioRenderClient>(IIds.IAudioRenderClientGuid);
 
             var blockAlignment = _initializedWavFormat.BlockAlign;
             return new WasapiAudioRenderClientInterop(audioRenderClientComInstance, ComInstance, blockAlignment);
@@ -326,10 +326,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T GetService<T>() where T : class
+        public T GetService<T>(Guid iid) where T : class
         {
-            var interfaceId = typeof(T).GetTypeInfo().GUID;
-            var result = GetService(interfaceId);
+            var result = GetService(iid);
             return ComObject.QuearyInterface<T>(result);
         }
 

@@ -2,9 +2,7 @@
     "version": "1.0.0-*",
 
     "dependencies": {
-        "NETStandard.Library": "1.6.0",
-        "JTForks.MiscUtil": "1.*"
-
+        "NETStandard.Library": "1.6.0"
     },
 
     "frameworks": {
@@ -14,14 +12,29 @@
                 "portable-net40+sl50+netcore45+wpa81+wp8"
             ],
             "dependencies": {
-                "System.Runtime.InteropServices": "4.3.0"
+                "System.Runtime.InteropServices": "4.3.0",
+                "JTForks.MiscUtil": "1.*"
             }
+
         },
         "netstandard1.1": {
             "imports": [
                 "dnxcore50",
                 "portable-net40+sl50+netcore45+wpa81+wp8"
-            ]
+            ],
+            "dependencies": {
+                "JTForks.MiscUtil": "1.*"
+            }
+        },
+        "net45": {
+            "dependencies": {
+                "JonSkeet.MiscUtil": "0.1.0"
+            }
+        },
+        "net40": {
+            "dependencies": {
+                "JonSkeet.MiscUtil": "0.1.0"
+            }
         }
     }
 }

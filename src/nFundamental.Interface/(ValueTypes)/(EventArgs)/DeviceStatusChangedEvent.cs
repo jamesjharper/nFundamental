@@ -1,7 +1,9 @@
 ﻿
+using System;
+
 namespace Fundamental.Interface
 {
-    public class DeviceStatusChangedEvent
+    public class DeviceStatusChangedEvent : EventArgs
     {
 
         /// <summary>
