@@ -15,7 +15,7 @@
         /// 11 kHz.
         /// Used for lower-quality speech.
         /// </summary>
-        public const int Khz11 = 8000;
+        public const int Khz11 = 11025;
 
         /// <summary>
         /// 16 kHz. A multiple of 8 kHz. 

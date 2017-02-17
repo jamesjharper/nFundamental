@@ -6,8 +6,7 @@
 
 ### What's nFundamental?
 
-Using dotnet core, nFundamental aims at providing a simple and easy **cross-platfrom** solution for implementing rich audio functionality into any dotnet application without the need of mono prerequisite. 
-This project is young and is not yet ready for production use. 
+Using dotnet core, nFundamental aims at providing a simple and easy **cross-platfrom** solution for implementing rich audio functionality into any dotnet application without the need of mono prerequisite.  
 
 ## Mission
   - Provide easy audio API to all dotnet developers.
@@ -27,7 +26,7 @@ This project is young and is not yet ready for production use.
   - JSON serializable Audio format          - DONE
   - Windows WAVEFORMAT to json convertion   - DONE
   - WASAPI Device Capature                  - DONE
-  - WASAPI Device Render
+  - WASAPI Device Render                    - DONE
   - *.wav envelope support 
   - Playback/Record support
   - Channel converter

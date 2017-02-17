@@ -1,18 +1,31 @@
 ﻿{
     "version": "1.0.0-*",
-
+    "buildOptions": {
+        "treatWarningsAsErrors": true
+    },
     "dependencies": {
         "NETStandard.Library": "1.6.0",
         "nFundamental.Core": { "target": "project" }
     },
 
     "frameworks": {
-        "net46": {
+        "net45": {
             "dependencies": {
                 "nFundamental.Interface.Wasapi": { "target": "project" }
             }
         },
-        "netstandard1.6": {
+        "net40": {
+            "dependencies": {
+                "nFundamental.Interface.Wasapi": { "target": "project" }
+            }
+        },
+        "netstandard1.0": {
+            "imports": [
+                "dnxcore50",
+                "portable-net46+win7"
+            ]
+        },
+        "netstandard1.1": {
             "imports": [
                 "dnxcore50",
                 "portable-net46+win7"

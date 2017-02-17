@@ -19,6 +19,6 @@ namespace Fundamental.Interface.Wasapi.Interop
 
         public const string IAudioRenderClient = "F294ACFC-3146-4483-A7BF-ADDCA7C260E2";
 
-        public static Guid IIAudioRenderClientGuid = Guid.Parse(IAudioRenderClient);
+        public static Guid IAudioRenderClientGuid = Guid.Parse(IAudioRenderClient);
     }
 }

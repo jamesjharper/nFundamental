@@ -21,8 +21,8 @@ namespace Fundamental.Core
 
 
         /// <summary>
-        /// Suggests a format to use.
-        /// This may return, none, one or many
+        /// Suggests the possible formats which are supported by the audio endpoint.
+        /// This may return none, one or many.
         /// </summary>
         /// <param name="dontSuggestTheseFormats">The don't suggest these formats.</param>
         /// <returns></returns>

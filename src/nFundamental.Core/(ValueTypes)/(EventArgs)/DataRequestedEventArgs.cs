@@ -1,10 +1,12 @@
 ﻿
+using System;
+
 namespace Fundamental.Core
 {
     /// <summary>
     /// Source Data Received Event arguments 
     /// </summary>
-    public class DataRequestedEventArgs
+    public class DataRequestedEventArgs : EventArgs
     {
         /// <summary>
         /// Gets the size of the byte.

@@ -67,7 +67,11 @@ namespace Fundamental.Core.Memory
         /// <returns></returns>
         public T PtrToStructure<T>()
         {
-            return Marshal.PtrToStructure<T>(_ptr);
+#if NETSTANDARD1_0
+        return Marshal.PtrToStructure<T>(_ptr);
+#else
+        return (T)Marshal.PtrToStructure(_ptr, typeof(T));
+#endif
         }
 
         /// <summary>

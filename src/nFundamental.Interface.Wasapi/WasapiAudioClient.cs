@@ -4,16 +4,18 @@ using System.Linq;
 using System.Threading;
 using Fundamental.Core;
 using Fundamental.Core.AudioFormats;
+using Fundamental.Interface.Wasapi.Extentions;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
+using Fundamental.Interface.Wasapi.Options;
 
 namespace Fundamental.Interface.Wasapi
 {
     public abstract class WasapiAudioClient : 
         IFormatGetable, 
         IFormatSetable,
-        IIsFormatSupported,
-        IFormatChangeNotifiable
+        IFormatChangeNotifiable, 
+        IFormatNegotiable
     {
         // Dependents
 
@@ -31,6 +33,15 @@ namespace Fundamental.Interface.Wasapi
         /// The WASAPI audio client factory
         /// </summary>
         private readonly IWasapiAudioClientInteropFactory _wasapiAudioClientInteropFactory;
+
+        /// <summary>
+        /// The list of known driver keys which can yield supported formats.
+        /// </summary>
+        private static readonly IList<string> KnownDriverKeysForSupportedFormats = new List<string>
+        {
+            "AudioEngine.DeviceFormat",
+            "AudioEngine.OemFormat"
+        };
 
         // protected fields
 
@@ -84,62 +95,38 @@ namespace Fundamental.Interface.Wasapi
         private int _isRunning;
 
         /// <summary>
-        /// The cached supported formats
+        /// The cached supported formats as calculating them involves a lot of com calls
         /// </summary>
         private IAudioFormat[] _cachedSupportedFormats;
 
-        #region Required Settings 
-
-        /// <summary>
-        /// Gets the device access mode.
-        /// </summary>
-        /// <value>
-        /// The device access.
-        /// </value>
-        protected abstract AudioClientShareMode DeviceAccessMode { get; }
-
-        /// <summary>
-        /// Gets the length of the buffer.
-        /// </summary>
-        /// <value>
-        /// The length of the buffer.
-        /// </value>
-        protected abstract TimeSpan ManualSyncLatency { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether to use hardware sampling synchronization. 
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if [use hardware synchronize]; otherwise, <c>false</c>.
-        /// </value>
-        protected abstract bool UseHardwareSync { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether [prefer device native format].
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if [prefer device native format]; otherwise, <c>false</c>.
-        /// </value>
-        protected abstract bool PreferDeviceNativeFormat { get; }
-
-        #endregion
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Fundamental.Interface.Wasapi.WasapiAudioSource" /> class.
         /// </summary>
         /// <param name="wasapiDeviceToken">The WASAPI device token.</param>
         /// <param name="deviceInfo">The device information.</param>
+        /// <param name="options"></param>
         /// <param name="wasapiAudioClientInteropFactory">The WASAPI audio client inter-operation factory.</param>
         protected WasapiAudioClient(IDeviceToken wasapiDeviceToken,
                                     IDeviceInfo deviceInfo,
+                                    WasapiAudioClientSettings options,
                                     IWasapiAudioClientInteropFactory wasapiAudioClientInteropFactory)
         {
             _wasapiDeviceToken = wasapiDeviceToken;
             _deviceInfo = deviceInfo;
+            Options = options;
             _wasapiAudioClientInteropFactory = wasapiAudioClientInteropFactory;
             SupportsEventHandle = true;
             HardwareSyncEvent = new AutoResetEvent(false);
         }
+
+        /// <summary>
+        /// Gets the client options.
+        /// </summary>
+        /// <value>
+        /// The options.
+        /// </value>
+        protected WasapiAudioClientSettings Options { get; }
 
         /// <summary>
         /// Raised when source format changes.
@@ -200,12 +187,12 @@ namespace Fundamental.Interface.Wasapi
         /// </returns>
         public bool IsAudioFormatSupported(IAudioFormat audioFormat, out IAudioFormat closestMatchingFormat)
         {
-            return AudioClientInterop.IsFormatSupported(DeviceAccessMode, audioFormat, out closestMatchingFormat);
+            var deviceAccessMode = Options.DeviceAccess.ConvertToWasapiAudioClientShareMode();
+            return WasapiClient.IsFormatSupported(deviceAccessMode, audioFormat, out closestMatchingFormat);
         }
 
         /// <summary>
-        /// Suggests a format to use.
-        /// This may return, none, one or many
+        /// Suggests the possible formats which are supported by the audio endpoint.
         /// </summary>
         /// <param name="dontSuggestTheseFormats">The don't suggest these formats.</param>
         /// <returns></returns>
@@ -215,7 +202,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Suggests the formats.
+        /// Suggests the possible formats which are supported by the audio endpoint.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<IAudioFormat> SuggestFormats()
@@ -227,7 +214,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Sets the format.
+        /// Sets the format which will be used for the audio client when spooling.
         /// </summary>
         /// <param name="audioFormat">The audio format.</param>
         /// <exception cref="Fundamental.Core.FormatNotSupportedException">Target device does not support the given format</exception>
@@ -248,7 +235,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Gets the format.
+        /// Gets the format which will be used for the audio client when spooling.
         /// </summary>
         /// <returns></returns>
         public IAudioFormat GetFormat()
@@ -259,6 +246,7 @@ namespace Fundamental.Interface.Wasapi
 
         /// <summary>
         /// Gets the desired format.
+        /// This is the format which has been explicitly set. This will be equal to null, if no format has been set.
         /// </summary>
         /// <returns></returns>
         public IAudioFormat GetDesiredFormat()
@@ -268,6 +256,7 @@ namespace Fundamental.Interface.Wasapi
 
         /// <summary>
         /// Gets the default format.
+        /// This is the format which will be used if no format is set.
         /// </summary>
         /// <returns></returns>
         public IAudioFormat GetDefaultFormat()
@@ -276,7 +265,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Starts capturing audio.
+        /// Starts audio spooling process.
         /// </summary>
         public void Start()
         {
@@ -312,7 +301,7 @@ namespace Fundamental.Interface.Wasapi
 
 
         /// <summary>
-        /// Stops capturing audio.
+        /// Stops audio spooling process.
         /// </summary>
         public void Stop()
         {
@@ -322,7 +311,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Ensures the is initialize.
+        /// Ensures the Audio client is initialize.
         /// </summary>
         public void EnsureIsInitialize()
         {
@@ -341,7 +330,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Ensures the is deinitialize.
+        /// Ensures the Audio client is de-initialized.
         /// </summary>
         public void EnsureIsDeinitialize()
         {
@@ -364,18 +353,30 @@ namespace Fundamental.Interface.Wasapi
         // Protected Methods
 
         /// <summary>
-        /// Runs the audio pump using hardware interrupt audio synchronization
+        /// Primes the audio pump so that its ready for pumping.
         /// </summary>
-        protected abstract void HardwareSyncAudioPump();
+        protected virtual void PrimeAudioPrime()
+        {
+            WasapiClient.Reset();
+        }
 
         /// <summary>
-        /// Runs the audio pump using Manual audio synchronization
+        /// Pumps the current audio content audio using a manual sync
         /// </summary>
-        protected abstract void ManualSyncAudioPump();
+        protected abstract bool PumpAudioManunalSync(TimeSpan pollRate);
 
         /// <summary>
-        /// Gets or sets the audio format latency calculator.
+        /// Pumps the current audio content audio using hardware sync
         /// </summary>
+        /// <param name="latency">The latency.</param>
+        /// <returns></returns>
+        protected abstract bool PumpAudioHardwareSync(TimeSpan latency);
+
+        /// <summary>
+        /// Gets or sets the audio format latency calculator which can be used for calculating the device timing
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="DeviceNotInitializedException">Unable to get audio format latency calculator, when device is not initialized.</exception>
         /// <value>
         /// The audio format latency calculator.
         /// </value>
@@ -387,26 +388,42 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Initializes the implementation.
+        /// Gets the list of known driver keys for supported formats.
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IList<string> GetKnownDriverKeysForSupportedFormats()
+        {
+            return KnownDriverKeysForSupportedFormats;
+        }
+
+        /// <summary>
+        /// Initializes the implementation code seam, override then for performing custom actions which need to happen
+        /// as part of the initialization process 
         /// </summary>
         protected virtual void InitializeImpl()
         {
         }
 
+
         // Private methods
+
+        #region Format methods
 
         public IEnumerable<IAudioFormat> CalculateSuggestFormats()
         {
             var mixerFormats = CalculateMixerFormats();
             var oemFormats = CalculateOemFormats();
-            return PreferDeviceNativeFormat ?
-                oemFormats.Concat(mixerFormats) :
-                mixerFormats.Concat(oemFormats);
+
+            var formats = Options.PreferDeviceNativeFormat
+                ? oemFormats.Concat(mixerFormats)
+                : mixerFormats.Concat(oemFormats);
+
+            return formats.Distinct();
         }
 
         private IEnumerable<IAudioFormat> CalculateMixerFormats()
         {
-            var mixerFormat = AudioClientInterop.GetMixFormat();
+            var mixerFormat = WasapiClient.GetMixFormat();
             IEnumerable<IAudioFormat> closestMatchingFormats;
 
             // yield the mixer format, if it was not in the "don't suggest these formats" list
@@ -423,16 +440,20 @@ namespace Fundamental.Interface.Wasapi
 
         private IEnumerable<IAudioFormat> CalculateOemFormats()
         {
-            IAudioFormat audioFormat;
-            if (TryGetDeivceDriveFormat("AudioEngine.DeviceFormat", out audioFormat))
+            // If OEM formats are to be ignored,
+            if(Options.IgnoreDeviceNativeFormat)
+               yield break;
+
+            foreach (var knownKey in GetKnownDriverKeysForSupportedFormats())
             {
-                if (IsAudioFormatSupported(audioFormat))
-                    yield return audioFormat;
-            }
-            else if (TryGetDeivceDriveFormat("AudioEngine.OemFormat", out audioFormat))
-            {
-                if (IsAudioFormatSupported(audioFormat))
-                    yield return audioFormat;
+                IAudioFormat audioFormat;
+                if (!TryGetDeivceDriveFormat(knownKey, out audioFormat)) 
+                    continue;
+                
+                if (!IsAudioFormatSupported(audioFormat))
+                    continue;
+
+                yield return audioFormat;
             }
         }
 
@@ -448,20 +469,29 @@ namespace Fundamental.Interface.Wasapi
             return audioFormat != null && IsAudioFormatSupported(audioFormat);
         }
 
-        private void CallAudioPump()
+        #endregion
+
+        #region Audio Pump methods
+
+        protected void CallAudioPump()
         {
             try
             {
                 Started?.Invoke(this, EventArgs.Empty);
-                AudioClientInterop.Start();
+
+                // Give the change to reset the current buffer and ready the pump for 
+                // starting with out any glitches
+                PrimeAudioPrime();
+
+                WasapiClient.Start();
 
                 if (SupportsEventHandle)
                     HardwareSyncAudioPump();
                 else
                     ManualSyncAudioPump();
 
-                AudioClientInterop.Stop();
-                AudioClientInterop.Reset();
+                WasapiClient.Stop();
+                WasapiClient.Reset();
             }
             catch (Exception ex)
             {
@@ -474,11 +504,28 @@ namespace Fundamental.Interface.Wasapi
             }
         }
 
+        private void HardwareSyncAudioPump()
+        {
+            var hardwareSyncTimeout = GetHardwareSyncTimeout();
+            while (IsRunning && PumpAudioHardwareSync(hardwareSyncTimeout)) { }
+        }
+
+        private void ManualSyncAudioPump()
+        {
+            var manualSyncPollRate = GetManualSyncPollRate();
+            while (IsRunning && PumpAudioManunalSync(manualSyncPollRate)) { }
+        }
+
+
+        #endregion
+
+        #region Initialize methods
+
         private void Initialize()
         {
             var format = GetFormat();
 
-            if (UseHardwareSync)
+            if (Options.UseHardwareSync)
                 InitializeForHardwareSync(format);
             else
                 InitializeForManualSync(format);
@@ -504,13 +551,25 @@ namespace Fundamental.Interface.Wasapi
 
         private bool TryInitializeForHardwareSync(IAudioFormat format)
         {
-            AudioClientInterop.Initialize(DeviceAccessMode, AudioClientStreamFlags.EventCallback, TimeSpan.Zero, TimeSpan.Zero, format);
+            var deviceAccessMode = Options.DeviceAccess.ConvertToWasapiAudioClientShareMode();
+
+
+            WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.EventCallback, TimeSpan.Zero, TimeSpan.Zero, format);
 
             try
             {
+                if (deviceAccessMode == AudioClientShareMode.Exclusive)
+                {
+                    var latency = ByteAlignLatency(Options.ManualSyncLatency, format);
+                    WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.EventCallback, latency, latency, format);
+                }
+                else
+                    WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.EventCallback, TimeSpan.Zero,TimeSpan.Zero, format);
+
                 HardwareSyncEvent.Reset();
-                var handle = HardwareSyncEvent.GetSafeWaitHandle().DangerousGetHandle();
-                AudioClientInterop.SetEventHandle(handle);
+
+                var handle = GetHardwareSyncHandle();
+                WasapiClient.SetEventHandle(handle);
                 SupportsEventHandle = true;
             }
             catch (Exception)
@@ -526,19 +585,65 @@ namespace Fundamental.Interface.Wasapi
 
         private void InitializeForManualSync(IAudioFormat format)
         {
-            AudioClientInterop.Initialize(DeviceAccessMode, AudioClientStreamFlags.None, ManualSyncLatency, TimeSpan.Zero, format);
+            var deviceAccessMode = Options.DeviceAccess.ConvertToWasapiAudioClientShareMode();
+            var latency = ByteAlignLatency(Options.ManualSyncLatency, format);
+
+            WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.None, latency, TimeSpan.Zero, format);
             SupportsEventHandle = false;
         }
 
-        private static ILatencyCalculator FactoryLatencyCaculator(IAudioFormat format)
+        private IntPtr GetHardwareSyncHandle()
         {
-            var sampleRate = format.Value<int>(FormatKeys.Pcm.SampleRate); 
-            var frameSize  = format.Value<int>(FormatKeys.Pcm.Packing);
-            return new LatencyCalculator(frameSize, (ulong)sampleRate);
+#if (NET40 || NET45)
+            return HardwareSyncEvent.SafeWaitHandle.DangerousGetHandle();
+#else
+            return HardwareSyncEvent.GetSafeWaitHandle().DangerousGetHandle();
+#endif
         }
 
-        protected virtual IWasapiAudioClientInterop FactoryAudioClient() => _wasapiAudioClientInteropFactory.FactoryAudioClient(_wasapiDeviceToken);
+        private TimeSpan ByteAlignLatency(TimeSpan latency, IAudioFormat format)
+        {
+            return FactoryLatencyCaculator(format).ByteAlignLatency(latency);
+        }
 
-        protected virtual IWasapiAudioClientInterop AudioClientInterop => _audioClientInterop ?? (_audioClientInterop = FactoryAudioClient());
+#endregion
+
+#region Latency Calculating methods
+
+        private static ILatencyCalculator FactoryLatencyCaculator(IAudioFormat format)
+        {
+            var sampleRate = format.Value<int>(FormatKeys.Pcm.SampleRate);
+            var frameSize = format.Value<int>(FormatKeys.Pcm.Packing);
+            return new PcmLatencyCalculator(frameSize, sampleRate);
+        }
+
+        protected TimeSpan GetManualSyncPollRate()
+        {
+            var bufferSpan = GetBufferTimeSpan();
+            return TimeSpan.FromTicks(bufferSpan.Ticks / 2);
+        }
+
+        protected TimeSpan GetHardwareSyncTimeout()
+        {
+            // The hardware sync is equal to the buffer length
+            return GetBufferTimeSpan();
+        }
+
+        protected TimeSpan GetBufferTimeSpan()
+        {
+            var latencyCaculator = GetAudioFormatLatencyCalculator();
+            var bufferSize = WasapiClient.GetBufferSize();
+            return latencyCaculator.FramesToLatency(bufferSize);
+        }
+
+#endregion
+
+#region Factory methods
+
+        protected virtual IWasapiAudioClientInterop FactoryWasapiAudioClient() => _wasapiAudioClientInteropFactory.FactoryAudioClient(_wasapiDeviceToken);
+
+        protected virtual IWasapiAudioClientInterop WasapiClient => _audioClientInterop ?? (_audioClientInterop = FactoryWasapiAudioClient());
+
+#endregion
     }
 }

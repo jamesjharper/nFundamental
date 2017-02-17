@@ -44,8 +44,9 @@ namespace Fundamental.Interface.Wasapi.Internal
         /// Gets the service.
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="interfaceId">The interface identifier.</param>
         /// <returns></returns>
-        T GetService<T>() where T : class;
+        T GetService<T>(Guid interfaceId) where T : class;
 
         /// <summary>
         /// Gets the stream latency.

@@ -17,12 +17,16 @@
     },
 
     "frameworks": {
-        "net46": {
+        "net45": {
             "dependencies": {
                 "nFundamental.Interface.Wasapi": { "target": "project" }
             }
         },
-
+        "net40": {
+            "dependencies": {
+                "nFundamental.Interface.Wasapi": { "target": "project" }
+            }
+        },
         "netcoreapp1.0": {
             "imports": "dnxcore50",
 

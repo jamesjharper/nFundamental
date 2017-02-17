@@ -1,9 +1,9 @@
 ﻿{
     "version": "1.0.0-*",
     "dependencies": {
-        "NUnit": "3.5.*",
-        "NSubstitute": "2.0.1-rc",
         "dotnet-test-nunit": "3.4.0-beta-3",
+        "NSubstitute": "2.0.1-rc",
+        "NUnit": "3.5.*",
         "nFundamental.Core": { "target": "project" }
     },
 
