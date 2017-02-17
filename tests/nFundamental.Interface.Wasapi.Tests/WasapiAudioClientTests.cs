@@ -51,6 +51,14 @@ namespace Fundamental.Interface.Wasapi.Tests
             {
                 return true;
             }
+
+
+            public IList<string> KnownDriverKeysForSupportedFormats { get; set; }
+
+            protected override IList<string> GetKnownDriverKeysForSupportedFormats()
+            {
+                return KnownDriverKeysForSupportedFormats ?? base.GetKnownDriverKeysForSupportedFormats();
+            }
         }
 
 
@@ -62,6 +70,8 @@ namespace Fundamental.Interface.Wasapi.Tests
 
         private IDeviceInfo DeviceInfoFixture { get; set; }
 
+        private IPropertyBag DevicePropertyBagFixture { get; set; }
+
         private WasapiAudioClientSettings Settings { get; set; } = new WasapiAudioClientSettings();
 
         [SetUp]
@@ -71,6 +81,8 @@ namespace Fundamental.Interface.Wasapi.Tests
             WasapiAudioClientInteropFactoryFixture = Substitute.For<IWasapiAudioClientInteropFactory>();
             WasapiAudioClientInteropFixture = Substitute.For<IWasapiAudioClientInterop>();
             DeviceInfoFixture = Substitute.For<IDeviceInfo>();
+            DevicePropertyBagFixture = Substitute.For<IPropertyBag>();
+            DeviceInfoFixture.Properties.Returns(DevicePropertyBagFixture);
         }
 
         private WasapiAudioSourceTestFixture GetTestFixture()
@@ -179,6 +191,10 @@ namespace Fundamental.Interface.Wasapi.Tests
         }
 
 
+        #endregion
+
+        #region  Is Format Supported and if not suggest me the closest supported format
+
         [Test]
         public void CanGetClosestMatchFormatsForNonSupportedFormatWhenUsingSharedMode()
         {
@@ -257,10 +273,7 @@ namespace Fundamental.Interface.Wasapi.Tests
         {
             // -> ARRANGE:
             var fixture = GetTestFixture();
-
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
-            var suggestedFormat = AudioFormatHelper.Pcm16Bit44KhzMonoLittle;
-
 
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
@@ -277,6 +290,7 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ASSERT
             Assert.AreEqual(true, isAudioFormatSupported);
 
+            // No formats are suggested as the given format was supported
             Assert.AreEqual(0, closestMatchingFormats.Count);
         }
 
@@ -292,7 +306,11 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
-            var accessmode = DeviceAccess.Exclusive;
+
+            // Make sure the setting is set to Shared mode
+            Settings.DeviceAccess = DeviceAccess.Exclusive;
+            Settings.IgnoreDeviceNativeFormat = true;
+
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
                 .GetMixFormat()
@@ -302,16 +320,9 @@ namespace Fundamental.Interface.Wasapi.Tests
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
                 .IsFormatSupported(AudioClientShareMode.Exclusive, mixerFormat, out outFormat)
-                .Returns((p) =>
-                {
-                    return true;
-                });
+                .Returns((p) => true);
 
             // -> ACT:
-
-            // Make sure the setting is set to Shared mode
-            Settings.DeviceAccess = accessmode;
-
             IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats(format);
             var closestMatchingFormats = outSuggestions.ToList();
 
@@ -329,7 +340,10 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var format = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
-            var accessmode = DeviceAccess.Shared;
+
+            // Make sure the setting is set to Shared mode
+            Settings.DeviceAccess = DeviceAccess.Shared;
+            Settings.IgnoreDeviceNativeFormat = true;
 
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
@@ -340,15 +354,9 @@ namespace Fundamental.Interface.Wasapi.Tests
             IAudioFormat outFormat;
             WasapiAudioClientInteropFixture
                 .IsFormatSupported(AudioClientShareMode.Shared, mixerFormat, out outFormat)
-                .Returns((p) =>
-                {
-                    return true;
-                });
+                .Returns((p) => true);
 
             // -> ACT:
-
-            // Make sure the setting is set to Shared mode
-            Settings.DeviceAccess = accessmode;
 
             IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats(format);
             var closestMatchingFormats = outSuggestions.ToList();
@@ -369,6 +377,9 @@ namespace Fundamental.Interface.Wasapi.Tests
 
             var suggestedFormat = AudioFormatHelper.Pcm16Bit44KhzMonoBig;
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
+
+            // Make sure the setting is set to Shared mode
+            Settings.IgnoreDeviceNativeFormat = true;
 
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
@@ -408,6 +419,8 @@ namespace Fundamental.Interface.Wasapi.Tests
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
             var ignoreFormat = mixerFormat;
 
+            // Make sure the setting is set to Shared mode
+            Settings.IgnoreDeviceNativeFormat = true;
 
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
@@ -430,6 +443,142 @@ namespace Fundamental.Interface.Wasapi.Tests
             Assert.AreEqual(0, closestMatchingFormats.Count); //
         }
 
+        [Test]
+        public void SuggestSupportedFormatWithOemFormats()
+        {
+            // -> ARRANGE:
+            var fixture = GetTestFixture();
+            var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
+            var oemFormat = AudioFormatHelper.Pcm16Bit44KhzMonoLittle;
+
+            fixture.KnownDriverKeysForSupportedFormats = new List<string>() {"key1"};
+
+            // Make sure the setting is set to Shared mode
+            Settings.IgnoreDeviceNativeFormat = false;
+
+            // Expect a call to get the mixer format
+            WasapiAudioClientInteropFixture
+                .GetMixFormat()
+                .Returns(mixerFormat);
+
+            // Expect a call to check that is format is supported in the current mode 
+            IAudioFormat outFormat;
+            WasapiAudioClientInteropFixture
+                .IsFormatSupported(Arg.Any<AudioClientShareMode>(), Arg.Any<AudioFormat>(), out outFormat)
+                .Returns(true);
+
+            object outResult;
+            DevicePropertyBagFixture
+                .TryGetValue("key1", out outResult)
+                .Returns((p) =>
+                {
+                    p[1] = oemFormat;
+                    return true;
+                });
+
+            // -> ACT:
+
+
+            // Make sure the setting is set to Shared mode
+            IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats();
+            var closestMatchingFormats = outSuggestions.ToList();
+
+            // -> ASSERT
+            Assert.AreEqual(2, closestMatchingFormats.Count);
+            Assert.Contains(oemFormat, closestMatchingFormats);
+        }
+
+        [Test]
+        public void SuggestSupportedFormatWithPrefrenceToOemFormats()
+        {
+            // -> ARRANGE:
+            var fixture = GetTestFixture();
+            var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
+            var oemFormat = AudioFormatHelper.Pcm16Bit44KhzMonoLittle;
+
+            fixture.KnownDriverKeysForSupportedFormats = new List<string>() { "key1" };
+
+            // Make sure the setting is set to Shared mode
+            Settings.IgnoreDeviceNativeFormat = false;
+            Settings.PreferDeviceNativeFormat = true;
+
+            // Expect a call to get the mixer format
+            WasapiAudioClientInteropFixture
+                .GetMixFormat()
+                .Returns(mixerFormat);
+
+            // Expect a call to check that is format is supported in the current mode 
+            IAudioFormat outFormat;
+            WasapiAudioClientInteropFixture
+                .IsFormatSupported(Arg.Any<AudioClientShareMode>(), Arg.Any<AudioFormat>(), out outFormat)
+                .Returns(true);
+
+            object outResult;
+            DevicePropertyBagFixture
+                .TryGetValue("key1", out outResult)
+                .Returns((p) =>
+                {
+                    p[1] = oemFormat;
+                    return true;
+                });
+
+            // -> ACT:
+
+            // Make sure the setting is set to Shared mode
+            IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats();
+            var closestMatchingFormats = outSuggestions.ToList();
+
+            // -> ASSERT
+            Assert.AreEqual(2, closestMatchingFormats.Count);
+            Assert.AreEqual(oemFormat, closestMatchingFormats[0]);
+            Assert.AreEqual(mixerFormat, closestMatchingFormats[1]);
+        }
+
+        [Test]
+        public void SuggestSupportedFormatWithPrefrenceToMixerFormats()
+        {
+            // -> ARRANGE:
+            var fixture = GetTestFixture();
+            var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
+            var oemFormat = AudioFormatHelper.Pcm16Bit44KhzMonoLittle;
+
+            fixture.KnownDriverKeysForSupportedFormats = new List<string>() { "key1" };
+
+            // Make sure the setting is set to Shared mode
+            Settings.IgnoreDeviceNativeFormat = false;
+            Settings.PreferDeviceNativeFormat = false;
+
+            // Expect a call to get the mixer format
+            WasapiAudioClientInteropFixture
+                .GetMixFormat()
+                .Returns(mixerFormat);
+
+            // Expect a call to check that is format is supported in the current mode 
+            IAudioFormat outFormat;
+            WasapiAudioClientInteropFixture
+                .IsFormatSupported(Arg.Any<AudioClientShareMode>(), Arg.Any<AudioFormat>(), out outFormat)
+                .Returns(true);
+
+            object outResult;
+            DevicePropertyBagFixture
+                .TryGetValue("key1", out outResult)
+                .Returns((p) =>
+                {
+                    p[1] = oemFormat;
+                    return true;
+                });
+
+            // -> ACT:
+
+            // Make sure the setting is set to Shared mode
+            IEnumerable<IAudioFormat> outSuggestions = fixture.SuggestFormats();
+            var closestMatchingFormats = outSuggestions.ToList();
+
+            // -> ASSERT
+            Assert.AreEqual(2, closestMatchingFormats.Count);
+            Assert.AreEqual(oemFormat, closestMatchingFormats[1]);
+            Assert.AreEqual(mixerFormat, closestMatchingFormats[0]);
+        }
 
         #endregion
 
@@ -491,7 +640,6 @@ namespace Fundamental.Interface.Wasapi.Tests
             var mixerFormat = AudioFormatHelper.Pcm32BitFloat96KhzSurround5Point1Big;
 
             // As the format has never been set, we Expect the first suggested format to be resolve as the default format
-
 
             // Expect a call to get the mixer format
             WasapiAudioClientInteropFixture
@@ -566,7 +714,6 @@ namespace Fundamental.Interface.Wasapi.Tests
             // -> ASSERT
             Assert.AreEqual(suggestedFormat, format);
         }
-
 
 
         #endregion

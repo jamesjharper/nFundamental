@@ -14,8 +14,8 @@ namespace Fundamental.Interface.Wasapi
     public abstract class WasapiAudioClient : 
         IFormatGetable, 
         IFormatSetable,
-        IIsFormatSupported,
-        IFormatChangeNotifiable
+        IFormatChangeNotifiable, 
+        IFormatNegotiable
     {
         // Dependents
 
@@ -192,8 +192,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Suggests a format to use.
-        /// This may return, none, one or many
+        /// Suggests the possible formats which are supported by the audio endpoint.
         /// </summary>
         /// <param name="dontSuggestTheseFormats">The don't suggest these formats.</param>
         /// <returns></returns>
@@ -203,7 +202,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Suggests the formats.
+        /// Suggests the possible formats which are supported by the audio endpoint.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<IAudioFormat> SuggestFormats()
@@ -215,7 +214,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Sets the format.
+        /// Sets the format which will be used for the audio client when spooling.
         /// </summary>
         /// <param name="audioFormat">The audio format.</param>
         /// <exception cref="Fundamental.Core.FormatNotSupportedException">Target device does not support the given format</exception>
@@ -236,7 +235,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Gets the format.
+        /// Gets the format which will be used for the audio client when spooling.
         /// </summary>
         /// <returns></returns>
         public IAudioFormat GetFormat()
@@ -247,6 +246,7 @@ namespace Fundamental.Interface.Wasapi
 
         /// <summary>
         /// Gets the desired format.
+        /// This is the format which has been explicitly set. This will be equal to null, if no format has been set.
         /// </summary>
         /// <returns></returns>
         public IAudioFormat GetDesiredFormat()
@@ -256,6 +256,7 @@ namespace Fundamental.Interface.Wasapi
 
         /// <summary>
         /// Gets the default format.
+        /// This is the format which will be used if no format is set.
         /// </summary>
         /// <returns></returns>
         public IAudioFormat GetDefaultFormat()
@@ -264,7 +265,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Starts capturing audio.
+        /// Starts audio spooling process.
         /// </summary>
         public void Start()
         {
@@ -300,7 +301,7 @@ namespace Fundamental.Interface.Wasapi
 
 
         /// <summary>
-        /// Stops capturing audio.
+        /// Stops audio spooling process.
         /// </summary>
         public void Stop()
         {
@@ -310,7 +311,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Ensures the is initialize.
+        /// Ensures the Audio client is initialize.
         /// </summary>
         public void EnsureIsInitialize()
         {
@@ -329,7 +330,7 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Ensures the is deinitialize.
+        /// Ensures the Audio client is de-initialized.
         /// </summary>
         public void EnsureIsDeinitialize()
         {
@@ -372,8 +373,10 @@ namespace Fundamental.Interface.Wasapi
         protected abstract bool PumpAudioHardwareSync(TimeSpan latency);
 
         /// <summary>
-        /// Gets or sets the audio format latency calculator.
+        /// Gets or sets the audio format latency calculator which can be used for calculating the device timing
         /// </summary>
+        /// <returns></returns>
+        /// <exception cref="DeviceNotInitializedException">Unable to get audio format latency calculator, when device is not initialized.</exception>
         /// <value>
         /// The audio format latency calculator.
         /// </value>
@@ -385,11 +388,22 @@ namespace Fundamental.Interface.Wasapi
         }
 
         /// <summary>
-        /// Initializes the implementation.
+        /// Gets the list of known driver keys for supported formats.
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IList<string> GetKnownDriverKeysForSupportedFormats()
+        {
+            return KnownDriverKeysForSupportedFormats;
+        }
+
+        /// <summary>
+        /// Initializes the implementation code seam, override then for performing custom actions which need to happen
+        /// as part of the initialization process 
         /// </summary>
         protected virtual void InitializeImpl()
         {
         }
+
 
         // Private methods
 
@@ -430,7 +444,7 @@ namespace Fundamental.Interface.Wasapi
             if(Options.IgnoreDeviceNativeFormat)
                yield break;
 
-            foreach (var knownKey in KnownDriverKeysForSupportedFormats)
+            foreach (var knownKey in GetKnownDriverKeysForSupportedFormats())
             {
                 IAudioFormat audioFormat;
                 if (!TryGetDeivceDriveFormat(knownKey, out audioFormat)) 
@@ -463,8 +477,6 @@ namespace Fundamental.Interface.Wasapi
         {
             try
             {
-        
-
                 Started?.Invoke(this, EventArgs.Empty);
 
                 // Give the change to reset the current buffer and ready the pump for 
@@ -540,17 +552,23 @@ namespace Fundamental.Interface.Wasapi
         private bool TryInitializeForHardwareSync(IAudioFormat format)
         {
             var deviceAccessMode = Options.DeviceAccess.ConvertToWasapiAudioClientShareMode();
+
+
             WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.EventCallback, TimeSpan.Zero, TimeSpan.Zero, format);
 
             try
             {
+                if (deviceAccessMode == AudioClientShareMode.Exclusive)
+                {
+                    var latency = ByteAlignLatency(Options.ManualSyncLatency, format);
+                    WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.EventCallback, latency, latency, format);
+                }
+                else
+                    WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.EventCallback, TimeSpan.Zero,TimeSpan.Zero, format);
+
                 HardwareSyncEvent.Reset();
 
-#if (NET45 || NET40)
-                var handle = HardwareSyncEvent.Handle;
-#else
-                var handle = HardwareSyncEvent.GetSafeWaitHandle().DangerousGetHandle();
-#endif
+                var handle = GetHardwareSyncHandle();
                 WasapiClient.SetEventHandle(handle);
                 SupportsEventHandle = true;
             }
@@ -568,9 +586,24 @@ namespace Fundamental.Interface.Wasapi
         private void InitializeForManualSync(IAudioFormat format)
         {
             var deviceAccessMode = Options.DeviceAccess.ConvertToWasapiAudioClientShareMode();
-            var manualSyncLatency = Options.ManualSyncLatency;
-            WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.None, manualSyncLatency, TimeSpan.Zero, format);
+            var latency = ByteAlignLatency(Options.ManualSyncLatency, format);
+
+            WasapiClient.Initialize(deviceAccessMode, AudioClientStreamFlags.None, latency, TimeSpan.Zero, format);
             SupportsEventHandle = false;
+        }
+
+        private IntPtr GetHardwareSyncHandle()
+        {
+#if (NET40 || NET45)
+            return HardwareSyncEvent.SafeWaitHandle.DangerousGetHandle();
+#else
+            return HardwareSyncEvent.GetSafeWaitHandle().DangerousGetHandle();
+#endif
+        }
+
+        private TimeSpan ByteAlignLatency(TimeSpan latency, IAudioFormat format)
+        {
+            return FactoryLatencyCaculator(format).ByteAlignLatency(latency);
         }
 
 #endregion
@@ -581,7 +614,7 @@ namespace Fundamental.Interface.Wasapi
         {
             var sampleRate = format.Value<int>(FormatKeys.Pcm.SampleRate);
             var frameSize = format.Value<int>(FormatKeys.Pcm.Packing);
-            return new LatencyCalculator(frameSize, (ulong)sampleRate);
+            return new PcmLatencyCalculator(frameSize, sampleRate);
         }
 
         protected TimeSpan GetManualSyncPollRate()
