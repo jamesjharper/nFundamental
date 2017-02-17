@@ -1,6 +1,8 @@
 ﻿{
     "version": "1.0.0-*",
-
+    "buildOptions": {
+        "treatWarningsAsErrors": true
+    },
     "dependencies": {
         "NETStandard.Library": "1.6.0",
         "nFundamental.Core": { "target": "project" }
