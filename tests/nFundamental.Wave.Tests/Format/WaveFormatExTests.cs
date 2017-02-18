@@ -4,7 +4,7 @@ using Fundamental.Core.AudioFormats;
 using MiscUtil.Conversion;
 using NUnit.Framework;
 
-namespace Fundamental.Core.Tests.AudioFormats
+namespace Fundamental.Wave.Format
 {
     [TestFixture]
     public class WaveFormatExTests

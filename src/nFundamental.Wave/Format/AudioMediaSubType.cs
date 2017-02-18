@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fundamental.Core.AudioFormats
+namespace Fundamental.Wave.Format
 {
     public static class AudioMediaSubType
     {

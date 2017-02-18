@@ -10,10 +10,10 @@
 
     "frameworks": {
         "netstandard1.0": {
-            "imports": [
-                "dnxcore50",
-                "portable-net40+sl50+netcore45+wpa81+wp8"
-            ]
+            "imports": "dnxcore50"
+        },
+        "netstandard1.1": {
+            "imports": "dnxcore50"
         },
         "net40": {
         }

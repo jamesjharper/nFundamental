@@ -6,7 +6,7 @@ using MiscUtil.Conversion;
 using NUnit.Framework;
 using Fundamental.Core.AudioFormats;
 
-namespace Fundamental.Core.Tests.AudioFormats
+namespace Fundamental.Wave.Format
 {
     public class WaveFormatExtensiableTests
     {

@@ -4,7 +4,7 @@ using MiscUtil.Conversion;
 using NUnit.Framework;
 using Endianness = Fundamental.Core.AudioFormats.Endianness;
 
-namespace Fundamental.Core.Tests.AudioFormats
+namespace Fundamental.Wave.Format
 {
     [TestFixture]
     public class WaveFormatToAudioFormatConverterTests

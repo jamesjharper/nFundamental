@@ -1,8 +1,9 @@
 ﻿using System;
+using Fundamental.Core.AudioFormats;
 using Fundamental.Core.Math;
 using MiscUtil.Conversion;
 
-namespace Fundamental.Core.AudioFormats
+namespace Fundamental.Wave.Format
 {
     public abstract class WaveFormat 
     {

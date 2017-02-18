@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fundamental.Core;
 using Fundamental.Core.AudioFormats;
+using Fundamental.Wave.Format;
 using Fundamental.Core.Tests.AudioFormats;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;

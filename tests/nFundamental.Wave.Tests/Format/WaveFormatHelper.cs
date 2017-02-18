@@ -3,7 +3,7 @@ using System.IO;
 using MiscUtil.Conversion;
 using Fundamental.Core.AudioFormats;
 
-namespace Fundamental.Core.Tests.AudioFormats
+namespace Fundamental.Wave.Format
 {
     public static class WaveFormatHelper
     {

@@ -4,14 +4,14 @@
         "treatWarningsAsErrors": true
     },
     "dependencies": {
-        "NETStandard.Library": "1.6.0"
+        "NETStandard.Library": "1.6.0",
+        "nFundamental.Core": { "target": "project" }
     },
 
     "frameworks": {
         "netstandard1.0": {
             "imports": "dnxcore50",
             "dependencies": {
-                "System.Runtime.InteropServices": "4.3.0",
                 "JTForks.MiscUtil": "1.*"
             }
         },
