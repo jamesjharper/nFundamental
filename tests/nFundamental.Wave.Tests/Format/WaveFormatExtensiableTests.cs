@@ -8,6 +8,7 @@ using Fundamental.Core.AudioFormats;
 
 namespace Fundamental.Wave.Format
 {
+    [TestFixture]
     public class WaveFormatExtensiableTests
     {
 

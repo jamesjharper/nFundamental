@@ -5,7 +5,8 @@
         "NSubstitute": "2.0.1-rc",
         "NUnit": "3.5.*",
         "nFundamental.Core": { "target": "project" },
-        "nFundamental.Wave": { "target": "project" }
+        "nFundamental.Wave": { "target": "project" },
+        "nFundamental.Core.Tests": { "target": "project" }
     },
 
     "buildOptions": { "allowUnsafe": true },
