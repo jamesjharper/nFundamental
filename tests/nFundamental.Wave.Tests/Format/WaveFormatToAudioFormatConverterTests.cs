@@ -2,7 +2,7 @@
 using Fundamental.Core.AudioFormats;
 using MiscUtil.Conversion;
 using NUnit.Framework;
-using Endianness = Fundamental.Core.AudioFormats.Endianness;
+using Endianness = Fundamental.Core.Memory.Endianness;
 
 namespace Fundamental.Wave.Format
 {

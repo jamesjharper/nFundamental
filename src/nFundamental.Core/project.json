@@ -21,11 +21,11 @@
                 "JTForks.MiscUtil": "1.*"
             }
         },
-        "net45": {
-            "dependencies": {
-                "JonSkeet.MiscUtil": "0.1.0"
-            }
-        },
+        //"net45": {
+        //    "dependencies": {
+        //        "JonSkeet.MiscUtil": "0.1.0"
+        //    }
+        //},
         "net40": {
             "dependencies": {
                 "JonSkeet.MiscUtil": "0.1.0"

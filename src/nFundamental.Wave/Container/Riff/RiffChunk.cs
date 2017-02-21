@@ -1,8 +1,9 @@
 ﻿// ReSharper disable BuiltInTypeReferenceStyle
 
 using System;
+using System.IO;
 using System.Text;
-using MiscUtil.IO;
+using Fundamental.Core.Memory;
 
 namespace Fundamental.Wave.Container.Riff
 {
@@ -46,9 +47,12 @@ namespace Fundamental.Wave.Container.Riff
         /// <summary>
         /// Reads the specified binary reader.
         /// </summary>
-        /// <param name="binaryReader">The binary reader.</param>
-        public void Read(EndianBinaryReader binaryReader)
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
+        public void Read(Stream stream, Endianness endianness)
         {
+            var binaryReader = stream.AsEndianReader(endianness);
+
             // Read the MMIO id string. This is actually a 4 char string
             // but is used as an id of the RIFF chunk type
             var mmioBytes = binaryReader.ReadBytes(4);
@@ -63,14 +67,17 @@ namespace Fundamental.Wave.Container.Riff
         /// <summary>
         /// Writes the specified binary writer.
         /// </summary>
-        /// <param name="binaryWriter">The binary writer.</param>
-        public void Write(EndianBinaryWriter binaryWriter)
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <exception cref="System.FormatException">MMIO Id must be exactly 4 chars long</exception>
+        public void Write(Stream stream, Endianness endianness)
         {
             // Write MMIO Id
             var mmioBytes = Encoding.UTF8.GetBytes(MmioId);
             if(mmioBytes.Length != 4)
                 throw new FormatException("MMIO Id must be exactly 4 chars long");
 
+            var binaryWriter = stream.AsEndianWriter(endianness);
             binaryWriter.Write(mmioBytes);
 
             // Write Chunk Size
@@ -83,12 +90,13 @@ namespace Fundamental.Wave.Container.Riff
         /// <summary>
         /// Reads from stream.
         /// </summary>
-        /// <param name="binaryReader">The binary reader.</param>
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns></returns>
-        public static RiffChunk ReadFromStream(EndianBinaryReader binaryReader)
+        public static RiffChunk ReadFromStream(Stream stream, Endianness endianness)
         {
             var rc = new RiffChunk();
-            rc.Read(binaryReader);
+            rc.Read(stream, endianness);
             return rc;
         }
     }

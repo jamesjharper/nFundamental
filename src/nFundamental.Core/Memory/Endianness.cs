@@ -1,4 +1,4 @@
-﻿namespace Fundamental.Core.AudioFormats
+﻿namespace Fundamental.Core.Memory
 {
     public enum Endianness
     {

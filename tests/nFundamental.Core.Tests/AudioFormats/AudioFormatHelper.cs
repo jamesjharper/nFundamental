@@ -1,4 +1,5 @@
 ﻿using Fundamental.Core.AudioFormats;
+using Fundamental.Core.Memory;
 
 namespace Fundamental.Core.Tests.AudioFormats
 {

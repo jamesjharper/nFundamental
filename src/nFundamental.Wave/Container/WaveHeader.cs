@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Fundamental.Core.Memory;
 using Fundamental.Wave.Container.Riff;
 using Fundamental.Wave.Format;
 using MiscUtil.IO;
@@ -18,9 +20,9 @@ namespace Fundamental.Wave.Container
 
 
 
-        public void Read(EndianBinaryReader binaryReader)
+        public void Read(Stream stream, Endianness endianness)
         {
-            _header.Read(binaryReader);
+            _header.Read(stream, endianness);
 
             if(_header.Type != "WAVE")
                 throw new FormatException("Wave file header expects WAVE MMIO");

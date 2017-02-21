@@ -1,10 +1,13 @@
 ﻿using System;
 using System.IO;
-using Fundamental.Core.Tests.Math;
-using MiscUtil.IO;
-using Fundamental.Wave.Container.Riff;
-using MiscUtil.Conversion;
+using System.Linq;
+
 using NUnit.Framework;
+using Fundamental.Core.Tests.Math;
+using Fundamental.Wave.Container.Riff;
+using Fundamental.Core.Memory;
+
+
 
 namespace Fundamental.Core.Tests.Container.Riff
 {
@@ -29,8 +32,7 @@ namespace Fundamental.Core.Tests.Container.Riff
             memoryStream.Position = 0;
 
             // -> ACT
-            var reader = new EndianBinaryReader(EndianBitConverter.Little, memoryStream);
-            var fixture = RiffChunk.ReadFromStream(reader);
+            var fixture = RiffChunk.ReadFromStream(memoryStream, Endianness.Little);
 
             // -> ASSERT
             Assert.AreEqual("DATA",  fixture.MmioId);
@@ -57,8 +59,7 @@ namespace Fundamental.Core.Tests.Container.Riff
             memoryStream.Position = 0;
 
             // -> ACT
-            var reader = new EndianBinaryReader(EndianBitConverter.Big, memoryStream);
-            var fixture = RiffChunk.ReadFromStream(reader);
+            var fixture = RiffChunk.ReadFromStream(memoryStream, Endianness.Big);
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.MmioId);
@@ -70,7 +71,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
 
         [Test]
-        public void CanReadAtOffsetedPositionLittleEndianRiffChunk()
+        public void CanReadAtOffsetedPositionBigEndianRiffChunk()
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -88,18 +89,83 @@ namespace Fundamental.Core.Tests.Container.Riff
             var chunckSizeBytes = EndianHelpers.ToBigEndianBytes(54);
             memoryStream.Write(chunckSizeBytes, 0, chunckSizeBytes.Length);
 
-            memoryStream.Position = 0;
+            memoryStream.Position = garbageBytes.Length;
 
             // -> ACT
-            var reader = new EndianBinaryReader(EndianBitConverter.Big, memoryStream);
-            var fixture = RiffChunk.ReadFromStream(reader);
+            var fixture = RiffChunk.ReadFromStream(memoryStream, Endianness.Big);
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.MmioId);
             Assert.AreEqual(54, fixture.ContentByteSize);
             Assert.AreEqual(8, fixture.HeaderByteSize);
             Assert.AreEqual(54 + 8, fixture.TotalByteSize);
-            Assert.AreEqual(8, fixture.Location);
+            Assert.AreEqual(8 + garbageBytes.Length, fixture.Location);
+        }
+
+
+        [Test]
+        public void CanWriteLittleEndianRiffChunk()
+        {
+            // -> ARRANGE:
+
+            var expectedMmioBytes = new byte[] { 0x44, 0x41, 0x54, 0x41 };
+            var expectedChunckSizeBytes = EndianHelpers.ToLittleEndianBytes(32);
+
+            var fixuture = new RiffChunk();
+
+            fixuture.MmioId = "DATA";
+            fixuture.ContentByteSize = 32;
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            fixuture.Write(memoryStream, Endianness.Little);
+
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written MIMO bytes
+            var mmioBytes = memoryStream.Read(4);
+            var contentByteSizeBytes = memoryStream.Read(4);
+
+
+            Assert.IsTrue(expectedMmioBytes.SequenceEqual(mmioBytes));
+            Assert.IsTrue(expectedChunckSizeBytes.SequenceEqual(contentByteSizeBytes));
+            Assert.AreEqual(8, streamPosition);
+        }
+
+
+        [Test]
+        public void CanWriteBigEndianRiffChunk()
+        {
+            // -> ARRANGE:
+
+            var expectedMmioBytes = new byte[] { 0x44, 0x41, 0x54, 0x41 };
+            var expectedChunckSizeBytes = EndianHelpers.ToBigEndianBytes(31);
+
+            var fixuture = new RiffChunk();
+
+            fixuture.MmioId = "DATA";
+            fixuture.ContentByteSize = 31;
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            fixuture.Write(memoryStream, Endianness.Big);
+
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written MIMO bytes
+            var mmioBytes = memoryStream.Read(4);
+            var contentByteSizeBytes = memoryStream.Read(4);
+
+
+            Assert.IsTrue(expectedMmioBytes.SequenceEqual(mmioBytes));
+            Assert.IsTrue(expectedChunckSizeBytes.SequenceEqual(contentByteSizeBytes));
+            Assert.AreEqual(8, streamPosition);
         }
     }
 }

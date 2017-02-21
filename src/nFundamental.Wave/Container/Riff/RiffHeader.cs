@@ -2,9 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using MiscUtil.IO;
+using Fundamental.Core.Memory;
 
 namespace Fundamental.Wave.Container.Riff
 {
@@ -52,15 +53,17 @@ namespace Fundamental.Wave.Container.Riff
         /// <value>
         /// The chunks.
         /// </value>
-        public List<RiffChunk> Chunks  { get;  } = new List<RiffChunk>(); 
+        public List<RiffChunk> Chunks  { get;  } = new List<RiffChunk>();
 
         /// <summary>
         /// Reads the binary fragment from the stream reader.
         /// </summary>
-        /// <param name="binaryReader">The binary reader.</param>
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <exception cref="System.FormatException">Expected riff header was missing. check that the stream contains a valid header at this position.</exception>
-        public void Read(EndianBinaryReader binaryReader)
+        public void Read(Stream stream, Endianness endianness)
         {
+            var binaryReader = stream.AsEndianReader(endianness);
             var startPosition = binaryReader.BaseStream.Position;
 
             var fileSignature = binaryReader.ReadBytes(4);
@@ -78,11 +81,11 @@ namespace Fundamental.Wave.Container.Riff
             var length = binaryReader.BaseStream.Length;
 	        var chunkEndPosition = Math.Min(byteSize + 8, length - startPosition);
 
-	        while (binaryReader.BaseStream.Length < chunkEndPosition)
+	        while (binaryReader.BaseStream.Position < chunkEndPosition)
 	        {
 	            var chunck = new RiffChunk();
                 Chunks.Add(chunck);
-                chunck.Read(binaryReader);
+                chunck.Read(stream, endianness);
 
                 // Go to the position of the next chunk
 	            binaryReader.BaseStream.Position = chunck.ContentByteSize + chunck.Location;
@@ -92,10 +95,13 @@ namespace Fundamental.Wave.Container.Riff
         /// <summary>
         /// Writes the binary fragment to the stream writer.
         /// </summary>
-        /// <param name="binaryWriter">The binary writer.</param>
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <exception cref="System.FormatException">Riff type MMIO Id must be exactly 4 chars long</exception>
-        public void Write(EndianBinaryWriter binaryWriter)
+        public void Write(Stream stream, Endianness endianness)
         {
+            var binaryWriter = stream.AsEndianWriter(endianness);
+
             // Write Signature
             binaryWriter.Write(RiffFileSignature);
 
@@ -111,11 +117,24 @@ namespace Fundamental.Wave.Container.Riff
 
             foreach (var chunk in Chunks)
             {
-                chunk.Write(binaryWriter);
+                chunk.Write(stream, endianness);
 
                 // Go to the position of the next chunk
                 binaryWriter.BaseStream.Position = chunk.ContentByteSize + chunk.Location;
             }
+        }
+
+        /// <summary>
+        /// Reads from stream.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns></returns>
+        public static RiffHeader ReadFromStream(Stream stream, Endianness endianness)
+        {
+            var rh = new RiffHeader();
+            rh.Read(stream, endianness);
+            return rh;
         }
     }
 }
