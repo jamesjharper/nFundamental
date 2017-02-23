@@ -137,8 +137,9 @@ namespace Fundamental.Wave.Format
         /// <returns></returns>
         public static WaveFormat FromBytes(byte[] bytes, EndianBitConverter bitConverter)
         {
-            return WaveFormatEx.FromBytes(bytes);
+            return WaveFormatEx.FromBytes(bytes, bitConverter);
         }
+
 
         /// <summary>
         /// Creates the PCM format.
@@ -343,9 +344,9 @@ namespace Fundamental.Wave.Format
 
         // Private Methods
 
-        private static int GetContainerPackingSize( int bitsPerSample)
+        private static int GetContainerPackingSize(int bitsPerSample)
         {           
-             // If the number of set bits is not equal to 1 then the bits per sample is not
+            // If the number of set bits is not equal to 1 then the bits per sample is not
             // of 2^x, which means it does not pack completely into its container, which means
             // we can not use the old wave format for storing this format  
             return Bitwise.IsSquareOf2(bitsPerSample)

@@ -7,19 +7,15 @@ using System.Linq;
 using System.Text;
 using Fundamental.Core.Memory;
 
-namespace Fundamental.Wave.Container.Riff
+namespace Fundamental.Wave.Container.Iff
 {
-    public class RiffHeader 
+    public class InterchangeFileFormatListChunk 
     {
-        /// <summary>
-        /// We expect the header to start with "RIFF"
-        /// </summary>
-        private static readonly byte[] RiffFileSignature = { 0x52, 0x49, 0x46, 0x46 };
 
         /// <summary>
         /// The total byte size of all the 
         /// </summary>
-        public UInt32 ContentByteSize => (UInt32)Chunks.Sum(x => x.TotalByteSize);
+        public UInt32 SubChunkByteSize => (UInt32)Chunks.Sum(x => x.TotalByteSize);
 
         /// <summary>
         /// Gets the size of the header byte.
@@ -27,9 +23,9 @@ namespace Fundamental.Wave.Container.Riff
         /// <value>
         /// The size of the header byte.
         /// </value>
-        public UInt32 HeaderByteSize =>  4  // Sig
-                                       + 4  // type
-							           + 4; // size
+        public UInt32 ChunkByteSize =>  4  // Sig
+                                      + 4  // type
+							          + 4; // size
 
         /// <summary>
         /// Gets the total size of the byte.
@@ -37,15 +33,23 @@ namespace Fundamental.Wave.Container.Riff
         /// <value>
         /// The total size of the byte.
         /// </value>
-        public UInt32 TotalByteSize => HeaderByteSize + ContentByteSize;
+        public UInt32 TotalByteSize => ChunkByteSize + SubChunkByteSize;
 
         /// <summary>
-        /// Gets or sets the riff type.
+        /// Gets or sets the type identifier.
         /// </summary>
         /// <value>
-        /// The type.
+        /// The type identifier.
         /// </value>
-        public string Type { get; set; } = "NONE";
+        public string TypeId { get; set; } = "LIST";
+
+        /// <summary>
+        /// Gets or sets the sub type identifier.
+        /// </summary>
+        /// <value>
+        /// The sub type identifier.
+        /// </value>
+        public string SubTypeId { get; set; } = "NONE";
 
         /// <summary>
         /// Gets the chunks.
@@ -53,7 +57,7 @@ namespace Fundamental.Wave.Container.Riff
         /// <value>
         /// The chunks.
         /// </value>
-        public List<RiffChunk> Chunks  { get;  } = new List<RiffChunk>();
+        public List<InterchangeFileFormatChunk> Chunks  { get;  } = new List<InterchangeFileFormatChunk>();
 
         /// <summary>
         /// Reads the binary fragment from the stream reader.
@@ -66,24 +70,24 @@ namespace Fundamental.Wave.Container.Riff
             var binaryReader = stream.AsEndianReader(endianness);
             var startPosition = binaryReader.BaseStream.Position;
 
-            var fileSignature = binaryReader.ReadBytes(4);
-
-            if(!RiffFileSignature.SequenceEqual(fileSignature))
-                throw new FormatException("Expected riff header was missing. check that the stream contains a valid header at this position.");
+            var typeBytes = binaryReader.ReadBytes(4);
+            TypeId = Encoding.UTF8.GetString(typeBytes, 0, typeBytes.Length);
 
             // Read the length of the riff chunk
             var byteSize = binaryReader.ReadUInt32();
 
             // Read the file content type
-            var mmioBytes = binaryReader.ReadBytes(4);
-            Type = Encoding.UTF8.GetString(mmioBytes, 0, mmioBytes.Length);
+            var subTypeBytes = binaryReader.ReadBytes(4);
+            SubTypeId = Encoding.UTF8.GetString(subTypeBytes, 0, subTypeBytes.Length);
 
             var length = binaryReader.BaseStream.Length;
 	        var chunkEndPosition = Math.Min(byteSize + 8, length - startPosition);
 
-	        while (binaryReader.BaseStream.Position < chunkEndPosition)
+            Chunks.Clear();
+
+            while (binaryReader.BaseStream.Position < chunkEndPosition)
 	        {
-	            var chunck = new RiffChunk();
+	            var chunck = new InterchangeFileFormatChunk();
                 Chunks.Add(chunck);
                 chunck.Read(stream, endianness);
 
@@ -103,15 +107,18 @@ namespace Fundamental.Wave.Container.Riff
             var binaryWriter = stream.AsEndianWriter(endianness);
 
             // Write Signature
-            binaryWriter.Write(RiffFileSignature);
+            var typeIdBytes = Encoding.UTF8.GetBytes(TypeId);
+            if (typeIdBytes.Length != 4)
+                throw new FormatException("IFF type Id must be exactly 4 chars long");
+            binaryWriter.Write(typeIdBytes);
 
             // Write byte Size
-            binaryWriter.Write(ContentByteSize  + 4);
+            binaryWriter.Write(SubChunkByteSize  + 4);
 
             // Write riff type id
-            var mmioBytes = Encoding.UTF8.GetBytes(Type);
+            var mmioBytes = Encoding.UTF8.GetBytes(SubTypeId);
             if (mmioBytes.Length != 4)
-                throw new FormatException("Riff type MMIO Id must be exactly 4 chars long");
+                throw new FormatException("IFF sub type Id must be exactly 4 chars long");
 
             binaryWriter.Write(mmioBytes);
 
@@ -130,9 +137,9 @@ namespace Fundamental.Wave.Container.Riff
         /// <param name="stream">The stream.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns></returns>
-        public static RiffHeader ReadFromStream(Stream stream, Endianness endianness)
+        public static InterchangeFileFormatListChunk ReadFromStream(Stream stream, Endianness endianness)
         {
-            var rh = new RiffHeader();
+            var rh = new InterchangeFileFormatListChunk();
             rh.Read(stream, endianness);
             return rh;
         }

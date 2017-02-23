@@ -5,9 +5,9 @@ using System.IO;
 using System.Text;
 using Fundamental.Core.Memory;
 
-namespace Fundamental.Wave.Container.Riff
+namespace Fundamental.Wave.Container.Iff
 {
-    public class RiffChunk 
+    public class InterchangeFileFormatChunk 
     {
         /// <summary>
         /// The chunk byte size
@@ -42,7 +42,7 @@ namespace Fundamental.Wave.Container.Riff
         /// <summary>
         /// The MMIO identifier
         /// </summary>
-        public string MmioId { get; set; } = "NONE";
+        public string TypeId { get; set; } = "NONE";
 
         /// <summary>
         /// Reads the specified binary reader.
@@ -56,7 +56,7 @@ namespace Fundamental.Wave.Container.Riff
             // Read the MMIO id string. This is actually a 4 char string
             // but is used as an id of the RIFF chunk type
             var mmioBytes = binaryReader.ReadBytes(4);
-            MmioId = Encoding.UTF8.GetString(mmioBytes, 0, mmioBytes.Length);
+            TypeId = Encoding.UTF8.GetString(mmioBytes, 0, mmioBytes.Length);
 
             // Read the length of the riff chunk
             ContentByteSize = binaryReader.ReadUInt32();
@@ -73,9 +73,9 @@ namespace Fundamental.Wave.Container.Riff
         public void Write(Stream stream, Endianness endianness)
         {
             // Write MMIO Id
-            var mmioBytes = Encoding.UTF8.GetBytes(MmioId);
+            var mmioBytes = Encoding.UTF8.GetBytes(TypeId);
             if(mmioBytes.Length != 4)
-                throw new FormatException("MMIO Id must be exactly 4 chars long");
+                throw new FormatException("Type Id must be exactly 4 chars long");
 
             var binaryWriter = stream.AsEndianWriter(endianness);
             binaryWriter.Write(mmioBytes);
@@ -84,6 +84,10 @@ namespace Fundamental.Wave.Container.Riff
             binaryWriter.Write(ContentByteSize);
 
             Location = binaryWriter.BaseStream.Position;
+
+            // Seek to the position after the chunk data
+            // NOTE: this should allocated additional space in the stream if the stream is empty
+            binaryWriter.Seek((int)ContentByteSize, SeekOrigin.Current);
         }
 
 
@@ -93,9 +97,9 @@ namespace Fundamental.Wave.Container.Riff
         /// <param name="stream">The stream.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns></returns>
-        public static RiffChunk ReadFromStream(Stream stream, Endianness endianness)
+        public static InterchangeFileFormatChunk ReadFromStream(Stream stream, Endianness endianness)
         {
-            var rc = new RiffChunk();
+            var rc = new InterchangeFileFormatChunk();
             rc.Read(stream, endianness);
             return rc;
         }

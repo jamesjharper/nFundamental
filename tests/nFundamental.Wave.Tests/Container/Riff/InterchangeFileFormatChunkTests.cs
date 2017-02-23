@@ -4,19 +4,18 @@ using System.Linq;
 
 using NUnit.Framework;
 using Fundamental.Core.Tests.Math;
-using Fundamental.Wave.Container.Riff;
 using Fundamental.Core.Memory;
-
+using Fundamental.Wave.Container.Iff;
 
 
 namespace Fundamental.Core.Tests.Container.Riff
 {
     [TestFixture]
-    public class RiffChunckTests
+    public class InterchangeFileFormatChunkTests
     {
 
         [Test]
-        public void CanReadLittleEndianRiffChunk()
+        public void CanReadLittleEndianRiffSubChunk()
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -32,10 +31,10 @@ namespace Fundamental.Core.Tests.Container.Riff
             memoryStream.Position = 0;
 
             // -> ACT
-            var fixture = RiffChunk.ReadFromStream(memoryStream, Endianness.Little);
+            var fixture = InterchangeFileFormatChunk.ReadFromStream(memoryStream, Endianness.Little);
 
             // -> ASSERT
-            Assert.AreEqual("DATA",  fixture.MmioId);
+            Assert.AreEqual("DATA",  fixture.TypeId);
             Assert.AreEqual(123,     fixture.ContentByteSize);
             Assert.AreEqual(8,       fixture.HeaderByteSize);
             Assert.AreEqual(123 + 8, fixture.TotalByteSize);
@@ -43,7 +42,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test]
-        public void CanReadBigEndianRiffChunk()
+        public void CanReadBigEndianRiffSubChunk()
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -59,10 +58,10 @@ namespace Fundamental.Core.Tests.Container.Riff
             memoryStream.Position = 0;
 
             // -> ACT
-            var fixture = RiffChunk.ReadFromStream(memoryStream, Endianness.Big);
+            var fixture = InterchangeFileFormatChunk.ReadFromStream(memoryStream, Endianness.Big);
 
             // -> ASSERT
-            Assert.AreEqual("DATA", fixture.MmioId);
+            Assert.AreEqual("DATA", fixture.TypeId);
             Assert.AreEqual(54, fixture.ContentByteSize);
             Assert.AreEqual(8, fixture.HeaderByteSize);
             Assert.AreEqual(54 + 8, fixture.TotalByteSize);
@@ -71,7 +70,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
 
         [Test]
-        public void CanReadAtOffsetedPositionBigEndianRiffChunk()
+        public void CanReadAtOffsetedPositionBigEndianRiffSubChunk()
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -92,10 +91,10 @@ namespace Fundamental.Core.Tests.Container.Riff
             memoryStream.Position = garbageBytes.Length;
 
             // -> ACT
-            var fixture = RiffChunk.ReadFromStream(memoryStream, Endianness.Big);
+            var fixture = InterchangeFileFormatChunk.ReadFromStream(memoryStream, Endianness.Big);
 
             // -> ASSERT
-            Assert.AreEqual("DATA", fixture.MmioId);
+            Assert.AreEqual("DATA", fixture.TypeId);
             Assert.AreEqual(54, fixture.ContentByteSize);
             Assert.AreEqual(8, fixture.HeaderByteSize);
             Assert.AreEqual(54 + 8, fixture.TotalByteSize);
@@ -104,17 +103,19 @@ namespace Fundamental.Core.Tests.Container.Riff
 
 
         [Test]
-        public void CanWriteLittleEndianRiffChunk()
+        public void CanWriteLittleEndianRiffSubChunk()
         {
             // -> ARRANGE:
 
             var expectedMmioBytes = new byte[] { 0x44, 0x41, 0x54, 0x41 };
             var expectedChunckSizeBytes = EndianHelpers.ToLittleEndianBytes(32);
 
-            var fixuture = new RiffChunk();
+            var fixuture = new InterchangeFileFormatChunk
+            {
+                TypeId = "DATA",
+                ContentByteSize = 32
+            };
 
-            fixuture.MmioId = "DATA";
-            fixuture.ContentByteSize = 32;
 
             // -> ACT
             var memoryStream = new MemoryStream();
@@ -132,22 +133,24 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             Assert.IsTrue(expectedMmioBytes.SequenceEqual(mmioBytes));
             Assert.IsTrue(expectedChunckSizeBytes.SequenceEqual(contentByteSizeBytes));
-            Assert.AreEqual(8, streamPosition);
+            Assert.AreEqual(40, streamPosition); // Expect the cursor to be at the end of the chuck data
         }
 
 
         [Test]
-        public void CanWriteBigEndianRiffChunk()
+        public void CanWriteBigEndianRiffSubChunk()
         {
             // -> ARRANGE:
 
             var expectedMmioBytes = new byte[] { 0x44, 0x41, 0x54, 0x41 };
             var expectedChunckSizeBytes = EndianHelpers.ToBigEndianBytes(31);
 
-            var fixuture = new RiffChunk();
+            var fixuture = new InterchangeFileFormatChunk
+            {
+                TypeId = "DATA",
+                ContentByteSize = 31
+            };
 
-            fixuture.MmioId = "DATA";
-            fixuture.ContentByteSize = 31;
 
             // -> ACT
             var memoryStream = new MemoryStream();
@@ -165,7 +168,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             Assert.IsTrue(expectedMmioBytes.SequenceEqual(mmioBytes));
             Assert.IsTrue(expectedChunckSizeBytes.SequenceEqual(contentByteSizeBytes));
-            Assert.AreEqual(8, streamPosition);
+            Assert.AreEqual(39, streamPosition); // Expect the cursor to be at the end of the chuck data
         }
     }
 }
