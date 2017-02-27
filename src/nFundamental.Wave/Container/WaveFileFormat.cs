@@ -7,8 +7,6 @@ using Fundamental.Core.Memory;
 using Fundamental.Wave.Container.Iff;
 using Fundamental.Wave.Format;
 
-using MiscUtil.IO;
-
 namespace Fundamental.Wave.Container
 {
     /// <summary>
@@ -114,11 +112,11 @@ namespace Fundamental.Wave.Container
 
 
             if (iff.TypeId != WaveChunkId)
-                throw new FormatException("Wave file header expects WAVE Type multimedia Id");
+                throw new FormatException($"Wave file header expects {WaveChunkId} Type multimedia Id");
 
 
             if (iff.SubTypeId != WaveSubChunkId)
-                throw new FormatException("Wave file header expects WAVE Type multimedia Id");
+                throw new FormatException($"Wave file header expects {WaveSubChunkId} Type multimedia Id");
 
 
             var formatChunk = iff.Chunks.First(x => x.TypeId == FormatSubChunkId);
@@ -127,6 +125,21 @@ namespace Fundamental.Wave.Container
             SetFormatChunck(formatChunk, stream, endianness);
             SetAudioChunck(audioChunk);
         }
+
+        /// <summary>
+        /// Reads from stream.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns></returns>
+        public static WaveFileFormat ReadFromStream(Stream stream, Endianness endianness)
+        {
+            var rh = new WaveFileFormat();
+            rh.Read(stream, endianness);
+            return rh;
+        }
+
+        // Private methods
 
         private void SetFormatChunck(InterchangeFileFormatChunk chunk, Stream stream, Endianness endianness)
         {

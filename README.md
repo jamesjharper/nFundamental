@@ -15,8 +15,7 @@ Using dotnet core, nFundamental aims at providing a simple and easy **cross-plat
 ## What will it be
   - Be simple to use.
   - Be as portable as possable.
-  - Be technology independance as possable. 
-  - Be Test Driven
+  - Be technology independant as possable. 
 
 ## Project Heart beat 
 
