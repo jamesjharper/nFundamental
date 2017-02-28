@@ -9,8 +9,6 @@ using Fundamental.Core.AudioFormats;
 using Fundamental.Wave.Format;
 using MiscUtil.Conversion;
 using NUnit.Framework;
-using Endianness = Fundamental.Core.Memory.Endianness;
-
 namespace Fundamental.Core.Tests.Container
 {
 

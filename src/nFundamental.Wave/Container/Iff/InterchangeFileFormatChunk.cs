@@ -84,10 +84,6 @@ namespace Fundamental.Wave.Container.Iff
             binaryWriter.Write(ContentByteSize);
 
             Location = binaryWriter.BaseStream.Position;
-
-            // Seek to the position after the chunk data
-            // NOTE: this should allocated additional space in the stream if the stream is empty
-            binaryWriter.Seek((int)ContentByteSize, SeekOrigin.Current);
         }
 
 

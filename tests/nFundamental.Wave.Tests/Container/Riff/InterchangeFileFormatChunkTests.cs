@@ -133,7 +133,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             Assert.IsTrue(expectedMmioBytes.SequenceEqual(mmioBytes));
             Assert.IsTrue(expectedChunckSizeBytes.SequenceEqual(contentByteSizeBytes));
-            Assert.AreEqual(40, streamPosition); // Expect the cursor to be at the end of the chuck data
+            Assert.AreEqual(8, streamPosition); // Expect the cursor to be at the end of the chuck data
         }
 
 
@@ -168,7 +168,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             Assert.IsTrue(expectedMmioBytes.SequenceEqual(mmioBytes));
             Assert.IsTrue(expectedChunckSizeBytes.SequenceEqual(contentByteSizeBytes));
-            Assert.AreEqual(39, streamPosition); // Expect the cursor to be at the end of the chuck data
+            Assert.AreEqual(8, streamPosition); 
         }
     }
 }

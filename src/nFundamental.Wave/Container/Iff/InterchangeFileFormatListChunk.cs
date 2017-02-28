@@ -168,7 +168,6 @@ namespace Fundamental.Wave.Container.Iff
 
         private static void WriteChunk(Stream stream, Endianness endianness, InterchangeFileFormatChunk chunk, Action<InterchangeFileFormatChunk, Stream> writeChunkData)
         {
-
             chunk.Write(stream, endianness);
 
             WriteChunkData(stream, endianness, chunk, writeChunkData);
@@ -183,7 +182,9 @@ namespace Fundamental.Wave.Container.Iff
             var currentSize = chunk.ContentByteSize;
 
             if (writeChunkData == null)
+            {
                 return;
+            }
 
             writeChunkData.Invoke(chunk, stream);
 
@@ -192,13 +193,14 @@ namespace Fundamental.Wave.Container.Iff
                 return;
 
             // If the chunk size changed then we need to update the size in the header
-            stream.Position = fragmentWritePosition;
+            stream.Position = fragmentWritePosition - chunk.HeaderByteSize;
             chunk.Write(stream, endianness);
         }
 
+
         #endregion
 
-        #region Read
+            #region Read
 
         private void ReadTypeId(MiscUtil.IO.EndianBinaryReader binaryReader)
         {
