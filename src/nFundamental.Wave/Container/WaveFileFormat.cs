@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+
 using Fundamental.Core.Memory;
 using Fundamental.Wave.Container.Iff;
 using Fundamental.Wave.Format;
@@ -36,16 +37,31 @@ namespace Fundamental.Wave.Container
         private const string AudioSubChunkId = "data";
 
         /// <summary>
-        /// The format chunk
+        /// The group chunk which hold the RIFF content
         /// </summary>
-        private InterchangeFileFormatChunk _formatChunk = new InterchangeFileFormatChunk { TypeId = FormatSubChunkId };
+        private InterchangeFileFormatGroupChunk Iff { get; set; }
 
         /// <summary>
-        /// The audio chunk
+        /// Prevents a default instance of the <see cref="WaveFileFormat"/> class from being created.
         /// </summary>
-        private InterchangeFileFormatChunk _audioChunk = new InterchangeFileFormatChunk { TypeId = AudioSubChunkId };
+        private WaveFileFormat()
+        {
+            Iff = InterchangeFileFormatGroupChunk.Create
+            (
+                WaveChunkId,
+                WaveSubChunkId,
+                InterchangeFileFormatChunk.Create
+                (
+                    FormatSubChunkId
+                ),
+                InterchangeFileFormatChunk.Create
+                (
+                    AudioSubChunkId
+                )
+            );
+        }
 
-         // Public 
+        // Public 
 
         /// <summary>
         /// Gets or sets the format.
@@ -53,7 +69,7 @@ namespace Fundamental.Wave.Container
         /// <value>
         /// The format.
         /// </value>
-        public WaveFormat Format { get; set; }
+        public WaveFormat Format { get; protected set; }
 
         /// <summary>
         /// Gets or sets the size of the audio content.
@@ -61,11 +77,7 @@ namespace Fundamental.Wave.Container
         /// <value>
         /// The size of the audio content.
         /// </value>
-        public UInt32 AudioContentSize
-        {
-            get { return _audioChunk.ContentByteSize; }
-            set { _audioChunk.ContentByteSize = value; }
-        }
+        public UInt32 AudioContentSize { get; set; }
 
         /// <summary>
         /// Gets the audio content location.
@@ -73,7 +85,7 @@ namespace Fundamental.Wave.Container
         /// <value>
         /// The audio content location.
         /// </value>
-        public Int64 AudioContentLocation => _audioChunk.Location;
+        public Int64 AudioContentLocation { get; protected set; }
 
         /// <summary>
         /// Writes the specified stream.
@@ -82,21 +94,13 @@ namespace Fundamental.Wave.Container
         /// <param name="endianness">The endianness.</param>
         public void Write(Stream stream, Endianness endianness)
         {
-            // Get the byte size of the format header 
-            var formatBytes = GetFormatBytes();
-
-            // Set the content size on the chuck
-            _formatChunk.ContentByteSize = checked((uint)formatBytes.Length);
-
-            var iff = new InterchangeFileFormatListChunk();
-            iff.Chunks.Add(_formatChunk);
-            iff.Chunks.Add(_audioChunk);
-
-            // Goto the location of the format chunk
-            stream.Position = _formatChunk.Location;
-
-            // Write the wave bytes to the location
-            stream.Write(formatBytes);
+            UpdateAudioChunkByteLength();
+            Iff.Write
+            (
+                stream,
+                endianness,
+                WriteSubChuck
+            );
         }
 
         /// <summary>
@@ -105,71 +109,123 @@ namespace Fundamental.Wave.Container
         /// <param name="stream">The stream.</param>
         /// <param name="endianness">The endianness.</param>
         /// <exception cref="System.FormatException">Wave file header expects WAVE Type multimedia Id</exception>
-        public void Read(Stream stream, Endianness endianness)
+        private void Read(Stream stream, Endianness endianness)
         {
-            var iff = new InterchangeFileFormatListChunk();
-            iff.Read(stream, endianness);
-
-
-            if (iff.TypeId != WaveChunkId)
-                throw new FormatException($"Wave file header expects {WaveChunkId} Type multimedia Id");
-
-
-            if (iff.SubTypeId != WaveSubChunkId)
-                throw new FormatException($"Wave file header expects {WaveSubChunkId} Type multimedia Id");
-
-
-            var formatChunk = iff.Chunks.First(x => x.TypeId == FormatSubChunkId);
-            var audioChunk = iff.Chunks.First(x => x.TypeId == AudioSubChunkId);
-
-            SetFormatChunck(formatChunk, stream, endianness);
-            SetAudioChunck(audioChunk);
+            Iff = InterchangeFileFormatGroupChunk.FromStream
+            (
+                stream,
+                endianness,
+                (s, c) => ReadSubChuck(s, c, endianness)
+            );
         }
 
         /// <summary>
-        /// Reads from stream.
+        /// Reads the wave file format from the given stream.
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns></returns>
-        public static WaveFileFormat ReadFromStream(Stream stream, Endianness endianness)
+        public static WaveFileFormat FromStream(Stream stream, Endianness endianness = Endianness.Little)
         {
-            var rh = new WaveFileFormat();
-            rh.Read(stream, endianness);
-            return rh;
+            var wff = new WaveFileFormat();
+            wff.Read(stream, endianness);
+            return wff;
+        }
+
+        /// <summary>
+        /// Creates a new wave file format.
+        /// </summary>
+        /// <param name="waveFormat">The wave format.</param>
+        /// <param name="stream">The stream.</param>
+        /// <param name="endianness">The endianness (WAVE files by definition are little endian).</param>
+        /// <returns></returns>
+        public static WaveFileFormat Create(WaveFormat waveFormat, Stream stream, Endianness endianness = Endianness.Little)
+        {
+            var wff = new WaveFileFormat { Format = waveFormat };
+
+            // The wave file needs to be written immediately to the stream 
+            // so that the audio chuck has a valid data location
+            wff.Write(stream, endianness);
+
+            return wff;
         }
 
         // Private methods
 
-        private void SetFormatChunck(InterchangeFileFormatChunk chunk, Stream stream, Endianness endianness)
+        #region Read
+
+        private void ReadSubChuck(InterchangeFileFormatChunk chunk, Stream stream, Endianness endianness)
         {
-            _formatChunk = chunk;
-
-            // Goto the location of the chunk
-            stream.Position = chunk.Location;
-
-            // Read the format header
-            var formateBytes = stream.Read(checked((int)chunk.ContentByteSize));
-
-            SetFormatBytes(formateBytes, endianness);
+            switch (chunk.ChunkId)
+            {
+                case FormatSubChunkId:
+                    ReadFormatChunck(chunk, stream, endianness);
+                    return;
+                case AudioSubChunkId:
+                    SetAudioChunck(chunk);
+                    return;
+            }
         }
 
+        private void ReadFormatChunck(InterchangeFileFormatChunk chunk, Stream stream, Endianness endianness)
+        {
+            // Read the format header
+            var chunkSize = checked((int) chunk.DataByteSize);
+            var formateBytes = stream.Read(chunkSize);
 
-        private void SetFormatBytes(byte[] bytes, Endianness endianness)
+            ReadFormatBytes(formateBytes, endianness);
+        }
+
+        private void ReadFormatBytes(byte[] bytes, Endianness endianness)
         {
             // We can only assume the endianness is the same as the source file format
             var converter = endianness.ToBitConverter();
             Format = WaveFormat.FromBytes(bytes, converter);
         }
 
-        private byte[] GetFormatBytes()
-        {
-            return Format == null ? new byte[] {} : Format.ToBytes();
-        }
-
         private void SetAudioChunck(InterchangeFileFormatChunk chunk)
         {
-            _audioChunk = chunk;
+            AudioContentSize = chunk.DataByteSize;
+            AudioContentLocation = chunk.DataLocation;
         }
+
+        #endregion
+
+        #region Write 
+
+        private void UpdateAudioChunkByteLength()
+        {
+            var audioChuck = Iff.FirstOrDefault(x => x.ChunkId == AudioSubChunkId);
+            if (audioChuck == null)
+                throw new FormatException("Wave file is missing data chunk, file can not be append.");
+            audioChuck.DataByteSize = AudioContentSize;
+        }
+
+        private void WriteSubChuck(InterchangeFileFormatChunk chunk, Stream stream)
+        {
+            switch (chunk.ChunkId)
+            {
+                case FormatSubChunkId:
+                    WriteFormatChunck(chunk, stream);
+                    return;
+                case AudioSubChunkId:
+                    SetAudioChunck(chunk);
+                    return;
+            }
+        }
+
+        private void WriteFormatChunck(InterchangeFileFormatChunk chunk, Stream stream)
+        {
+            var formatBytes = GetFormatBytes();
+            stream.Write(formatBytes);
+            chunk.DataByteSize = checked ((uint)formatBytes.Length);
+        }
+
+        private byte[] GetFormatBytes()
+        {
+            return Format == null ? new byte[] { } : Format.ToBytes();
+        }
+
+        #endregion
     }
 }

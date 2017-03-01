@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Text;
+
 using Fundamental.Core.Memory;
 
 namespace Fundamental.Wave.Container.Iff
@@ -10,9 +11,17 @@ namespace Fundamental.Wave.Container.Iff
     public class InterchangeFileFormatChunk 
     {
         /// <summary>
-        /// The chunk byte size
+        /// The chunk content byte size
         /// </summary>
-        public UInt32 ContentByteSize { get; set; }
+        public UInt32 DataByteSize { get; set; }
+
+        /// <summary>
+        /// The size of the padded content byte.
+        /// </summary>
+        /// <value>
+        /// The size of the padded content byte.
+        /// </value>
+        public UInt32 PaddedDataByteSize => DataByteSize + PaddingBytes;
 
         /// <summary>
         /// Gets the size of the header byte.
@@ -20,8 +29,8 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// The size of the header byte.
         /// </value>
-        public UInt32 HeaderByteSize => 4  // MMIO id
-							          + 4; // chunk size
+        public UInt32 HeaderByteSize =>  (sizeof(byte) * 4)  // Chunks Id
+                                        + sizeof(UInt32);    // Data Size
 
         /// <summary>
         /// Gets the total size of the byte.
@@ -29,7 +38,15 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// The total size of the byte.
         /// </value>
-        public UInt32 TotalByteSize => HeaderByteSize + ContentByteSize;
+        public UInt32 TotalByteSize => HeaderByteSize + PaddedDataByteSize;
+
+        /// <summary>
+        /// Gets or sets the chunk identifier.
+        /// </summary>
+        /// <value>
+        /// The chunk identifier.
+        /// </value>
+        public string ChunkId { get; protected set; }
 
         /// <summary>
         /// Gets the location.
@@ -37,32 +54,56 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// The location.
         /// </value>
-        public Int64 Location { get; private set; }
+        public Int64 DataLocation => StartLocation + HeaderByteSize;
 
         /// <summary>
-        /// The MMIO identifier
+        /// Gets the start location.
         /// </summary>
-        public string TypeId { get; set; } = "NONE";
+        /// <value>
+        /// The start location.
+        /// </value>
+        public Int64 StartLocation { get; private set; }
+
+        /// <summary>
+        /// Gets the end location.
+        /// Note: EA IFF 85 Standard for Interchange Format Files states that
+        /// chucks should be 16bit aligned 
+        /// </summary>
+        /// <value>
+        /// The start location.
+        /// </value>
+        public Int64 EndLocation => StartLocation + HeaderByteSize + PaddedDataByteSize;
+
+        /// <summary>
+        /// Gets the padding bytes.
+        /// </summary>
+        /// <value>
+        /// The padding bytes.
+        /// </value>
+        public UInt32 PaddingBytes => DataByteSize % 2;
+
+        /// <summary>
+        /// Prevents a default instance of the <see cref="InterchangeFileFormatChunk"/> class from being created.
+        /// </summary>
+        private InterchangeFileFormatChunk()
+        {
+            
+        }
 
         /// <summary>
         /// Reads the specified binary reader.
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="endianness">The endianness.</param>
-        public void Read(Stream stream, Endianness endianness)
+        private void Read(Stream stream, Endianness endianness)
         {
+            StartLocation = stream.Position;
             var binaryReader = stream.AsEndianReader(endianness);
 
-            // Read the MMIO id string. This is actually a 4 char string
-            // but is used as an id of the RIFF chunk type
-            var mmioBytes = binaryReader.ReadBytes(4);
-            TypeId = Encoding.UTF8.GetString(mmioBytes, 0, mmioBytes.Length);
-
-            // Read the length of the riff chunk
-            ContentByteSize = binaryReader.ReadUInt32();
-
-            Location = binaryReader.BaseStream.Position;
+            ReadChunkId(binaryReader);
+            ReadDataSize(binaryReader);
         }
+
 
         /// <summary>
         /// Writes the specified binary writer.
@@ -72,32 +113,70 @@ namespace Fundamental.Wave.Container.Iff
         /// <exception cref="System.FormatException">MMIO Id must be exactly 4 chars long</exception>
         public void Write(Stream stream, Endianness endianness)
         {
-            // Write MMIO Id
-            var mmioBytes = Encoding.UTF8.GetBytes(TypeId);
-            if(mmioBytes.Length != 4)
-                throw new FormatException("Type Id must be exactly 4 chars long");
-
+            StartLocation = stream.Position;
             var binaryWriter = stream.AsEndianWriter(endianness);
-            binaryWriter.Write(mmioBytes);
 
-            // Write Chunk Size
-            binaryWriter.Write(ContentByteSize);
-
-            Location = binaryWriter.BaseStream.Position;
+            WriteChunkId(binaryWriter);
+            WriteDataSize(binaryWriter);
         }
 
 
         /// <summary>
-        /// Reads from stream.
+        /// Reads a chunk from a stream using the given endianness.
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns></returns>
-        public static InterchangeFileFormatChunk ReadFromStream(Stream stream, Endianness endianness)
+        public static InterchangeFileFormatChunk FromStream(Stream stream, Endianness endianness)
         {
-            var rc = new InterchangeFileFormatChunk();
-            rc.Read(stream, endianness);
-            return rc;
+            var iffc = new InterchangeFileFormatChunk();
+            iffc.Read(stream, endianness);
+            return iffc;
+        }
+
+        /// <summary>
+        /// Creates a new chunk.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="dataByteSize">Size of the data byte.</param>
+        /// <returns></returns>
+        /// <exception cref="System.FormatException">Type Id must be exactly 4 chars long</exception>
+        public static InterchangeFileFormatChunk Create(string id, int dataByteSize = 0)
+        {
+            if (id.Length != 4)
+                throw new FormatException("Chunk Id must be exactly 4 chars long");
+            return new InterchangeFileFormatChunk
+            {
+                ChunkId = id,
+                DataByteSize = checked ((UInt32)dataByteSize)
+            };
+        }
+
+        // Private methods
+
+        private void WriteDataSize(MiscUtil.IO.EndianBinaryWriter binaryWriter)
+        {
+            binaryWriter.Write(DataByteSize);
+        }
+
+        private void WriteChunkId(MiscUtil.IO.EndianBinaryWriter binaryWriter)
+        {
+            var chunkIdBytes = Encoding.UTF8.GetBytes(ChunkId);
+            if (chunkIdBytes.Length != 4)
+                throw new FormatException("Chunk Id must be exactly 4 chars long");
+
+            binaryWriter.Write(chunkIdBytes);
+        }
+
+        private void ReadDataSize(MiscUtil.IO.EndianBinaryReader binaryReader)
+        {
+            DataByteSize = binaryReader.ReadUInt32();
+        }
+
+        private void ReadChunkId(MiscUtil.IO.EndianBinaryReader binaryReader)
+        {
+            var chunkIdBytes = binaryReader.ReadBytes(4);
+            ChunkId = Encoding.UTF8.GetString(chunkIdBytes, 0, chunkIdBytes.Length);
         }
     }
 }
