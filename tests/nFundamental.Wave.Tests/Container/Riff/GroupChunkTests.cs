@@ -13,9 +13,37 @@ namespace Fundamental.Core.Tests.Container.Riff
     [TestFixture]
     public class GroupChunkTests
     {
+        #region Test Fixtures
+
+        public class TestDataChunk : Chunk
+        {
+            public byte[] Data { get; set; }
+
+            protected override void ReadData()
+            {
+                Data = new byte[DataByteSize];
+                Read(Data, 0, Data.Length);
+            }
+        }
+
+        public class TestGroupChunk : GroupChunk
+        {
+            protected override Chunk ParseLocalChunk(Chunk streamChunk)
+            {
+                if (streamChunk.ChunkId.StartsWith("SUB"))
+                    return streamChunk.As<GroupChunk>();
+
+                if (streamChunk.ChunkId.StartsWith("TST"))
+                    return streamChunk.As<TestDataChunk>();
+                return streamChunk;
+            }
+        }
+
+        #endregion
+
         private static readonly object[] Standard32Bit = IffStandard.Standard32Bit;
 
-        // Read
+        #region Read
 
         // Read Empty
 
@@ -24,6 +52,8 @@ namespace Fundamental.Core.Tests.Container.Riff
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
+
+            // Write Group Header
             memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
             memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
@@ -47,20 +77,18 @@ namespace Fundamental.Core.Tests.Container.Riff
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
+
+            // Write Group Header
             memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
             memoryStream.Write(EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
 
-            // Write Riff Chunk 1
-
-            // DAT1 written in ASCII
+            // Write DAT1 sub chunk
             memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
             memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
 
-            // Write Riff Chunk 2
-
-            // DAT2 written in ASCII
+            // Write DAT2 sub chunk
             memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
             memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x07, 0x08, 0x09, 0x0A });
@@ -89,25 +117,25 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(26,     fixture[1].DataLocation);
         }
 
+        // Read non aligned
+
         [Test, TestCaseSource(nameof(Standard32Bit))]
         public void CanReadNonAlignedNonEmptyIffListHeader(IffStandard iffStandard)
         {
-                        // -> ARRANGE:
+            // -> ARRANGE:
             var memoryStream = new MemoryStream();
+
+            // Write Group Header
             memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
             memoryStream.Write(EndianHelpers.Int32Bytes(28, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
 
-            // Write Riff Chunk 1
-
-            // DAT1 written in ASCII
+            // Write DAT12 sub chunk
             memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
             memoryStream.Write(EndianHelpers.Int32Bytes(5, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0xff });
-
-            // Write Riff Chunk 2
-
-            // DAT2 written in ASCII
+            
+            // Write DAT2 sub chunk
             memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
             memoryStream.Write(EndianHelpers.Int32Bytes(3, iffStandard.ByteOrder));
             memoryStream.Write(new byte[] { 0x07, 0x08, 0x09, 0xff });
@@ -136,105 +164,329 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(26,     fixture[1].DataLocation);
         }
 
-        // Read with delegates
+        // Read sub chunk
 
-        //[Test, TestCaseSource(nameof(TestParams))]
-        //public void CanDelegateReadNonEmptyIffListHeader(Endianness endianness)
-        //{
-        //     -> ARRANGE:
-        //    var memoryStream = new MemoryStream();
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReadAllChunkContentIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+            var expectedChunk2Bytes = new byte[] { 0x07, 0x08, 0x09, 0x0A };
 
-        //     Write Iff List
+            var memoryStream = new MemoryStream();
 
-        //     RIFF written in ASCII
-        //    memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
 
-        //     Iff Size written in little Endian bytes
-        //    memoryStream.Write(EndianHelpers.Int32Bytes(6 + 4 + (8 * 2) + 4, endianness));
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(expectedChunk1Bytes);
 
-        //     mIwF written in ASCII
-        //    memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
+            // Write DAT2 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(expectedChunk2Bytes);
 
-        //     Write Riff Chunk 1
+            memoryStream.Position = 0;
 
-        //     DAT1 written in ASCII
-        //    memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
-        //    memoryStream.Write(EndianHelpers.Int32Bytes(6, endianness));
-        //    memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
+            // -> ACT
+            var fixture = GroupChunk.FromStream(memoryStream, iffStandard);
 
-        //     Write Riff Chunk 2
+            var chunk1Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+            var chunk2Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff };
 
-        //     DAT2 written in ASCII
-        //    memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
-        //    memoryStream.Write(EndianHelpers.Int32Bytes(4, endianness));
-        //    memoryStream.Write(new byte[] { 0x07, 0x08, 0x09, 0x0A });
+            var chunk1BytesSize = fixture[0].Read(chunk1Bytes, 0 , chunk1Bytes.Length);
+            var chunk2BytesSize = fixture[1].Read(chunk2Bytes, 0, chunk2Bytes.Length);
 
-        //    memoryStream.Position = 0;
+            // -> ASSERT
+            Assert.AreEqual(expectedChunk1Bytes, chunk1Bytes);
+            Assert.AreEqual(expectedChunk2Bytes, chunk2Bytes);
 
-        //     -> ACT
+            Assert.AreEqual(6, chunk1BytesSize);
+            Assert.AreEqual(4, chunk2BytesSize);
 
-        //    var wasCalledForChunk1 = false;
-        //    var wasCalledForChunk2 = false;
-        //    var wasCalledForUnexpected = false;
+            Assert.AreEqual(6, fixture[0].Position);
+            Assert.AreEqual(4, fixture[1].Position);
 
-        //    var streamLocationAtChunk1 = 0L;
-        //    var streamLocationAtChunk2 = 0L;
+        }
 
-        //    var callback = new Action<Chunk, Stream>((iff, stream) =>
-        //    {
-        //        var currentLocation = stream.Position;
-        //         Change the position to something invalid just to test the rest of the file is still read correctly
-        //        stream.Position = 0;
+        // Read past the end of sub chunk
 
-        //        if (iff.ChunkId == "DAT1")
-        //        {
-        //            wasCalledForChunk1 = true;
-        //            streamLocationAtChunk1 = currentLocation;
-        //            return;
-        //        }
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanOverreadReadChunkContentIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0xff, 0xff };
+            var expectedChunk2Bytes = new byte[] { 0x07, 0x08, 0x09, 0x0A, 0xff, 0xff, 0xff, 0xff };
 
-        //        if (iff.ChunkId == "DAT2")
-        //        {
-        //            wasCalledForChunk2 = true;
-        //            streamLocationAtChunk2 = currentLocation;
-        //            return;
-        //        }
+            var memoryStream = new MemoryStream();
 
-        //        wasCalledForUnexpected = true;
-        //    });
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
+
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(expectedChunk1Bytes, 0, 6);
+
+            // Write DAT2 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(expectedChunk2Bytes, 0, 4);
+
+            memoryStream.Position = 0;
+
+            // -> ACT
+            var fixture = GroupChunk.FromStream(memoryStream, iffStandard);
+
+            var chunk1Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+            var chunk2Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+            var chunk1BytesSize = fixture[0].Read(chunk1Bytes, 0, chunk1Bytes.Length);
+            var chunk2BytesSize = fixture[1].Read(chunk2Bytes, 0, chunk2Bytes.Length);
+
+            // -> ASSERT
+            Assert.AreEqual(expectedChunk1Bytes, chunk1Bytes);
+            Assert.AreEqual(expectedChunk2Bytes, chunk2Bytes); 
+            
+            Assert.AreEqual(6, chunk1BytesSize);
+            Assert.AreEqual(4, chunk2BytesSize);
+
+            Assert.AreEqual(6, fixture[0].Position);
+            Assert.AreEqual(4, fixture[1].Position);
+        }
+
+        // Read portion of sub chunk
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanUnderReadChunkContentIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+            var expectedChunk2Bytes = new byte[] { 0x07, 0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+            var memoryStream = new MemoryStream();
+
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
+
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
+
+            // Write DAT2 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x07, 0x08, 0x09, 0x0A });
+
+            memoryStream.Position = 0;
+
+            // -> ACT
+            var fixture = GroupChunk.FromStream(memoryStream, iffStandard);
+
+            var chunk1Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+            var chunk2Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+            var chunk1BytesSize = fixture[0].Read(chunk1Bytes, 0, 2);
+            var chunk2BytesSize = fixture[1].Read(chunk2Bytes, 0, 2);
+
+            // -> ASSERT
+            Assert.AreEqual(expectedChunk1Bytes, chunk1Bytes);
+            Assert.AreEqual(expectedChunk2Bytes, chunk2Bytes);
+
+            Assert.AreEqual(2, chunk1BytesSize);
+            Assert.AreEqual(2, chunk2BytesSize);
+
+            Assert.AreEqual(2, fixture[0].Position);
+            Assert.AreEqual(2, fixture[1].Position);
+        }
+
+        // Read from position of sub chunk 
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReadChunkContentFromPositionIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunk1Bytes = new byte[] { 0x03, 0x04, 0x05, 0x06, 0xff, 0xff, 0xff, 0xff };
+            var expectedChunk2Bytes = new byte[] { 0x09, 0x0A, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+            var memoryStream = new MemoryStream();
+
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
+
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
+
+            // Write DAT2 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x07, 0x08, 0x09, 0x0A });
+
+            memoryStream.Position = 0;
+
+            // -> ACT
+            var fixture = GroupChunk.FromStream(memoryStream, iffStandard);
+
+            var chunk1Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+            var chunk2Bytes = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+            fixture[0].Position = 2;
+            fixture[1].Position = 2;
+
+            var chunk1BytesSize = fixture[0].Read(chunk1Bytes, 0, chunk1Bytes.Length);
+            var chunk2BytesSize = fixture[1].Read(chunk2Bytes, 0, chunk2Bytes.Length);
+
+            // -> ASSERT
+            Assert.AreEqual(expectedChunk1Bytes, chunk1Bytes);
+            Assert.AreEqual(expectedChunk2Bytes, chunk2Bytes);
+
+            Assert.AreEqual(4, chunk1BytesSize);
+            Assert.AreEqual(2, chunk2BytesSize);
+
+            Assert.AreEqual(6, fixture[0].Position);
+            Assert.AreEqual(4, fixture[1].Position);
+        }
+
+        // Read nested sub chunk
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReadNestedChunkIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedSubChunkData = new byte[] {0x07, 0x08, 0x09, 0x0A};
+
+            var memoryStream = new MemoryStream();
+
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
+
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
+
+            // Write TST1 sub group chunk
+            memoryStream.Write(new byte[] { 0x54, 0x53, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(expectedSubChunkData);
+
+            memoryStream.Position = 0;
+
+            // -> ACT
+            var fixture = Chunk.FromStream<TestGroupChunk>(memoryStream, iffStandard);
+
+            // -> ASSERT
+            Assert.AreEqual(expectedSubChunkData, fixture.At<TestDataChunk>(1).Data);
+        }
+
+        // Read nested sub chunk group
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReadNestedGroupChunkIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedSubChunkData = new byte[] { 0x07, 0x08, 0x09, 0x0A };
+
+            var memoryStream = new MemoryStream();
+
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(42, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
+
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
+
+            // Write SUB1 sub group chunk
+            memoryStream.Write(new byte[] { 0x53, 0x55, 0x42, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(16, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6e, 0x53, 0x77, 0x6f });
+
+            // Write SUB1.DAT2 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(expectedSubChunkData);
+
+            memoryStream.Position = 0;
+
+            // -> ACT
+            var fixture = Chunk.FromStream<TestGroupChunk>(memoryStream, iffStandard);
+
+            var chunkBytes = new byte[] { 0xff, 0xff, 0xff, 0xff };
+            fixture.At<GroupChunk>(1)[0].Read(chunkBytes, 0, chunkBytes.Length);
+
+            // -> ASSERT
+            Assert.AreEqual(expectedSubChunkData, chunkBytes);
+        }
 
 
-        //    var fixture = InterchangeFileFormatGroupChunk.FromStream(memoryStream, endianness, callback);
+        // Read subsequent chucks after nested sub chunk group
 
-        //     -> ASSERT
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReadSubsequentChucksAfterNestedGroupChunkIffListHeader(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedSubChunkData = new byte[] { 0x07, 0x08, 0x09, 0x0A };
 
-        //     Asset callbacks
-        //    Assert.IsFalse(wasCalledForUnexpected);
-        //    Assert.IsTrue(wasCalledForChunk1);
-        //    Assert.IsTrue(wasCalledForChunk2);
+            var memoryStream = new MemoryStream();
 
-        //    Assert.AreEqual(20, streamLocationAtChunk1);
-        //    Assert.AreEqual(34, streamLocationAtChunk2);
+            // Write Group Header
+            memoryStream.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(54, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6d, 0x49, 0x77, 0x46 });
 
-        //     Assert the rest loaded correctly 
-        //    Assert.AreEqual("RIFF", fixture.ChunkId);
-        //    Assert.AreEqual("mIwF", fixture.TypeId);
-        //    Assert.AreEqual(26, fixture.DataByteSize);
-        //    Assert.AreEqual(12, fixture.HeaderByteSize);
-        //    Assert.AreEqual(12 + 26, fixture.TotalByteSize);
+            // Write DAT1 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 });
 
-        //    Assert.AreEqual(2, fixture.Count);
+            // Write SUB1 sub group chunk
+            memoryStream.Write(new byte[] { 0x53, 0x55, 0x42, 0x31 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(16, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6e, 0x53, 0x77, 0x6f });
 
-        //    Assert.AreEqual("DAT1", fixture[0].ChunkId);
-        //    Assert.AreEqual(6, fixture[0].DataByteSize);
-        //    Assert.AreEqual(20, fixture[0].DataLocation);
+            // Write SUB1.DAT2 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x32 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(new byte[] { 0x6e, 0x53, 0x77, 0x6f });
 
-        //    Assert.AreEqual("DAT2", fixture[1].ChunkId);
-        //    Assert.AreEqual(4, fixture[1].DataByteSize);
-        //    Assert.AreEqual(34, fixture[1].DataLocation);
-        //}
+            // Write DAT3 sub chunk
+            memoryStream.Write(new byte[] { 0x44, 0x41, 0x54, 0x33 });
+            memoryStream.Write(EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder));
+            memoryStream.Write(expectedSubChunkData);
 
+            memoryStream.Position = 0;
 
+            // -> ACT
+            var fixture = Chunk.FromStream<TestGroupChunk>(memoryStream, iffStandard);
+
+            var chunkBytes = new byte[] { 0xff, 0xff, 0xff, 0xff };
+            fixture[2].Read(chunkBytes, 0, chunkBytes.Length);
+
+            // -> ASSERT
+            Assert.AreEqual(expectedSubChunkData, chunkBytes);
+        }
+
+        #endregion
+
+       
         // Write
 
         //[Test, TestCaseSource(nameof(TestParams))]

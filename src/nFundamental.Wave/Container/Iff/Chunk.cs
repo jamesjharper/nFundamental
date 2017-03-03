@@ -17,6 +17,11 @@ namespace Fundamental.Wave.Container.Iff
         private bool _headerNeedsFlushing;
 
         /// <summary>
+        /// The position
+        /// </summary>
+        private long _cursor;
+
+        /// <summary>
         /// The base stream
         /// </summary>
         protected Stream BaseStream { get; set; }
@@ -132,15 +137,7 @@ namespace Fundamental.Wave.Container.Iff
         {
             _headerNeedsFlushing = true;
         }
-
-        /// <summary>
-        /// Seeks to end of chunk.
-        /// </summary>
-        public void SeekToEndOfChunk()
-        {
-            Position = PaddedDataByteSize;
-        }
-
+     
         /// <summary>
         /// Serialize as.
         /// </summary>
@@ -148,12 +145,20 @@ namespace Fundamental.Wave.Container.Iff
         /// <returns></returns>
         public T As<T>() where  T : Chunk, new()
         {
-            return new T
+            var c = new T
             {
                 StartLocation = StartLocation,
                 DataByteSize = DataByteSize,
-                ChunkId =  ChunkId
+                ChunkId = ChunkId,
+                BaseStream = BaseStream,
+                IffStandard = IffStandard,
+                IsRf64 = IsRf64
             };
+
+            BaseStream.Position = DataLocation;
+            c.ReadData();
+
+            return c;
         }
 
         #region Stream Impl
@@ -195,6 +200,7 @@ namespace Fundamental.Wave.Container.Iff
 
         public override void SetLength(long value)
         {
+            // Please don't do this.
             throw new NotSupportedException();
         }
 
@@ -209,9 +215,20 @@ namespace Fundamental.Wave.Container.Iff
         /// </returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var remainingBytes = (int) (DataByteSize - Position);
+            // If the cursor has been moved, we want to move it 
+            // the cursor location of this particular chunk 
+            // NOTE: reading and writing to chunks is very not 
+            // thread safe.
+            if (ActualPosition != _cursor)
+                ActualPosition = _cursor;
+
+            var remainingBytes = (int) (DataByteSize - ActualPosition);
             var readableBytes = Math.Min(count, remainingBytes);
-            return BaseStream.Read(buffer, offset, readableBytes);
+            var bytesRead = BaseStream.Read(buffer, offset, readableBytes);
+
+            // Sync up both cursor and position
+            _cursor = ActualPosition;
+            return bytesRead;
         }
 
         /// <summary>
@@ -223,7 +240,14 @@ namespace Fundamental.Wave.Container.Iff
         /// <exception cref="System.ArgumentOutOfRangeException">count - Unable to write past the end of the chunk</exception>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            var remainingBytes = DataByteSize - Position;
+            // If the cursor has been moved, we want to move it 
+            // the cursor location of this particular chunk 
+            // NOTE: reading and writing to chunks is very not 
+            // thread safe.
+            if (ActualPosition != _cursor)
+                ActualPosition = _cursor;
+
+            var remainingBytes = DataByteSize - ActualPosition;
             if (remainingBytes < count)
             {
                 var newBytesWritten = count - remainingBytes;
@@ -232,6 +256,9 @@ namespace Fundamental.Wave.Container.Iff
             }
 
             BaseStream.Write(buffer, offset, count);
+
+            // Sync up both cursor and position
+            _cursor = ActualPosition;
         }
 
         /// <summary>
@@ -254,14 +281,32 @@ namespace Fundamental.Wave.Container.Iff
         /// </summary>
         public override long Length => DataByteSize;
 
+
         /// <summary>
-        /// When overridden in a derived class, gets or sets the position within the current stream.
+        /// The cursor position for this chunk
         /// </summary>
         public override long Position
         {
-            get { return BaseStream.Position - DataLocation; }
-            set { BaseStream.Position = value + DataLocation; }
+            get { return _cursor; }
+            set
+            {
+                _cursor = value;
+                BaseStream.Position = value + DataLocation;
+            }
         }
+
+        /// <summary>
+        /// Gets or sets the actual position.
+        /// </summary>
+        /// <value>
+        /// The actual position.
+        /// </value>
+        public long ActualPosition
+        {
+            get { return BaseStream.Position - DataLocation;  }
+            set { Position = value; }
+        }
+
 
         #endregion
 
@@ -274,6 +319,24 @@ namespace Fundamental.Wave.Container.Iff
         public static Chunk FromStream(Stream stream, IffStandard standardStandard)
         {
             var chunk = new Chunk
+            {
+                IffStandard = standardStandard,
+                BaseStream = stream
+            };
+            chunk.Read();
+            return chunk;
+        }
+
+        /// <summary>
+        /// Reads a chunk from a stream using the given standard.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="standardStandard">Type of the chunk standard.</param>
+        /// <returns></returns>
+        public static T FromStream<T>(Stream stream, IffStandard standardStandard)
+            where T : Chunk, new()
+        {
+            var chunk = new T
             {
                 IffStandard = standardStandard,
                 BaseStream = stream

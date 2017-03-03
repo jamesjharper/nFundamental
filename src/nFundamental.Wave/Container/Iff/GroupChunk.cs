@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Fundamental.Core.Memory;
 
 namespace Fundamental.Wave.Container.Iff
 {
@@ -57,22 +56,15 @@ namespace Fundamental.Wave.Container.Iff
         /// </value>
         protected Chunk[] LocalChunks { get; set; } = { };
 
-
         /// <summary>
-        /// Reads a chunk from a stream using the given standard.
+        /// Gets the <see cref="Chunk"/> with the specified identifier.
         /// </summary>
-        /// <param name="stream">The stream.</param>
-        /// <param name="standardStandard">Type of the chunk standard.</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="i">The i.</param>
         /// <returns></returns>
-        public new static GroupChunk FromStream(Stream stream, IffStandard standardStandard)
+        public T At<T>(int i) where T : Chunk, new()
         {
-            var chunk = new GroupChunk
-            {
-                IffStandard = standardStandard,
-                BaseStream = stream
-            };
-            chunk.Read();
-            return chunk;
+            return this[i] as T;
         }
 
         /// <summary>
@@ -96,6 +88,17 @@ namespace Fundamental.Wave.Container.Iff
 
             chunk.Write();
             return chunk;
+        }
+
+        /// <summary>
+        /// Reads a chunk from a stream using the given standard.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="standardStandard">Type of the chunk standard.</param>
+        /// <returns></returns>
+        public new static GroupChunk FromStream(Stream stream, IffStandard standardStandard)
+        {
+            return FromStream<GroupChunk>(stream, standardStandard);
         }
 
         // private methods
@@ -144,9 +147,12 @@ namespace Fundamental.Wave.Container.Iff
 
         private Chunk ReadLocalChunk()
         {
+            var startLocation = Position;
             var c = Chunk.FromStream(this, IffStandard);
             c = ParseLocalChunk(c);
-            c.SeekToEndOfChunk();
+
+            // Seek to the byte aligned end of the chunk
+            Position = startLocation + c.TotalByteSize;
             return c;
         }
 
