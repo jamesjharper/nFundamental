@@ -57,6 +57,15 @@ namespace Fundamental.Wave.Container.Iff
         protected Chunk[] LocalChunks { get; set; } = { };
 
         /// <summary>
+        /// Gets the byte size of the current content.
+        /// </summary>
+        /// <returns></returns>
+        public override long CaculateContentSize()
+        {
+            return GetChunkByteSize();
+        }
+
+        /// <summary>
         /// Gets the <see cref="Chunk"/> with the specified identifier.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -67,26 +76,41 @@ namespace Fundamental.Wave.Container.Iff
             return this[i] as T;
         }
 
+        public T Add<T>(string chunkId) where T : Chunk, new()
+        {
+            var c = CreateChild<T>(chunkId);
+            ParseLocalChunk(c);
+            AddLocalChunkArray(c);
+            return c;
+        }
+
+        public T AddGroup<T>(string chunkId, string typeId) where T : GroupChunk, new()
+        {
+            var c = CreateChild<T>(chunkId);
+            c.TypeId = typeId;
+            ParseLocalChunk(c);
+            AddLocalChunkArray(c);
+            return c;
+        }
+
         /// <summary>
         /// Creates a new chunk.
         /// </summary>
-        /// <param name="id">The identifier.</param>
+        /// <param name="chunkId">The chunk identifier.</param>
         /// <param name="typeId">The type identifier.</param>
         /// <param name="stream">The stream.</param>
         /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
         /// <returns></returns>
         /// <exception cref="System.FormatException">Type Id must be exactly 4 chars long</exception>
-        public static GroupChunk Create(string id, string typeId, Stream stream, IffStandard standardStandard)
+        public static GroupChunk Create(string chunkId, string typeId, Stream stream, IffStandard standardStandard)
         {
             var chunk = new GroupChunk
             {
-                ChunkId = typeId,
+                ChunkId = chunkId,
                 TypeId = typeId,
                 IffStandard = standardStandard,
                 BaseStream = stream
             };
-
-            chunk.Write();
             return chunk;
         }
 
@@ -101,7 +125,9 @@ namespace Fundamental.Wave.Container.Iff
             return FromStream<GroupChunk>(stream, standardStandard);
         }
 
+
         // private methods
+
 
         protected override void WriteData()
         {
@@ -121,10 +147,15 @@ namespace Fundamental.Wave.Container.Iff
         private void WriteLocalChunks()
         {
             foreach (var chunk in LocalChunks)
-                chunk.Flush();
+                chunk.WriteToStream();
+
+            // Update the byte size, just in case an chuck
+            // didn't correctly calculate is size 
+            DataByteSize = GetChunkByteSize();
         }
 
         // Read
+
         protected override void ReadData()
         {
             ReadTypeId();
@@ -134,7 +165,7 @@ namespace Fundamental.Wave.Container.Iff
         private void ReadTypeId()
         {
             var typeIdBytes = new byte[4];
-            Read(typeIdBytes,0,4);
+            Read(typeIdBytes, 0, 4);
             TypeId = Encoding.UTF8.GetString(typeIdBytes, 0, typeIdBytes.Length);
         }
 
@@ -152,15 +183,32 @@ namespace Fundamental.Wave.Container.Iff
             c = ParseLocalChunk(c);
 
             // Seek to the byte aligned end of the chunk
-            Position = startLocation + c.TotalByteSize;
+            Position = startLocation + c.PaddedDataByteSize + c.HeaderByteSize;
             return c;
         }
-
 
         protected virtual Chunk ParseLocalChunk(Chunk streamChunk)
         {
             // Override this method for specialized parsing of chunks
             return streamChunk;
+        }
+
+        // Chunk Methods
+
+        private void AddLocalChunkArray(Chunk localChunk)
+        {
+            LocalChunks = LocalChunks.Concat(new [] {localChunk}).ToArray();
+        }
+
+        private long GetLocalChunkByteSize()
+        {
+            return LocalChunks.Sum(x => x.CaculatePaddedContentSize() + x.HeaderByteSize);
+        }
+
+
+        private long GetChunkByteSize()
+        {
+            return GetLocalChunkByteSize() + (sizeof(byte) * 4); // Plus  the type Id bytes
         }
     }
 }

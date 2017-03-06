@@ -65,5 +65,36 @@ namespace Fundamental.Core.Math
         }
 
         #endregion
+
+        #region Smallest Factor
+
+        /// <summary>
+        /// Finds the smallest factor x where (a * x) / b == whole number.
+        /// </summary>
+        /// <param name="a">a.</param>
+        /// <param name="b">b.</param>
+        /// <returns></returns>
+        public static int SmallestFactor(int a, int b)
+        {
+            var m = 1;
+            while ((a * m) % b != 0) { m++; }
+            return m;
+        }
+
+
+        /// <summary>
+        /// Finds the smallest factor x where (a * x) / b == whole number.
+        /// </summary>
+        /// <param name="a">a.</param>
+        /// <param name="b">The b.</param>
+        /// <returns></returns>
+        public static long SmallestFactor(long a, long b)
+        {
+            var m = 1;
+            while ((a * m) % b != 0) { m++; }
+            return m;
+        }
+
+        #endregion
     }
 }

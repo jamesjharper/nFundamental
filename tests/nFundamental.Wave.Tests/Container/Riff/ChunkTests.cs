@@ -32,11 +32,9 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(124,        fixture.DataByteSize);
             Assert.AreEqual(124,        fixture.Length);
             Assert.AreEqual(8,          fixture.HeaderByteSize);
-            Assert.AreEqual(124 + 8,    fixture.TotalByteSize);
             Assert.AreEqual(8,          fixture.DataLocation);
             Assert.AreEqual(0,          fixture.StartLocation);
             Assert.AreEqual(124 + 8,    fixture.EndLocation);
-            Assert.AreEqual(0,          fixture.PaddingBytes);
             Assert.AreEqual(false,      fixture.IsRf64);
         }
 
@@ -55,11 +53,9 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA",     fixture.ChunkId);
-            Assert.AreEqual(1,          fixture.PaddingBytes);
             Assert.AreEqual(123,        fixture.DataByteSize);
             Assert.AreEqual(123,        fixture.Length);
             Assert.AreEqual(8,          fixture.HeaderByteSize);
-            Assert.AreEqual(124 + 8,    fixture.TotalByteSize);
             Assert.AreEqual(8,          fixture.DataLocation);
             Assert.AreEqual(0,          fixture.StartLocation);
             Assert.AreEqual(124 + 8,    fixture.EndLocation);
@@ -88,8 +84,6 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(54,     fixture.DataByteSize);
             Assert.AreEqual(54,     fixture.Length);
             Assert.AreEqual(8,      fixture.HeaderByteSize);
-            Assert.AreEqual(54 + 8, fixture.TotalByteSize);
-            Assert.AreEqual(0,      fixture.PaddingBytes);
 
             Assert.AreEqual(8 + offsetPosition,         fixture.DataLocation);
             Assert.AreEqual(0 + offsetPosition,         fixture.StartLocation);

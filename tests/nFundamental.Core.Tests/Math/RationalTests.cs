@@ -27,5 +27,17 @@ namespace Fundamental.Core.Tests.Math
         {
             Assert.AreEqual(ans, Rational.LeastCommonMultiple(a, b));
         }
+
+
+        [TestCase(/* a */  10,   /* b */  100,   /* ans */  10)]
+        [TestCase(/* a */ 100,   /* b */  100,   /* ans */  1)]
+        [TestCase(/* a */  43,   /* b */    8,   /* ans */  8)]
+        [TestCase(/* a */  93,   /* b */    8,   /* ans */  8)]
+        [TestCase(/* a */ 100,   /* b */   11,   /* ans */  11)]
+        [TestCase(/* a */  11,   /* b */  100,   /* ans */  100)]
+        public void CanFindSmallestFactor(int a, int b, int ans)
+        {
+            Assert.AreEqual(ans, Rational.SmallestFactor(a, b));
+        }
     }
 }

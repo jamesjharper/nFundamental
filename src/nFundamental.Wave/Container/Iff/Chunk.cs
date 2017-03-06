@@ -14,7 +14,12 @@ namespace Fundamental.Wave.Container.Iff
         /// <summary>
         /// The header needs flushing
         /// </summary>
-        private bool _headerNeedsFlushing;
+        private bool _headerNeedsFlushing = true;
+
+        /// <summary>
+        /// The packing
+        /// </summary>
+        private readonly PackingCalculator _packing = PackingCalculator.Int16;
 
         /// <summary>
         /// The position
@@ -43,14 +48,6 @@ namespace Fundamental.Wave.Container.Iff
         public IffStandard IffStandard { get; set;  }
 
         /// <summary>
-        /// Gets the total size of the byte.
-        /// </summary>
-        /// <value>
-        /// The total size of the byte.
-        /// </value>
-        public Int64 TotalByteSize => HeaderByteSize + PaddedDataByteSize;
-
-        /// <summary>
         /// Gets a value indicating whether this instance is r F64.
         /// </summary>
         /// <value>
@@ -64,7 +61,7 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// The size of the padded content byte.
         /// </value>
-        public Int64 PaddedDataByteSize => DataByteSize + PaddingBytes;
+        public Int64 PaddedDataByteSize => _packing.RoundUp(DataByteSize);
 
         /// <summary>
         /// The chunk content byte size
@@ -77,19 +74,26 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// The size of the header byte.
         /// </value>
-        public Int64 HeaderByteSize
+        public Int64 HeaderByteSize => AddressByteSize + (sizeof(byte) * 4);
+
+        /// <summary>
+        /// Gets the size of the header byte.
+        /// </summary>
+        /// <value>
+        /// The size of the header byte.
+        /// </value>
+        public Int64 AddressByteSize
         {
             get
             {
-                const int size = (sizeof(byte) * 4); // Chunks Id
                 switch (IffStandard.AddressSize)
                 {
                     case AddressSize.UInt32:
-                        return size + sizeof(UInt32);
+                        return sizeof(UInt32);
                     case AddressSize.UInt64:
-                        return size + sizeof(UInt64);
+                        return sizeof(UInt64);
                     case AddressSize.UInt16:
-                        return size + sizeof(UInt16);
+                        return sizeof(UInt16);
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -123,14 +127,6 @@ namespace Fundamental.Wave.Container.Iff
         public Int64 EndLocation => StartLocation + HeaderByteSize + PaddedDataByteSize;
 
         /// <summary>
-        /// Gets the padding bytes.
-        /// </summary>
-        /// <value>
-        /// The padding bytes.
-        /// </value>
-        public Int32 PaddingBytes => (Int32)(DataByteSize % 2);
-
-        /// <summary>
         /// Invalidates this instance.
         /// </summary>
         protected void FlagHeaderForFlush()
@@ -161,6 +157,8 @@ namespace Fundamental.Wave.Container.Iff
             return c;
         }
 
+       
+
         #region Stream Impl
 
         /// <summary>
@@ -171,7 +169,7 @@ namespace Fundamental.Wave.Container.Iff
             if(!_headerNeedsFlushing)
                 return;
             BaseStream.Position = StartLocation;
-            Write();
+            WriteToStream();
             BaseStream.Flush();
         }
 
@@ -311,6 +309,44 @@ namespace Fundamental.Wave.Container.Iff
         #endregion
 
         /// <summary>
+        /// Gets the byte size of the current content.
+        /// </summary>
+        /// <returns></returns>
+        public virtual long CaculateContentSize()
+        {
+            return DataByteSize;
+        }
+
+        /// <summary>
+        /// Gets the padded byte size of the current content.
+        /// </summary>
+        /// <returns></returns>
+        public virtual long CaculatePaddedContentSize()
+        {
+            return _packing.RoundUp(CaculateContentSize());
+        }
+
+        /// <summary>
+        /// Writes to stream.
+        /// </summary>
+        public void WriteToStream()
+        {
+            StartLocation = BaseStream.Position;
+            DataByteSize = CaculateContentSize();
+            WriteChunk();
+
+            // writing the data context may result in another header flush 
+            if (_headerNeedsFlushing)
+            {
+                BaseStream.Position = StartLocation;
+                WriteHeader();
+            }
+
+            BaseStream.Position = EndLocation;
+            _headerNeedsFlushing = false;
+        }
+
+        /// <summary>
         /// Reads a chunk from a stream using the given standard.
         /// </summary>
         /// <param name="stream">The stream.</param>
@@ -323,7 +359,7 @@ namespace Fundamental.Wave.Container.Iff
                 IffStandard = standardStandard,
                 BaseStream = stream
             };
-            chunk.Read();
+            chunk.ReadFromStream();
             return chunk;
         }
 
@@ -341,16 +377,16 @@ namespace Fundamental.Wave.Container.Iff
                 IffStandard = standardStandard,
                 BaseStream = stream
             };
-            chunk.Read();
+            chunk.ReadFromStream();
             return chunk;
         }
 
         /// <summary>
         /// Creates a new chunk.
         /// </summary>
+        /// <param name="id">The identifier.</param>
         /// <param name="stream">The stream.</param>
         /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
-        /// <param name="id">The identifier.</param>
         /// <returns></returns>
         /// <exception cref="System.FormatException">Type Id must be exactly 4 chars long</exception>
         public static Chunk Create(string id, Stream stream, IffStandard standardStandard)
@@ -361,39 +397,39 @@ namespace Fundamental.Wave.Container.Iff
                 IffStandard = standardStandard,
                 BaseStream = stream
             };
-
-            chunk.Write();
             return chunk;
         }
 
+
         // Private methods
 
-        protected void Read()
+     
+
+
+        protected void ReadFromStream()
         {
             StartLocation = BaseStream.Position;
-            ReadHeader();
-            ReadData();
+            ReadChunk();
             _headerNeedsFlushing = false;
         }
 
-        protected void Write()
+        protected T CreateChild<T>(string chunkId) where T : Chunk, new()
         {
-            StartLocation = BaseStream.Position;
-            WriteHeader();
-            WriteData();
-
-            // writing the data context may result in another header flush 
-            if (_headerNeedsFlushing)
+            return new T
             {
-                BaseStream.Position = StartLocation;
-                WriteHeader();
-                BaseStream.Position = EndLocation;
-            }
-            _headerNeedsFlushing = false;
+                ChunkId = chunkId,
+                BaseStream = BaseStream,
+                IffStandard = IffStandard,
+            };
         }
 
         #region Write
 
+        protected virtual void WriteChunk()
+        {
+            WriteHeader();
+            WriteData();
+        }
         private void WriteHeader()
         {
             WriteChunkId();
@@ -443,11 +479,20 @@ namespace Fundamental.Wave.Container.Iff
 
         protected virtual void WriteData()
         {
+
         }
 
         #endregion
 
         #region Read
+
+        private void ReadChunk()
+        {
+            ReadHeader();
+            ReadData();
+        }
+
+
         private void ReadHeader()
         {
             ReadChunkId();
