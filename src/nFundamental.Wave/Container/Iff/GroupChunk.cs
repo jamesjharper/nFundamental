@@ -165,7 +165,7 @@ namespace Fundamental.Wave.Container.Iff
         private void ReadTypeId()
         {
             var typeIdBytes = new byte[4];
-            Read(typeIdBytes, 0, 4);
+            BaseStream.Read(typeIdBytes, 0, 4);
             TypeId = Encoding.UTF8.GetString(typeIdBytes, 0, typeIdBytes.Length);
         }
 
@@ -197,6 +197,7 @@ namespace Fundamental.Wave.Container.Iff
 
         private void AddLocalChunkArray(Chunk localChunk)
         {
+            FlagHeaderForFlush();
             LocalChunks = LocalChunks.Concat(new [] {localChunk}).ToArray();
         }
 

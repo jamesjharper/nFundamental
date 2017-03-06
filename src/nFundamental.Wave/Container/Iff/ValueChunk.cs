@@ -35,10 +35,9 @@
         // Write
 
         protected override void WriteData()
-        {       
-            Write(RawBytes, 0, RawBytes.Length);
+        {
+            BaseStream.Write(RawBytes, 0, RawBytes.Length);
         }
-
 
         // Read
 
@@ -47,7 +46,7 @@
             if(RawBytes.Length != DataByteSize)
                 RawBytes = new byte[DataByteSize];
 
-            Read(RawBytes, 0, (int)DataByteSize);
+            BaseStream.Read(RawBytes, 0, (int)DataByteSize);
             ReadValueBytes(RawBytes);
         }
     }

@@ -168,9 +168,13 @@ namespace Fundamental.Wave.Container.Iff
         {
             if(!_headerNeedsFlushing)
                 return;
+
+            var cursor = _cursor;
+            _cursor = 0;
             BaseStream.Position = StartLocation;
             WriteToStream();
             BaseStream.Flush();
+            _cursor = cursor;
         }
 
         /// <summary>
@@ -430,6 +434,7 @@ namespace Fundamental.Wave.Container.Iff
             WriteHeader();
             WriteData();
         }
+
         private void WriteHeader()
         {
             WriteChunkId();
