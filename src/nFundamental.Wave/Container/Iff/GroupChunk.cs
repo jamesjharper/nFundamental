@@ -165,7 +165,7 @@ namespace Fundamental.Wave.Container.Iff
         private void ReadTypeId()
         {
             var typeIdBytes = new byte[4];
-            BaseStream.Read(typeIdBytes, 0, 4);
+            Read(typeIdBytes, 0, 4);
             TypeId = Encoding.UTF8.GetString(typeIdBytes, 0, typeIdBytes.Length);
         }
 
@@ -206,10 +206,14 @@ namespace Fundamental.Wave.Container.Iff
             return LocalChunks.Sum(x => x.CaculatePaddedContentSize() + x.HeaderByteSize);
         }
 
-
         private long GetChunkByteSize()
         {
             return GetLocalChunkByteSize() + (sizeof(byte) * 4); // Plus  the type Id bytes
+        }
+
+        public override bool HeaderRequireFlush()
+        {
+            return base.HeaderRequireFlush() || LocalChunks.Any(localChunk => localChunk.HeaderRequireFlush());
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Fundamental.Core.Memory
     {
         #region static members
 
-        public static PackingCalculator Int8 { get; } = new PackingCalculator(sizeof(short));
+        public static PackingCalculator Int8 { get; } = new PackingCalculator(sizeof(byte));
        
         public static PackingCalculator Int16 { get; } = new PackingCalculator(sizeof(short));
        

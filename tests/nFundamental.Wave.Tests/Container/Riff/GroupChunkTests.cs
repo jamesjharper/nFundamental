@@ -52,7 +52,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read Empty
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadEmptyIffListHeader(IffStandard iffStandard)
+        public void CanReadEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -76,7 +76,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read non empty
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadNonEmptyIffListHeader(IffStandard iffStandard)
+        public void CanReadNonEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -122,7 +122,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read non aligned
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadNonAlignedNonEmptyIffListHeader(IffStandard iffStandard)
+        public void CanReadNonAlignedNonEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var memoryStream = new MemoryStream();
@@ -168,7 +168,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read sub chunk
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadAllChunkContentIffListHeader(IffStandard iffStandard)
+        public void CanReadAllLocalChunkContent(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
@@ -217,7 +217,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read past the end of sub chunk
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanOverreadReadChunkContentIffListHeader(IffStandard iffStandard)
+        public void CanOverreadReadLocalChunkContent(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0xff, 0xff };
@@ -265,7 +265,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read portion of sub chunk
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanUnderReadChunkContentIffListHeader(IffStandard iffStandard)
+        public void CanUnderReadLocalChunkContent(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
@@ -313,7 +313,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read from position of sub chunk 
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadChunkContentFromPositionIffListHeader(IffStandard iffStandard)
+        public void CanReadLocalChunkContentFromPosition(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunk1Bytes = new byte[] { 0x03, 0x04, 0x05, 0x06, 0xff, 0xff, 0xff, 0xff };
@@ -364,7 +364,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read nested sub chunk
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadNestedChunkIffListHeader(IffStandard iffStandard)
+        public void CanReadNestedLocalChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedSubChunkData = new byte[] {0x07, 0x08, 0x09, 0x0A};
@@ -398,7 +398,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read nested sub chunk group
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadNestedGroupChunkIffListHeader(IffStandard iffStandard)
+        public void CanReadNestedGroupChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedSubChunkData = new byte[] { 0x07, 0x08, 0x09, 0x0A };
@@ -441,7 +441,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         // Read subsequent chucks after nested sub chunk group
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReadSubsequentChucksAfterNestedGroupChunkIffListHeader(IffStandard iffStandard)
+        public void CanReadSubsequentChucksAfterNestedGroupChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedSubChunkData = new byte[] { 0x07, 0x08, 0x09, 0x0A };
@@ -490,7 +490,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         #region Write 
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanWriteEmptyIffHeader(IffStandard iffStandard)
+        public void CanWriteEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkId = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -526,7 +526,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanWriteNonEmptyIffHeader(IffStandard iffStandard)
+        public void CanWriteNonEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -586,7 +586,78 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanWriteNonAlignedNonEmptyIffHeader(IffStandard iffStandard)
+        public void CanWriteNestedChunk(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(40, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedTst1ChunkId = new byte[] { 0x54, 0x53, 0x54, 0x31 };
+            var expectedTst1ChunkSizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedTst1ChunkBytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+            var expectedSub1ChunkId = new byte[] { 0x53, 0x55, 0x42, 0x31 };
+            var expectedSub1ChunkSizeBytes = EndianHelpers.Int32Bytes(16, iffStandard.ByteOrder);
+            var expectedSub1ChunkTypeId = new byte[] { 0x4e, 0x45, 0x53, 0x54 };
+
+            var expectedSub1Tst1ChunkId = new byte[] { 0x54, 0x53, 0x54, 0x32 };
+            var expectedSub1Tst1ChunkSizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedSub1Tst1ChunkBytes = new byte[] { 0x05, 0x06, 0x07, 0x08 };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.Create
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<TestDataChunk>("TST1");
+            dat1.Data = expectedTst1ChunkBytes;
+
+            var sub1 = fixture.AddGroup<TestGroupChunk>("SUB1", "NEST");
+
+            var sub1Dat1 = sub1.Add<TestDataChunk>("TST2");
+            sub1Dat1.Data = expectedSub1Tst1ChunkBytes;
+
+            // Write to stream
+            fixture.Flush();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedTst1ChunkId, memoryStream.Read(4));
+            Assert.AreEqual(expectedTst1ChunkSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTst1ChunkBytes, memoryStream.Read(4));
+
+            // Check sub1 chunk
+            Assert.AreEqual(expectedSub1ChunkId, memoryStream.Read(4));
+            Assert.AreEqual(expectedSub1ChunkSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedSub1ChunkTypeId, memoryStream.Read(4));
+
+            // Check sub1.tst1 chunk
+            Assert.AreEqual(expectedSub1Tst1ChunkId, memoryStream.Read(4));
+            Assert.AreEqual(expectedSub1Tst1ChunkSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedSub1Tst1ChunkBytes, memoryStream.Read(4));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual(32, fixture[1].DataLocation);
+            Assert.AreEqual(48, streamPosition);
+        }
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanWriteNonAlignedNonEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -648,7 +719,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanAppendNonEmptyChunkToEmptyIffHeader(IffStandard iffStandard)
+        public void CanAppendNonEmptyChunkToEmpty(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -709,7 +780,7 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanAppendBytesToChunkIffHeader(IffStandard iffStandard)
+        public void CanAppendBytesToChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -744,6 +815,133 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // Append bytes
             dat2.Data = expectedChunk2Bytes;
+            dat2.FlagHeaderForFlush();
+            fixture.Flush();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedChunk1Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1Bytes, memoryStream.Read(4));
+
+            // Check tst2 chunk
+            Assert.AreEqual(expectedChunk2Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2Bytes, memoryStream.Read(4));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual(32, fixture[1].DataLocation);
+            Assert.AreEqual(36, streamPosition);
+        }
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanAppendBytesToChunkStream(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(28, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedChunk1Id = new byte[] { 0x54, 0x53, 0x54, 0x31 };
+            var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+            var expectedChunk2Id = new byte[] { 0x44, 0x41, 0x54, 0x32 };
+            var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk2Bytes = new byte[] { 0x05, 0x06, 0x07, 0x08 };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.Create
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<TestDataChunk>("TST1");
+            dat1.Data = expectedChunk1Bytes;
+            var dat2 = fixture.Add<Chunk>("DAT2");
+
+            // Write to stream
+            fixture.Flush();
+
+            // Append bytes
+            dat2.Write(expectedChunk2Bytes);
+            fixture.Flush();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedChunk1Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1Bytes, memoryStream.Read(4));
+
+            // Check tst2 chunk
+            Assert.AreEqual(expectedChunk2Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2Bytes, memoryStream.Read(4));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual(32, fixture[1].DataLocation);
+            Assert.AreEqual(36, streamPosition);
+        }
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanOverwriteBytesToChunkStream(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(28, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedChunk1Id = new byte[] { 0x54, 0x53, 0x54, 0x31 };
+            var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+            var expectedChunk2Id = new byte[] { 0x44, 0x41, 0x54, 0x32 };
+            var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk2Bytes = new byte[] { 0x05, 0x06, 0x07, 0x08 };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.Create
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<TestDataChunk>("TST1");
+            dat1.Data = expectedChunk1Bytes;
+            var dat2 = fixture.Add<Chunk>("DAT2");
+            dat2.Write(new byte[] { 0xff, 0xff, 0xff, 0xff });
+            dat2.Position = 0;
+            
+            // Write to stream
+            fixture.Flush();
+
+            // Append bytes
+            dat2.Write(expectedChunk2Bytes);
             fixture.Flush();
 
             // -> ASSERT

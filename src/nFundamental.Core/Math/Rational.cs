@@ -3,7 +3,6 @@ namespace Fundamental.Core.Math
 {
     public class Rational
     {
-
         #region Greatest Common Divisor
 
         /// <summary>
@@ -36,8 +35,6 @@ namespace Fundamental.Core.Math
             return a;
         }
 
-
-
         #endregion
 
         #region Least Common Multiple
@@ -69,30 +66,29 @@ namespace Fundamental.Core.Math
         #region Smallest Factor
 
         /// <summary>
-        /// Finds the smallest factor x where (a * x) / b == whole number.
+        /// Finds the smallest factor x where a  x * (a / b) == whole number.
         /// </summary>
-        /// <param name="a">a.</param>
-        /// <param name="b">b.</param>
+        /// <param name="numerator">The numerator.</param>
+        /// <param name="denominator">The denominator.</param>
         /// <returns></returns>
-        public static int SmallestFactor(int a, int b)
+        public static int SmallestFactor(int numerator, int denominator)
         {
-            var m = 1;
-            while ((a * m) % b != 0) { m++; }
-            return m;
+            var factor = 1;
+            while ((numerator * factor) % denominator != 0) { factor++; }
+            return factor;
         }
-
 
         /// <summary>
         /// Finds the smallest factor x where (a * x) / b == whole number.
         /// </summary>
-        /// <param name="a">a.</param>
-        /// <param name="b">The b.</param>
+        /// <param name="numerator">The numerator.</param>
+        /// <param name="denominator">The denominator.</param>
         /// <returns></returns>
-        public static long SmallestFactor(long a, long b)
+        public static long SmallestFactor(long numerator, long denominator)
         {
-            var m = 1;
-            while ((a * m) % b != 0) { m++; }
-            return m;
+            var factor = 1;
+            while ((numerator * factor) % denominator != 0) { factor++; }
+            return factor;
         }
 
         #endregion

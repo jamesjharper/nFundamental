@@ -129,11 +129,20 @@ namespace Fundamental.Wave.Container.Iff
         /// <summary>
         /// Invalidates this instance.
         /// </summary>
-        protected void FlagHeaderForFlush()
+        public virtual void FlagHeaderForFlush()
         {
             _headerNeedsFlushing = true;
         }
-     
+
+        /// <summary>
+        /// Headers the require flush.
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool HeaderRequireFlush()
+        {
+            return _headerNeedsFlushing;
+        }
+
         /// <summary>
         /// Serialize as.
         /// </summary>
@@ -157,8 +166,6 @@ namespace Fundamental.Wave.Container.Iff
             return c;
         }
 
-       
-
         #region Stream Impl
 
         /// <summary>
@@ -166,15 +173,12 @@ namespace Fundamental.Wave.Container.Iff
         /// </summary>
         public override void Flush()
         {
-            if(!_headerNeedsFlushing)
+            if(!HeaderRequireFlush())
                 return;
-
-            var cursor = _cursor;
-            _cursor = 0;
+            
             BaseStream.Position = StartLocation;
             WriteToStream();
             BaseStream.Flush();
-            _cursor = cursor;
         }
 
         /// <summary>
@@ -404,12 +408,8 @@ namespace Fundamental.Wave.Container.Iff
             return chunk;
         }
 
-
         // Private methods
-
-     
-
-
+   
         protected void ReadFromStream()
         {
             StartLocation = BaseStream.Position;
@@ -432,7 +432,13 @@ namespace Fundamental.Wave.Container.Iff
         protected virtual void WriteChunk()
         {
             WriteHeader();
+
+            // save out the cursor position so that 
+            // it can be set to the start of the stream for the writing process 
+            var cursor = _cursor;
+            _cursor = 0;
             WriteData();
+            _cursor = cursor;
         }
 
         private void WriteHeader()
@@ -496,7 +502,6 @@ namespace Fundamental.Wave.Container.Iff
             ReadHeader();
             ReadData();
         }
-
 
         private void ReadHeader()
         {

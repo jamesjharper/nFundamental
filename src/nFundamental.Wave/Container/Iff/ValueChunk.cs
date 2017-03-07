@@ -2,6 +2,12 @@
 {
     public abstract class ValueChunk : Chunk
     {
+
+        /// <summary>
+        /// The data needs calculating
+        /// </summary>
+        private bool _dataNeedsCalculating = true;
+
         /// <summary>
         /// Gets the raw bytes which are written to the stream.
         /// </summary>
@@ -28,15 +34,34 @@
         /// <returns></returns>
         public override long CaculateContentSize()
         {
-            RawBytes = GetValueBytes();
+            CalculateBytes();
             return RawBytes.Length;
+        }
+
+        /// <summary>
+        /// Flags the header for flush.
+        /// </summary>
+        public override void FlagHeaderForFlush()
+        {
+            _dataNeedsCalculating = true;
+            base.FlagHeaderForFlush();
+        }
+
+        // private methods
+
+        private void CalculateBytes()
+        {
+            if (_dataNeedsCalculating)
+                RawBytes = GetValueBytes();
+            _dataNeedsCalculating = false;
         }
 
         // Write
 
         protected override void WriteData()
         {
-            BaseStream.Write(RawBytes, 0, RawBytes.Length);
+            CalculateBytes();
+            Write(RawBytes, 0, RawBytes.Length);
         }
 
         // Read
@@ -46,8 +71,9 @@
             if(RawBytes.Length != DataByteSize)
                 RawBytes = new byte[DataByteSize];
 
-            BaseStream.Read(RawBytes, 0, (int)DataByteSize);
+            Read(RawBytes, 0, (int)DataByteSize);
             ReadValueBytes(RawBytes);
+            _dataNeedsCalculating = false;
         }
     }
 }
