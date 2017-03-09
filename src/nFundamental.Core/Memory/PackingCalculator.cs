@@ -58,6 +58,16 @@ namespace Fundamental.Core.Memory
         /// <summary>
         /// Create a new packing calculator which is aligned to a given envelope size
         /// </summary>
+        /// <param name="other">The other packing calculator.</param>
+        /// <returns></returns>
+        public PackingCalculator AlignToEnvelope(PackingCalculator other)
+        {
+            return AlignToEnvelope(other.PackageSize);
+        }
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to a given envelope size
+        /// </summary>
         /// <param name="envelopeCount">The envelope count.</param>
         /// <returns></returns>
         public PackingCalculator AlignToEnvelope(int envelopeCount)
@@ -65,6 +75,50 @@ namespace Fundamental.Core.Memory
             var alignmentFactor = Rational.SmallestFactor(PackageSize, envelopeCount);
             var alignedCount = UnitCount * alignmentFactor;
             return new PackingCalculator(UnitSize, alignedCount);
+        }
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to smallest possible common factor of both packing calculators size
+        /// </summary>
+        /// <param name="other">The other packing calculator.</param>
+        /// <returns></returns>
+        public PackingCalculator AlignToLeastCommonMultiple(PackingCalculator other)
+        {
+            return AlignToLeastCommonMultiple(other.PackageSize);
+        }
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to smallest possible common factor of both packing calculators size
+        /// </summary>
+        /// <param name="packageSize">The package size to align to.</param>
+        /// <returns></returns>
+        public PackingCalculator AlignToLeastCommonMultiple(int packageSize)
+        {
+            var lcm = Rational.LeastCommonMultiple(PackageSize, packageSize);
+            var unitCount = lcm / UnitSize;
+            return new PackingCalculator(UnitSize, unitCount);
+        }
+
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to a single unit.
+        /// </summary>
+        /// <returns></returns>
+        public PackingCalculator AlignToUnit()
+        {
+            return new PackingCalculator(UnitSize, 1);
+        }
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to a the given buffer.
+        /// </summary>
+        /// <param name="packageSize">Size of the package.</param>
+        /// <returns></returns>
+        public PackingCalculator AlignToBufferSize(int packageSize)
+        {
+            var bufferPackageCount = packageSize / PackageSize;
+            var bufferUnitCount = bufferPackageCount * UnitCount;
+            return new PackingCalculator(UnitSize, bufferUnitCount);
         }
 
         /// <summary>
@@ -104,7 +158,6 @@ namespace Fundamental.Core.Memory
         /// <returns></returns>
         public int GetPackageCount(int count) => unchecked ((int)GetPackageCount((long)count));
         
-
         /// <summary>
         /// Packages the count.
         /// </summary>
@@ -112,7 +165,6 @@ namespace Fundamental.Core.Memory
         /// <returns></returns>
         public long GetPackageCount(long count) => count / PackageSize;
         
-
         /// <summary>
         /// Gets the number of "items" left over once packed
         /// </summary>
