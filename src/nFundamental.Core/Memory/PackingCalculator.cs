@@ -13,7 +13,19 @@ namespace Fundamental.Core.Memory
         public static PackingCalculator Int32 { get; } = new PackingCalculator(sizeof(int));
        
         public static PackingCalculator Int64 { get; } = new PackingCalculator(sizeof(long));
-       
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to smallest possible common factor of both packing sizes
+        /// </summary>
+        /// <param name="unitSizeA">The unit size a.</param>
+        /// <param name="unitSizeB">The unit size b.</param>
+        /// <returns></returns>
+        public static PackingCalculator AlignedLeastCommonMultiple(int unitSizeA, int unitSizeB)
+        {
+            var calc = new PackingCalculator(unitSizeA);
+            return calc.AlignToLeastCommonMultiple(unitSizeB);
+        }
+
         #endregion
 
         /// <summary>
