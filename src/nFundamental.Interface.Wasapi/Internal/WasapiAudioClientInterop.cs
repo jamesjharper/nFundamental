@@ -4,7 +4,7 @@ using Fundamental.Core.AudioFormats;
 using Fundamental.Core.Memory;
 using Fundamental.Interface.Wasapi.Interop;
 using Fundamental.Interface.Wasapi.Win32;
-using System.Reflection;
+using Fundamental.Wave.Format;
 
 namespace Fundamental.Interface.Wasapi.Internal
 {

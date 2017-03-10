@@ -1,7 +1,8 @@
 ﻿using System;
+using Fundamental.Core.AudioFormats;
 using MiscUtil.Conversion;
 
-namespace Fundamental.Core.AudioFormats
+namespace Fundamental.Wave.Format
 {
     public sealed class WaveFormatExtensible : WaveFormatDecorator
     {

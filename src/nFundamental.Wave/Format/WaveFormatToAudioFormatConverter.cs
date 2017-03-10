@@ -1,8 +1,10 @@
-﻿
-using System;
+﻿using System;
+using Fundamental.Core;
+using Fundamental.Core.AudioFormats;
 using MiscUtil.Conversion;
+using Endianness = Fundamental.Core.Memory.Endianness;
 
-namespace Fundamental.Core.AudioFormats
+namespace Fundamental.Wave.Format
 {
     public class WaveFormatToAudioFormatConverter : IAudioFormatConverter<WaveFormat>
     {
@@ -16,7 +18,6 @@ namespace Fundamental.Core.AudioFormats
         {
             // This will be re factored into adapters once more wave
             // formats are supported 
-
             result = null;
 
             // Try get the encoding type

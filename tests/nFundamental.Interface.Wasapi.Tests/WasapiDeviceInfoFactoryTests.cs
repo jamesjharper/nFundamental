@@ -1,5 +1,6 @@
 ﻿using Fundamental.Core;
 using Fundamental.Core.AudioFormats;
+using Fundamental.Wave.Format;
 using Fundamental.Interface.Wasapi.Internal;
 using Fundamental.Interface.Wasapi.Interop;
 using NSubstitute;

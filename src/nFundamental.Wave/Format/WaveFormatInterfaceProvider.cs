@@ -1,11 +1,10 @@
-﻿namespace Fundamental.Core.AudioFormats
-{
+﻿using Fundamental.Core;
 
+namespace Fundamental.Wave.Format
+{
     public class WaveFormatInterfaceProvider : InterfaceProvider,
             ISupportsInterface<IAudioFormatConverter<WaveFormat>>
-
     {
-
 
         #region Singleton Access 
 

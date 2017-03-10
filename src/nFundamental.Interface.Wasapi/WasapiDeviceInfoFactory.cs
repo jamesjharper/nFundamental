@@ -1,8 +1,6 @@
-﻿using System;
-using Fundamental.Core;
-using Fundamental.Core.AudioFormats;
+﻿using Fundamental.Core;
+using Fundamental.Wave.Format;
 using Fundamental.Interface.Wasapi.Internal;
-using Fundamental.Interface.Wasapi.Interop;
 
 namespace Fundamental.Interface.Wasapi
 {

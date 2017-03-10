@@ -5,6 +5,7 @@
         "NSubstitute": "2.0.1-rc",
         "dotnet-test-nunit": "3.4.0-beta-3",
         "nFundamental.Core": { "target": "project" },
+        "nFundamental.Wave": { "target": "project" },
         "nFundamental.Core.Tests": { "target": "project" },
         "nFundamental.Interface": { "target": "project" },
         "nFundamental.Interface.Wasapi": { "target": "project" }
