@@ -7,11 +7,11 @@ namespace Fundamental.Core.Memory
         #region static members
 
         public static PackingCalculator Int8 { get; } = new PackingCalculator(sizeof(byte));
-       
+
         public static PackingCalculator Int16 { get; } = new PackingCalculator(sizeof(short));
-       
+
         public static PackingCalculator Int32 { get; } = new PackingCalculator(sizeof(int));
-       
+
         public static PackingCalculator Int64 { get; } = new PackingCalculator(sizeof(long));
 
         /// <summary>
@@ -24,6 +24,18 @@ namespace Fundamental.Core.Memory
         {
             var calc = new PackingCalculator(unitSizeA);
             return calc.AlignToLeastCommonMultiple(unitSizeB);
+        }
+
+        /// <summary>
+        /// Create a new packing calculator which is aligned to largest possible common factor of both packing calculators size
+        /// </summary>
+        /// <param name="unitSizeA">The unit size a.</param>
+        /// <param name="unitSizeB">The unit size b.</param>
+        /// <returns></returns>
+        public static PackingCalculator AlignToGreatestCommonDivisor(int unitSizeA, int unitSizeB)
+        {
+            var calc = new PackingCalculator(unitSizeA);
+            return calc.AlignToGreatestCommonDivisor(unitSizeB);
         }
 
         #endregion
@@ -107,10 +119,23 @@ namespace Fundamental.Core.Memory
         public PackingCalculator AlignToLeastCommonMultiple(int packageSize)
         {
             var lcm = Rational.LeastCommonMultiple(PackageSize, packageSize);
-            var unitCount = lcm / UnitSize;
-            return new PackingCalculator(UnitSize, unitCount);
+            var unitSize = System.Math.Max(UnitSize, packageSize);
+            var unitCount = lcm / unitSize;
+            return new PackingCalculator(unitSize, unitCount);
         }
 
+        /// <summary>
+        /// Create a new packing calculator which is aligned to largest possible common factor of both packing calculators size
+        /// </summary>
+        /// <param name="packageSize">The package size to align to.</param>
+        /// <returns></returns>
+        public PackingCalculator AlignToGreatestCommonDivisor(int packageSize)
+        {
+            var gcd = Rational.GreatestCommonDivisor(PackageSize, packageSize);
+            var unitSize = System.Math.Min(UnitSize, packageSize);
+            var unitCount = gcd / unitSize;
+            return new PackingCalculator(unitSize, unitCount);
+        }
 
         /// <summary>
         /// Create a new packing calculator which is aligned to a single unit.

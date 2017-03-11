@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using MiscUtil.Conversion;
 using MiscUtil.IO;
 
@@ -90,56 +92,75 @@ namespace Fundamental.Core.Memory
             stream.Write(bytes, 0, bytes.Length);
         }
 
+        #region Rotate
+
         /// <summary>
-        /// Performs an in place swap of bytes in the stream
+        /// Rotates the order of the elements in such a way that the element pointed by middle becomes the new first element.
         /// </summary>
         /// <param name="stream">The stream.</param>
-        /// <param name="position">The position.</param>
-        /// <param name="mid">The mid.</param>
-        /// <param name="end">The end.</param>
-        public static void Swap(this Stream stream, int position, int mid, int end)
+        /// <param name="shiftVector">The shift vector.</param>
+        /// <param name="length">The length.</param>
+        public static void Rotate(this Stream stream, int shiftVector, int length)
         {
-            stream.Swap(position, mid, end, BufferSize);
+            stream.Rotate(shiftVector, length, BufferSize);
         }
 
         /// <summary>
-        /// Performs an in place swap of bytes in the stream
+        /// Rotates the order of the elements in such a way that the element pointed by middle becomes the new first element.
         /// </summary>
         /// <param name="stream">The stream.</param>
-        /// <param name="position">The position.</param>
-        /// <param name="mid">The mid.</param>
-        /// <param name="end">The end.</param>
+        /// <param name="shiftVector">The shift vector.</param>
+        /// <param name="length">The length.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
-        public static void Swap(this Stream stream, int position, int mid, int end, int bufferSize)
+        public static void Rotate(this Stream stream, int shiftVector, int length, int bufferSize)
         {
-            var leftBuffer = new byte[bufferSize];
-            var rightBuffer = new byte[bufferSize];
-            var leftCursor = position;
-            var rightCursor = (mid + end) - mid;
+            if(shiftVector == 0)
+                return;
 
-            var endPosition = position + mid + end;
+            if (shiftVector == length)
+                return;
 
-            while (rightCursor != endPosition)
-            {
-                // Read left
-                stream.Position = leftCursor;
-                var leftBytesRead = stream.Read(leftBuffer, 0, leftBuffer.Length);
+            var alignedBufferSize = CalculateAlignedBufferSize(shiftVector, length, bufferSize);
 
-                // Read left
-                stream.Position = rightCursor;
-                var rightBytesRead = stream.Read(rightBuffer, 0, rightBuffer.Length);
+            var left = stream.CursoredEnumerate(alignedBufferSize, length).ToArray();
+            var right = stream.CursoredEnumerate(alignedBufferSize, length).ToArray();
 
-                // Write left
-                stream.Position = rightCursor;
-                stream.Write(leftBuffer, 0, leftBytesRead);
-
-                // Write right
-                stream.Position = leftCursor;
-                stream.Write(rightBuffer, 0, rightBytesRead);
-
-                leftCursor += leftBytesRead;
-                rightCursor += rightBytesRead;
-            }
+            var midIndex = (length - shiftVector) / alignedBufferSize;
+            RotateInner(left, right, midIndex);
         }
+
+        private static int CalculateAlignedBufferSize(int shiftVector, int length, int bufferSize)
+        {
+            var left = length - shiftVector;
+            var right = shiftVector;
+
+            var packing = PackingCalculator.AlignToGreatestCommonDivisor(left, right);
+
+            if (bufferSize >= packing.PackageSize)
+                return packing.PackageSize;
+
+            var bufferCount = packing.PackageSize / bufferSize;
+            return packing.PackageSize / bufferCount;
+        }
+
+        private static void RotateInner(CursorStreamSegment[] left, CursorStreamSegment[] right, int middleOffset)
+        {
+            var first = 0;
+            var middle = middleOffset;
+            var next = middle;
+            var last = left.Length;
+
+            while (first != next)
+            {
+                CursorStreamSegment.Swap(left[first++], right[next++]);
+
+                if (next == last) 
+                    next = middle;
+                else if (first == middle) 
+                    middle = next;
+            }            
+        }
+
+        #endregion
     }
 }

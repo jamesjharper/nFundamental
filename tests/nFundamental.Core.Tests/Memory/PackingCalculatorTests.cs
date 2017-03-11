@@ -130,8 +130,8 @@ namespace Fundamental.Core.Tests.Memory
         [TestCase(/* Unit Size */ 11, /* Count */   2, /* package Size */ 2, /* -> Expected: Package Size */  22, /* Item Count */  2)]
         [TestCase(/* Unit Size */ 11, /* Count */   2, /* package Size */ 2, /* -> Expected: Package Size */  22, /* Item Count */  2)]
         [TestCase(/* Unit Size */ 10, /* Count */   1, /* package Size */ 6, /* -> Expected: Package Size */  30, /* Item Count */  3)]
-        [TestCase(/* Unit Size */  1, /* Count */  10, /* package Size */ 6, /* -> Expected: Package Size */  30, /* Item Count */  30)]
-        [TestCase(/* Unit Size */  5, /* Count */   2, /* package Size */ 6, /* -> Expected: Package Size */  30, /* Item Count */  6)]
+        [TestCase(/* Unit Size */  1, /* Count */  10, /* package Size */ 6, /* -> Expected: Package Size */  30, /* Item Count */  5)]
+        [TestCase(/* Unit Size */  5, /* Count */   2, /* package Size */ 6, /* -> Expected: Package Size */  30, /* Item Count */  5)]
         public void CanAlignToLcm(int unitSize, int itemCount, int otherPackageSize, int expectedPackageSize, int expectedItemCount)
         {
             var calc = new PackingCalculator(unitSize, itemCount);
