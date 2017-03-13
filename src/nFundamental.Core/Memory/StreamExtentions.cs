@@ -100,9 +100,43 @@ namespace Fundamental.Core.Memory
         /// <param name="stream">The stream.</param>
         /// <param name="shiftVector">The shift vector.</param>
         /// <param name="length">The length.</param>
+        public static void Rotate(this Stream stream, int shiftVector, long length)
+        {
+            stream.Rotate(shiftVector, checked((uint)length), BufferSize);
+        }
+
+        /// <summary>
+        /// Rotates the order of the elements in such a way that the element pointed by middle becomes the new first element.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="shiftVector">The shift vector.</param>
+        /// <param name="length">The length.</param>
         public static void Rotate(this Stream stream, int shiftVector, int length)
         {
-            stream.Rotate(shiftVector, length, BufferSize);
+            stream.Rotate(shiftVector, checked((uint)length), BufferSize);
+        }
+
+        /// <summary>
+        /// Rotates the specified shift vector.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="shiftVector">The shift vector.</param>
+        /// <param name="length">The length.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        public static void Rotate(this Stream stream, int shiftVector, int length, int bufferSize)
+        {
+            stream.Rotate(shiftVector, checked((uint)length), checked((uint)bufferSize));
+        }
+
+        /// <summary>
+        /// Rotates the order of the elements in such a way that the element pointed by middle becomes the new first element.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="shiftVector">The shift vector.</param>
+        /// <param name="length">The length.</param>
+        public static void Rotate(this Stream stream, long shiftVector, long length)
+        {
+            stream.Rotate(shiftVector, checked((uint)length), BufferSize);
         }
 
         /// <summary>
@@ -112,24 +146,36 @@ namespace Fundamental.Core.Memory
         /// <param name="shiftVector">The shift vector.</param>
         /// <param name="length">The length.</param>
         /// <param name="bufferSize">Size of the buffer.</param>
-        public static void Rotate(this Stream stream, int shiftVector, int length, int bufferSize)
+        public static void Rotate(this Stream stream, long shiftVector, uint length, uint bufferSize)
         {
-            if(shiftVector == 0)
+            // Calculate the wrap around shift vector, if the given vector was negative
+            var asbShiftVector = ToAbsoluteVector(shiftVector, length);
+
+            if (asbShiftVector == 0)
                 return;
 
-            if (shiftVector == length)
+            if (asbShiftVector == length)
                 return;
 
-            var alignedBufferSize = CalculateAlignedBufferSize(shiftVector, length, bufferSize);
+            var alignedBufferSize = CalculateAlignedBufferSize(asbShiftVector, length, bufferSize);
 
             var left = stream.CursoredEnumerate(alignedBufferSize, length).ToArray();
             var right = stream.CursoredEnumerate(alignedBufferSize, length).ToArray();
-
-            var midIndex = (length - shiftVector) / alignedBufferSize;
+            var midIndex = CalculateSegmentIndex(length, asbShiftVector, alignedBufferSize);
             RotateInner(left, right, midIndex);
         }
 
-        private static int CalculateAlignedBufferSize(int shiftVector, int length, int bufferSize)
+        private static uint CalculateSegmentIndex(uint length, uint asbShiftVector, uint alignedBufferSize)
+        {
+            return (length - asbShiftVector) / alignedBufferSize;
+        }
+
+        private static uint ToAbsoluteVector(long shiftVector, uint length)
+        {
+            return (uint)(shiftVector < 0 ? length - (shiftVector * -1) : shiftVector);
+        }
+
+        private static uint CalculateAlignedBufferSize(uint shiftVector, uint length, uint bufferSize)
         {
             var left = length - shiftVector;
             var right = shiftVector;
@@ -137,18 +183,18 @@ namespace Fundamental.Core.Memory
             var packing = PackingCalculator.AlignToGreatestCommonDivisor(left, right);
 
             if (bufferSize >= packing.PackageSize)
-                return packing.PackageSize;
+                return  packing.PackageSize;
 
             var bufferCount = packing.PackageSize / bufferSize;
             return packing.PackageSize / bufferCount;
         }
 
-        private static void RotateInner(CursorStreamSegment[] left, CursorStreamSegment[] right, int middleOffset)
+        private static void RotateInner(CursorStreamSegment[] left, CursorStreamSegment[] right, uint middleOffset)
         {
-            var first = 0;
+            var first = 0L;
             var middle = middleOffset;
             var next = middle;
-            var last = left.Length;
+            var last = (uint)left.Length;
 
             while (first != next)
             {

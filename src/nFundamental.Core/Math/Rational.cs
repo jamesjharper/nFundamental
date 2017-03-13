@@ -26,6 +26,22 @@ namespace Fundamental.Core.Math
         /// <param name="a">Input a.</param>
         /// <param name="b">Input b.</param>
         /// <returns> The greatest the common divisor</returns>
+        public static uint GreatestCommonDivisor(uint a, uint b)
+        {
+            while (b != 0)
+            {
+                var temp = b; b = a % b; a = temp;
+            }
+            return a;
+        }
+
+
+        /// <summary>
+        /// Finds the greatest the common divisor.
+        /// </summary>
+        /// <param name="a">Input a.</param>
+        /// <param name="b">Input b.</param>
+        /// <returns> The greatest the common divisor</returns>
         public static long GreatestCommonDivisor(long a, long b)
         {
             while (b != 0)
@@ -46,6 +62,17 @@ namespace Fundamental.Core.Math
         /// <param name="b">The b.</param>
         /// <returns> The least the common multiple. </returns>
         public static int LeastCommonMultiple(int a, int b)
+        {
+            return (a / GreatestCommonDivisor(a, b)) * b;
+        }
+
+        /// <summary>
+        /// Finds the least the common multiple.
+        /// </summary>
+        /// <param name="a">a.</param>
+        /// <param name="b">The b.</param>
+        /// <returns> The least the common multiple. </returns>
+        public static uint LeastCommonMultiple(uint a, uint b)
         {
             return (a / GreatestCommonDivisor(a, b)) * b;
         }
@@ -86,7 +113,20 @@ namespace Fundamental.Core.Math
         /// <returns></returns>
         public static long SmallestFactor(long numerator, long denominator)
         {
-            var factor = 1;
+            var factor = 1L;
+            while ((numerator * factor) % denominator != 0) { factor++; }
+            return factor;
+        }
+
+        /// <summary>
+        /// Finds the smallest factor x where (a * x) / b == whole number.
+        /// </summary>
+        /// <param name="numerator">The numerator.</param>
+        /// <param name="denominator">The denominator.</param>
+        /// <returns></returns>
+        public static uint SmallestFactor(uint numerator, uint denominator)
+        {
+            var factor = 1U;
             while ((numerator * factor) % denominator != 0) { factor++; }
             return factor;
         }

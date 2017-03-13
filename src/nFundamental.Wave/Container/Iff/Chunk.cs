@@ -32,6 +32,11 @@ namespace Fundamental.Wave.Container.Iff
         protected Stream BaseStream { get; set; }
 
         /// <summary>
+        /// The Parent chunk
+        /// </summary>
+        protected Chunk ParentChunk { get; set; }
+
+        /// <summary>
         /// Gets or sets the chunk identifier.
         /// </summary>
         /// <value>
@@ -157,7 +162,8 @@ namespace Fundamental.Wave.Container.Iff
                 ChunkId = ChunkId,
                 BaseStream = BaseStream,
                 IffStandard = IffStandard,
-                IsRf64 = IsRf64
+                IsRf64 = IsRf64,
+                ParentChunk = ParentChunk
             };
 
             BaseStream.Position = DataLocation;
@@ -256,10 +262,10 @@ namespace Fundamental.Wave.Container.Iff
             var remainingBytes = DataByteSize - ActualPosition;
             if (remainingBytes < count)
             {
-                var newBytesWritten = count - remainingBytes;
-                DataByteSize += newBytesWritten;
-                _headerNeedsFlushing = true;
+                var incressSize = count - remainingBytes;
+                ExpandChunkSize(incressSize);
             }
+
 
             BaseStream.Write(buffer, offset, count);
 
@@ -335,6 +341,26 @@ namespace Fundamental.Wave.Container.Iff
         }
 
         /// <summary>
+        /// Calculates if this chunk is trailing.
+        /// </summary>
+        /// <returns></returns>
+        public bool CaculateIfTrailingChunk()
+        {
+            // If this chunk doesn't have parent,
+            // then it must be trailing.
+            if (ParentChunk == null)
+                return true;
+
+            var groupChunk = ParentChunk as GroupChunk;
+
+            if (groupChunk == null)
+                return ParentChunk.CaculateIfTrailingChunk();
+
+            // Check if the chunk is the last in the list.
+            return groupChunk.Last == this;
+        }
+
+        /// <summary>
         /// Writes to stream.
         /// </summary>
         public void WriteToStream()
@@ -353,7 +379,17 @@ namespace Fundamental.Wave.Container.Iff
             BaseStream.Position = EndLocation;
             _headerNeedsFlushing = false;
         }
-
+ 
+        /// <summary>
+        /// Moves the chunk to end of stream.
+        /// </summary>
+        public void MoveChunkToEndOfStream()
+        {
+            var baseGroupChunk = ParentChunk as GroupChunk;
+            baseGroupChunk?.MoveChunkToEndOfStream(this);
+            ParentChunk?.MoveChunkToEndOfStream();
+        }
+ 
         /// <summary>
         /// Reads a chunk from a stream using the given standard.
         /// </summary>
@@ -365,7 +401,8 @@ namespace Fundamental.Wave.Container.Iff
             var chunk = new Chunk
             {
                 IffStandard = standardStandard,
-                BaseStream = stream
+                BaseStream = stream,
+                ParentChunk = stream as Chunk 
             };
             chunk.ReadFromStream();
             return chunk;
@@ -383,7 +420,8 @@ namespace Fundamental.Wave.Container.Iff
             var chunk = new T
             {
                 IffStandard = standardStandard,
-                BaseStream = stream
+                BaseStream = stream,
+                ParentChunk =  stream as Chunk
             };
             chunk.ReadFromStream();
             return chunk;
@@ -403,7 +441,8 @@ namespace Fundamental.Wave.Container.Iff
             {
                 ChunkId = id,
                 IffStandard = standardStandard,
-                BaseStream = stream
+                BaseStream = stream,
+                ParentChunk = stream as Chunk
             };
             return chunk;
         }
@@ -424,7 +463,18 @@ namespace Fundamental.Wave.Container.Iff
                 ChunkId = chunkId,
                 BaseStream = BaseStream,
                 IffStandard = IffStandard,
+                ParentChunk =  this
             };
+        }
+
+        private void ExpandChunkSize(long count)
+        {
+            // Make sure the chunk is at the end of the stream.
+            // NOTE: this could end up byte shifting the entire stream.
+            MoveChunkToEndOfStream();
+
+            DataByteSize += count;
+            _headerNeedsFlushing = true;
         }
 
         #region Write

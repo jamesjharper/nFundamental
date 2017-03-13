@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Fundamental.Core.Memory;
 
 namespace Fundamental.Wave.Container.Iff
 {
@@ -41,6 +42,16 @@ namespace Fundamental.Wave.Container.Iff
         }
 
         /// <summary>
+        /// Returns the last element of a chunk sequence, or a null if the sequence contains no elements. 
+        /// </summary>
+        public Chunk Last => LocalChunks.LastOrDefault();
+
+        /// <summary>
+        /// Returns the first element of a chunk sequence, or a null if the sequence contains no elements. 
+        /// </summary>
+        public Chunk First => LocalChunks.FirstOrDefault();
+
+        /// <summary>
         /// Gets the count of sub chunks.
         /// </summary>
         /// <value>
@@ -76,6 +87,12 @@ namespace Fundamental.Wave.Container.Iff
             return this[i] as T;
         }
 
+        /// <summary>
+        /// Adds the specified chunk with chunk identifier.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="chunkId">The chunk identifier.</param>
+        /// <returns></returns>
         public T Add<T>(string chunkId) where T : Chunk, new()
         {
             var c = CreateChild<T>(chunkId);
@@ -84,6 +101,13 @@ namespace Fundamental.Wave.Container.Iff
             return c;
         }
 
+        /// <summary>
+        /// Adds a group to the chunk group.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="chunkId">The chunk identifier.</param>
+        /// <param name="typeId">The type identifier.</param>
+        /// <returns></returns>
         public T AddGroup<T>(string chunkId, string typeId) where T : GroupChunk, new()
         {
             var c = CreateChild<T>(chunkId);
@@ -125,9 +149,32 @@ namespace Fundamental.Wave.Container.Iff
             return FromStream<GroupChunk>(stream, standardStandard);
         }
 
+        /// <summary>
+        /// Moves the chunk to end of stream.
+        /// </summary>
+        public void MoveChunkToEndOfStream(Chunk subChunk)
+        {
+            // If this chunk is already is the at the end of 
+            // the sequence, then we have nothing to do
+            if(subChunk.CaculateIfTrailingChunk())
+                return;
+            
+            var left = new[] { subChunk };
+            var right = GetChucksAfter(subChunk).ToArray();
+
+            // if the left list is empty, then the give chunk is 
+            // already at the end of the stream.
+            if(right.Length == 0)
+                return;
+
+            SwapChunks(left, right);
+            EnsureChunksAreInPositionOrder();
+        }
+
 
         // private methods
 
+        #region Write Data
 
         protected override void WriteData()
         {
@@ -154,7 +201,9 @@ namespace Fundamental.Wave.Container.Iff
             DataByteSize = GetChunkByteSize();
         }
 
-        // Read
+        #endregion
+
+        #region Read Data
 
         protected override void ReadData()
         {
@@ -192,6 +241,69 @@ namespace Fundamental.Wave.Container.Iff
             // Override this method for specialized parsing of chunks
             return streamChunk;
         }
+
+        #endregion
+
+
+        #region Chunk ordering
+
+        private IEnumerable<Chunk> GetChucksAfter(Chunk subChunk)
+        {
+            var chunkIndex = GetChunkIndex(subChunk);
+            if (chunkIndex == -1)
+                throw new InvalidOperationException("GetChucksAfter(Chunk c) failed as given chunk does not belong to this chunk group");
+
+            for (var i = chunkIndex + 1; i < LocalChunks.Length; i++)
+                yield return LocalChunks[i];
+        }
+
+        private int GetChunkIndex(Chunk subChunk)
+        {
+            for (var i = 0; i < LocalChunks.Length; i++)
+            {
+                if (subChunk == LocalChunks[i])
+                    return i;
+            }
+
+            return -1;
+        }
+
+
+        private void SwapChunks(Chunk[] leftChunks, Chunk[] rightChunks)
+        {
+            var leftStart = leftChunks.First().StartLocation;
+            var leftEnd = leftChunks.Last().EndLocation;
+
+            var rigthStart = rightChunks.First().StartLocation;
+            var rightEnd = rightChunks.Last().EndLocation;
+
+            if (leftEnd != rigthStart)
+                throw new InvalidOperationException("Can only swap contiguous chunk orders");
+
+            var vector = checked((uint)(rightEnd - rigthStart));
+            var length = checked((uint)(rightEnd - leftStart));
+
+            BaseStream.Position = leftStart;
+            BaseStream.Rotate(vector, length);
+
+            // Update chunk positions
+            var left = vector;
+            var right = length - vector;
+
+            foreach (var leftChunk in leftChunks)
+                leftChunk.StartLocation += left;
+
+            foreach (var rigthChunk in rightChunks)
+                rigthChunk.StartLocation -= right;
+        }
+
+        private void EnsureChunksAreInPositionOrder()
+        {
+            LocalChunks = LocalChunks.OrderBy(x => x.StartLocation).ToArray();
+        }
+
+        #endregion
+
 
         // Chunk Methods
 

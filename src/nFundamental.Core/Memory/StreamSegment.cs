@@ -53,6 +53,9 @@ namespace Fundamental.Core.Memory
         /// <returns></returns>
         public static IEnumerable<StreamSegment> Enumerate(this Stream stream, int bufferSize)
         {
+            if (bufferSize == 0)
+                throw new ArgumentException("Buffer size can not be equal to zero", nameof(bufferSize));
+
             var segment = new StreamSegment { Data = new byte[bufferSize] };
 
             while ((segment.Length = stream.Read(segment.Data, 0, segment.Data.Length)) != 0)

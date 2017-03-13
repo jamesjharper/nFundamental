@@ -27,6 +27,15 @@ namespace Fundamental.Core.Tests.Memory
                 /* Buffer Size */ 1
             },
 
+              // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x02, 0x01 },
+                /* shift       */ -1,
+                /* Buffer Size */ 1
+            },
+
             // buffer size 2
             new object[]
             {
@@ -44,6 +53,13 @@ namespace Fundamental.Core.Tests.Memory
                 /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
                 /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
                 /* shift       */ 2,
+                /* Buffer Size */ 1
+            },
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ -2,
                 /* Buffer Size */ 1
             },
 
@@ -91,6 +107,13 @@ namespace Fundamental.Core.Tests.Memory
                 /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
                 /* Output      */ new byte[] { 0x04, 0x05, 0x06, 0x01, 0x02, 0x03 }, 
                 /* shift       */ 3,
+                /* Buffer Size */ 1
+            },
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x04, 0x05, 0x06, 0x01, 0x02, 0x03 }, 
+                /* shift       */ -3,
                 /* Buffer Size */ 1
             },
             // buffer size 2
@@ -154,6 +177,14 @@ namespace Fundamental.Core.Tests.Memory
                 /* Output      */ new byte[] { 0x01, 0x02 }, 
                 /* shift       */ 2,
                 /* Buffer Size */ 2
+            },
+             // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x01, 0x02 }, 
+                /* shift       */ -2,
+                /* Buffer Size */ 2
             }
         };
 
@@ -182,6 +213,14 @@ namespace Fundamental.Core.Tests.Memory
                 /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
                 /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
                 /* shift       */ 1,
+                /* Buffer Size */ 1
+            },
+
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
+                /* shift       */ -3,
                 /* Buffer Size */ 1
             },
 
@@ -223,7 +262,14 @@ namespace Fundamental.Core.Tests.Memory
                 /* shift       */ 2,
                 /* Buffer Size */ 1
             },
-                        // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x05, 0x06, 0x01, 0x02, 0x03, 0x04 }, 
+                /* shift       */ -4,
+                /* Buffer Size */ 1
+            },
+            // buffer size 1
             new object[]
             {
                 /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
@@ -275,7 +321,13 @@ namespace Fundamental.Core.Tests.Memory
                 /* shift       */ 3,
                 /* Buffer Size */ 1
             },
-
+             new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x01 }, 
+                /* shift       */ -1,
+                /* Buffer Size */ 1
+            },
             // buffer size 2
             new object[]
             {
