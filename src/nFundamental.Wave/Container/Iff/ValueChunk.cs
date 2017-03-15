@@ -1,4 +1,7 @@
-﻿namespace Fundamental.Wave.Container.Iff
+﻿using System;
+using System.IO;
+
+namespace Fundamental.Wave.Container.Iff
 {
     public abstract class ValueChunk : Chunk
     {
@@ -37,7 +40,7 @@
             CalculateBytes();
             return RawBytes.Length;
         }
-
+  
         /// <summary>
         /// Flags the header for flush.
         /// </summary>
@@ -47,12 +50,35 @@
             base.FlagHeaderForFlush();
         }
 
+        /// <summary> Reads a chunk from a stream using the given standard. </summary>
+        /// <param name="stream">The source stream.</param>
+        /// <param name="standardStandard">Type of the chunk standard.</param>
+        public new static T FromStream<T>(Stream stream, IffStandard standardStandard)
+            where T : ValueChunk, new()
+        {
+            return Chunk.FromStream<T>(stream, standardStandard);
+        }
+
+        /// <summary> Creates a value new chunk. </summary>
+        /// <param name="id">The chunk identifier.</param>
+        /// <param name="stream">The target stream .</param>
+        /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
+        public new static T Create<T>(string id, Stream stream, IffStandard standardStandard)
+            where T : ValueChunk, new()
+        {
+            return Chunk.Create<T>(id, stream, standardStandard);
+        }
+
         // private methods
 
         private void CalculateBytes()
         {
             if (_dataNeedsCalculating)
                 RawBytes = GetValueBytes();
+                
+            if(RawBytes == null)
+                RawBytes = new byte[] {};
+
             _dataNeedsCalculating = false;
         }
 
@@ -61,7 +87,8 @@
         protected override void WriteData()
         {
             CalculateBytes();
-            Write(RawBytes, 0, RawBytes.Length);
+            SetLength(RawBytes.Length);
+            BaseStream.Write(RawBytes, 0, RawBytes.Length);
         }
 
         // Read
@@ -71,7 +98,7 @@
             if(RawBytes.Length != DataByteSize)
                 RawBytes = new byte[DataByteSize];
 
-            Read(RawBytes, 0, (int)DataByteSize);
+            BaseStream.Read(RawBytes, 0, (int)DataByteSize);
             ReadValueBytes(RawBytes);
             _dataNeedsCalculating = false;
         }

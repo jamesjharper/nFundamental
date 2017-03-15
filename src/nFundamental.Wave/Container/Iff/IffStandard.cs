@@ -95,8 +95,8 @@ namespace Fundamental.Wave.Container.Iff
         /// <param name="has64BitLookupChunk">if set to <c>true</c> [RF64].</param>
         /// <param name="addressSize">Size of the address.</param>
         public IffStandard(Endianness byteOrder, 
-                                    bool has64BitLookupChunk, 
-                                    AddressSize addressSize)
+                           bool has64BitLookupChunk, 
+                           AddressSize addressSize)
         {
             ByteOrder = byteOrder;
             Has64BitLookupChunk = has64BitLookupChunk;

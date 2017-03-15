@@ -5,12 +5,9 @@ namespace Fundamental.Core.Math
     {
         #region Greatest Common Divisor
 
-        /// <summary>
-        /// Finds the greatest the common divisor.
-        /// </summary>
+        /// <summary> Finds the greatest the common divisor. </summary>
         /// <param name="a">Input a.</param>
         /// <param name="b">Input b.</param>
-        /// <returns> The greatest the common divisor</returns>
         public static int GreatestCommonDivisor(int a, int b)
         {
             while (b != 0)
@@ -20,12 +17,9 @@ namespace Fundamental.Core.Math
             return a;
         }
 
-        /// <summary>
-        /// Finds the greatest the common divisor.
-        /// </summary>
+        /// <summary> Finds the greatest the common divisor. </summary>
         /// <param name="a">Input a.</param>
         /// <param name="b">Input b.</param>
-        /// <returns> The greatest the common divisor</returns>
         public static uint GreatestCommonDivisor(uint a, uint b)
         {
             while (b != 0)
@@ -36,13 +30,22 @@ namespace Fundamental.Core.Math
         }
 
 
-        /// <summary>
-        /// Finds the greatest the common divisor.
-        /// </summary>
+        /// <summary> Finds the greatest the common divisor. </summary>
         /// <param name="a">Input a.</param>
         /// <param name="b">Input b.</param>
-        /// <returns> The greatest the common divisor</returns>
         public static long GreatestCommonDivisor(long a, long b)
+        {
+            while (b != 0)
+            {
+                var temp = b; b = a % b; a = temp;
+            }
+            return a;
+        }
+
+        /// <summary> Finds the greatest the common divisor. </summary>
+        /// <param name="a">Input a.</param>
+        /// <param name="b">Input b.</param>
+        public static ulong GreatestCommonDivisor(ulong a, ulong b)
         {
             while (b != 0)
             {
@@ -55,35 +58,34 @@ namespace Fundamental.Core.Math
 
         #region Least Common Multiple
 
-        /// <summary>
-        /// Finds the least the common multiple.
-        /// </summary>
-        /// <param name="a">a.</param>
-        /// <param name="b">The b.</param>
-        /// <returns> The least the common multiple. </returns>
+        /// <summary> Finds the least the common multiple. </summary>
+        /// <param name="a">Input a.</param>
+        /// <param name="b">Input b.</param>
         public static int LeastCommonMultiple(int a, int b)
         {
             return (a / GreatestCommonDivisor(a, b)) * b;
         }
 
-        /// <summary>
-        /// Finds the least the common multiple.
-        /// </summary>
-        /// <param name="a">a.</param>
-        /// <param name="b">The b.</param>
-        /// <returns> The least the common multiple. </returns>
+        /// <summary> Finds the least the common multiple. </summary>
+        /// <param name="a">Input a.</param>
+        /// <param name="b">Input b.</param>
         public static uint LeastCommonMultiple(uint a, uint b)
         {
             return (a / GreatestCommonDivisor(a, b)) * b;
         }
 
-        /// <summary>
-        /// Finds the least the common multiple.
-        /// </summary>
-        /// <param name="a">a.</param>
-        /// <param name="b">The b.</param>
-        /// <returns> The least the common multiple. </returns>
+        /// <summary> Finds the least the common multiple. </summary>
+        /// <param name="a">Input a.</param>
+        /// <param name="b">Input b.</param>
         public static long LeastCommonMultiple(long a, long b)
+        {
+            return (a / GreatestCommonDivisor(a, b)) * b;
+        }
+
+        /// <summary> Finds the least the common multiple. </summary>
+        /// <param name="a">Input a.</param>
+        /// <param name="b">Input b.</param>
+        public static ulong LeastCommonMultiple(ulong a, ulong b)
         {
             return (a / GreatestCommonDivisor(a, b)) * b;
         }
@@ -92,12 +94,9 @@ namespace Fundamental.Core.Math
 
         #region Smallest Factor
 
-        /// <summary>
-        /// Finds the smallest factor x where a  x * (a / b) == whole number.
-        /// </summary>
+        /// <summary> Finds the smallest factor x where (a * x) / b == whole number. </summary>
         /// <param name="numerator">The numerator.</param>
         /// <param name="denominator">The denominator.</param>
-        /// <returns></returns>
         public static int SmallestFactor(int numerator, int denominator)
         {
             var factor = 1;
@@ -105,12 +104,9 @@ namespace Fundamental.Core.Math
             return factor;
         }
 
-        /// <summary>
-        /// Finds the smallest factor x where (a * x) / b == whole number.
-        /// </summary>
+        /// <summary> Finds the smallest factor x where (a * x) / b == whole number. </summary>
         /// <param name="numerator">The numerator.</param>
         /// <param name="denominator">The denominator.</param>
-        /// <returns></returns>
         public static long SmallestFactor(long numerator, long denominator)
         {
             var factor = 1L;
@@ -118,15 +114,22 @@ namespace Fundamental.Core.Math
             return factor;
         }
 
-        /// <summary>
-        /// Finds the smallest factor x where (a * x) / b == whole number.
-        /// </summary>
+        /// <summary> Finds the smallest factor x where (a * x) / b == whole number. </summary>
         /// <param name="numerator">The numerator.</param>
         /// <param name="denominator">The denominator.</param>
-        /// <returns></returns>
         public static uint SmallestFactor(uint numerator, uint denominator)
         {
             var factor = 1U;
+            while ((numerator * factor) % denominator != 0) { factor++; }
+            return factor;
+        }
+
+        /// <summary> Finds the smallest factor x where (a * x) / b == whole number. </summary>
+        /// <param name="numerator">The numerator.</param>
+        /// <param name="denominator">The denominator.</param>
+        public static ulong SmallestFactor(ulong numerator, ulong denominator)
+        {
+            var factor = 1UL;
             while ((numerator * factor) % denominator != 0) { factor++; }
             return factor;
         }

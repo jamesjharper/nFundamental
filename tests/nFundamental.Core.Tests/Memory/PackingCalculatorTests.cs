@@ -108,7 +108,7 @@ namespace Fundamental.Core.Tests.Memory
         public void CanFindPackageCount(int alignmentSize, int itemCount, int ans)
         {
             var calc = new PackingCalculator(alignmentSize);
-            Assert.AreEqual(ans, calc.GetPackageCount(itemCount));
+            Assert.AreEqual(ans, calc.GetWholePackageCount(itemCount));
         }
 
 

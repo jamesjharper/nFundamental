@@ -8,8 +8,88 @@ using Fundamental.Core.Memory;
 
 namespace Fundamental.Wave.Container.Iff
 {
-    public class Chunk : Stream
+    public class Chunk 
     {
+        /// <summary>
+        /// Reads a chunk from a stream using the given standard.
+        /// </summary>
+        /// <param name="parent">The parent.</param>
+        /// <param name="standardStandard">Type of the chunk standard.</param>
+        /// <returns></returns>
+        public static Chunk FromStream(Chunk parent, IffStandard standardStandard)
+        {
+            var chunk = new Chunk
+            {
+                IffStandard = standardStandard,
+                BaseStream = parent.BaseStream,
+                ParentChunk = parent
+            };
+            chunk.ReadFromStream();
+            return chunk;
+        }
+
+        /// <summary>
+        /// Reads a chunk from a stream using the given standard.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="standardStandard">Type of the chunk standard.</param>
+        /// <returns></returns>
+        public static Chunk FromStream(Stream stream, IffStandard standardStandard)
+        {
+            var chunk = new Chunk
+            {
+                IffStandard = standardStandard,
+                BaseStream = stream,
+                ParentChunk = (stream as ChunkStreamAdapter)?.Chunk
+            };
+            chunk.ReadFromStream();
+            return chunk;
+        }
+
+        /// <summary>
+        /// Reads a chunk from a stream using the given standard.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="standardStandard">Type of the chunk standard.</param>
+        /// <returns></returns>
+        public static T FromStream<T>(Stream stream, IffStandard standardStandard)
+            where T : Chunk, new()
+        {
+            var chunk = new T
+            {
+                IffStandard = standardStandard,
+                BaseStream = stream,
+                ParentChunk = (stream as ChunkStreamAdapter)?.Chunk
+            };
+            chunk.ReadFromStream();
+            return chunk;
+        }
+
+        /// <summary> Creates a value new chunk. </summary>
+        /// <param name="id">The chunk identifier.</param>
+        /// <param name="stream">The target stream .</param>
+        /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
+        public static Chunk Create(string id, Stream stream, IffStandard standardStandard)
+        {
+            return Create<Chunk>(id, stream, standardStandard);
+        }
+
+        /// <summary> Creates a value new chunk. </summary>
+        /// <param name="id">The chunk identifier.</param>
+        /// <param name="stream">The target stream .</param>
+        /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
+        protected static T Create<T>(string id, Stream stream, IffStandard standardStandard)
+            where T : Chunk, new()
+        {
+            var chunk = new T
+            {
+                ChunkId = id,
+                IffStandard = standardStandard,
+                BaseStream = stream,
+                ParentChunk = (stream as ChunkStreamAdapter)?.Chunk
+            };
+            return chunk;
+        }
 
         /// <summary>
         /// The header needs flushing
@@ -21,15 +101,16 @@ namespace Fundamental.Wave.Container.Iff
         /// </summary>
         private readonly PackingCalculator _packing = PackingCalculator.Int16;
 
+
         /// <summary>
-        /// The position
+        /// The pending initial write
         /// </summary>
-        private long _cursor;
+        private bool _pendingInitialWrite = true;
 
         /// <summary>
         /// The base stream
         /// </summary>
-        protected Stream BaseStream { get; set; }
+        public Stream BaseStream { get; set; }
 
         /// <summary>
         /// The Parent chunk
@@ -42,7 +123,7 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// The chunk identifier.
         /// </value>
-        public string ChunkId { get; protected set; }
+        public string ChunkId { get; set; }
 
         /// <summary>
         /// Gets the information file format type settings.
@@ -163,7 +244,8 @@ namespace Fundamental.Wave.Container.Iff
                 BaseStream = BaseStream,
                 IffStandard = IffStandard,
                 IsRf64 = IsRf64,
-                ParentChunk = ParentChunk
+                ParentChunk = ParentChunk,
+                _pendingInitialWrite = _pendingInitialWrite
             };
 
             BaseStream.Position = DataLocation;
@@ -172,12 +254,28 @@ namespace Fundamental.Wave.Container.Iff
             return c;
         }
 
-        #region Stream Impl
+        /// <summary>
+        /// Sets the length.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        public void SetLength(long value)
+        {
+            if (DataByteSize == value)
+                return;
+
+            // Make sure the chunk is at the end of the stream.
+            // NOTE: this could end up byte shifting the entire stream.
+            MoveChunkToEndOfStream();
+
+            DataByteSize = value;
+            _headerNeedsFlushing = true;
+        }
+
 
         /// <summary>
         /// When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
-        public override void Flush()
+        public void Flush()
         {
             if(!HeaderRequireFlush())
                 return;
@@ -187,140 +285,6 @@ namespace Fundamental.Wave.Container.Iff
             BaseStream.Flush();
         }
 
-        /// <summary>
-        /// When overridden in a derived class, sets the position within the current stream.
-        /// </summary>
-        /// <param name="offset">A byte offset relative to the <paramref name="origin" /> parameter.</param>
-        /// <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin" /> indicating the reference point used to obtain the new position.</param>
-        /// <returns>
-        /// The new position within the current stream.
-        /// </returns>
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    return BaseStream.Seek(offset + StartLocation, origin);
-                case SeekOrigin.End:
-                    return BaseStream.Seek(EndLocation - offset, SeekOrigin.Begin);
-                case SeekOrigin.Current:
-                    return BaseStream.Seek(offset, SeekOrigin.Current);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(origin), origin, null);
-            }
-        }
-
-        public override void SetLength(long value)
-        {
-            // Please don't do this.
-            throw new NotSupportedException();
-        }
-
-        /// <summary>
-        /// When overridden in a derived class, reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
-        /// </summary>
-        /// <param name="buffer">An array of bytes. When this method returns, the buffer contains the specified byte array with the values between <paramref name="offset" /> and (<paramref name="offset" /> + <paramref name="count" /> - 1) replaced by the bytes read from the current source.</param>
-        /// <param name="offset">The zero-based byte offset in <paramref name="buffer" /> at which to begin storing the data read from the current stream.</param>
-        /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
-        /// <returns>
-        /// The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.
-        /// </returns>
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            // If the cursor has been moved, we want to move it 
-            // the cursor location of this particular chunk 
-            // NOTE: reading and writing to chunks is very not 
-            // thread safe.
-            if (ActualPosition != _cursor)
-                ActualPosition = _cursor;
-
-            var remainingBytes = (int) (DataByteSize - ActualPosition);
-            var readableBytes = Math.Min(count, remainingBytes);
-            var bytesRead = BaseStream.Read(buffer, offset, readableBytes);
-
-            // Sync up both cursor and position
-            _cursor = ActualPosition;
-            return bytesRead;
-        }
-
-        /// <summary>
-        /// When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
-        /// </summary>
-        /// <param name="buffer">An array of bytes. This method copies <paramref name="count" /> bytes from <paramref name="buffer" /> to the current stream.</param>
-        /// <param name="offset">The zero-based byte offset in <paramref name="buffer" /> at which to begin copying bytes to the current stream.</param>
-        /// <param name="count">The number of bytes to be written to the current stream.</param>
-        /// <exception cref="System.ArgumentOutOfRangeException">count - Unable to write past the end of the chunk</exception>
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            // If the cursor has been moved, we want to move it 
-            // the cursor location of this particular chunk 
-            // NOTE: reading and writing to chunks is very not 
-            // thread safe.
-            if (ActualPosition != _cursor)
-                ActualPosition = _cursor;
-
-            var remainingBytes = DataByteSize - ActualPosition;
-            if (remainingBytes < count)
-            {
-                var incressSize = count - remainingBytes;
-                ExpandChunkSize(incressSize);
-            }
-
-
-            BaseStream.Write(buffer, offset, count);
-
-            // Sync up both cursor and position
-            _cursor = ActualPosition;
-        }
-
-        /// <summary>
-        /// When overridden in a derived class, gets a value indicating whether the current stream supports reading.
-        /// </summary>
-        public override bool CanRead => BaseStream.CanRead;
-
-        /// <summary>
-        /// When overridden in a derived class, gets a value indicating whether the current stream supports seeking.
-        /// </summary>
-        public override bool CanSeek => BaseStream.CanSeek;
-
-        /// <summary>
-        /// When overridden in a derived class, gets a value indicating whether the current stream supports writing.
-        /// </summary>
-        public override bool CanWrite => BaseStream.CanWrite;
-
-        /// <summary>
-        /// When overridden in a derived class, gets the length in bytes of the stream.
-        /// </summary>
-        public override long Length => DataByteSize;
-
-
-        /// <summary>
-        /// The cursor position for this chunk
-        /// </summary>
-        public override long Position
-        {
-            get { return _cursor; }
-            set
-            {
-                _cursor = value;
-                BaseStream.Position = value + DataLocation;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the actual position.
-        /// </summary>
-        /// <value>
-        /// The actual position.
-        /// </value>
-        public long ActualPosition
-        {
-            get { return BaseStream.Position - DataLocation;  }
-            set { Position = value; }
-        }
-
-
-        #endregion
 
         /// <summary>
         /// Gets the byte size of the current content.
@@ -378,6 +342,7 @@ namespace Fundamental.Wave.Container.Iff
 
             BaseStream.Position = EndLocation;
             _headerNeedsFlushing = false;
+            _pendingInitialWrite = false;
         }
  
         /// <summary>
@@ -390,71 +355,9 @@ namespace Fundamental.Wave.Container.Iff
             ParentChunk?.MoveChunkToEndOfStream();
         }
  
-        /// <summary>
-        /// Reads a chunk from a stream using the given standard.
-        /// </summary>
-        /// <param name="stream">The stream.</param>
-        /// <param name="standardStandard">Type of the chunk standard.</param>
-        /// <returns></returns>
-        public static Chunk FromStream(Stream stream, IffStandard standardStandard)
-        {
-            var chunk = new Chunk
-            {
-                IffStandard = standardStandard,
-                BaseStream = stream,
-                ParentChunk = stream as Chunk 
-            };
-            chunk.ReadFromStream();
-            return chunk;
-        }
-
-        /// <summary>
-        /// Reads a chunk from a stream using the given standard.
-        /// </summary>
-        /// <param name="stream">The stream.</param>
-        /// <param name="standardStandard">Type of the chunk standard.</param>
-        /// <returns></returns>
-        public static T FromStream<T>(Stream stream, IffStandard standardStandard)
-            where T : Chunk, new()
-        {
-            var chunk = new T
-            {
-                IffStandard = standardStandard,
-                BaseStream = stream,
-                ParentChunk =  stream as Chunk
-            };
-            chunk.ReadFromStream();
-            return chunk;
-        }
-
-        /// <summary>
-        /// Creates a new chunk.
-        /// </summary>
-        /// <param name="id">The identifier.</param>
-        /// <param name="stream">The stream.</param>
-        /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
-        /// <returns></returns>
-        /// <exception cref="System.FormatException">Type Id must be exactly 4 chars long</exception>
-        public static Chunk Create(string id, Stream stream, IffStandard standardStandard)
-        {
-            var chunk = new Chunk
-            {
-                ChunkId = id,
-                IffStandard = standardStandard,
-                BaseStream = stream,
-                ParentChunk = stream as Chunk
-            };
-            return chunk;
-        }
 
         // Private methods
    
-        protected void ReadFromStream()
-        {
-            StartLocation = BaseStream.Position;
-            ReadChunk();
-            _headerNeedsFlushing = false;
-        }
 
         protected T CreateChild<T>(string chunkId) where T : Chunk, new()
         {
@@ -463,32 +366,26 @@ namespace Fundamental.Wave.Container.Iff
                 ChunkId = chunkId,
                 BaseStream = BaseStream,
                 IffStandard = IffStandard,
-                ParentChunk =  this
+                ParentChunk =  this,
+                _pendingInitialWrite = true
             };
         }
 
-        private void ExpandChunkSize(long count)
+        protected void ReadFromStream()
         {
-            // Make sure the chunk is at the end of the stream.
-            // NOTE: this could end up byte shifting the entire stream.
-            MoveChunkToEndOfStream();
-
-            DataByteSize += count;
-            _headerNeedsFlushing = true;
+            StartLocation = BaseStream.Position;
+            ReadChunk();
+            _headerNeedsFlushing = false;
+            _pendingInitialWrite = false;
         }
+
 
         #region Write
 
         protected virtual void WriteChunk()
         {
             WriteHeader();
-
-            // save out the cursor position so that 
-            // it can be set to the start of the stream for the writing process 
-            var cursor = _cursor;
-            _cursor = 0;
             WriteData();
-            _cursor = cursor;
         }
 
         private void WriteHeader()
@@ -575,8 +472,12 @@ namespace Fundamental.Wave.Container.Iff
 
                     // If we are supporting RF64 and the data size is equal to 0xFFFFFFFF
                     // Then the actual length is save in another chunk external to this one
-                    if (IffStandard.Has64BitLookupChunk && DataByteSize == UInt32.MaxValue)
+                    if (IffStandard.Has64BitLookupChunk && DataByteSize == 0xFFFFFFFF)
+                    {
+                        DataByteSize = 0xFFFFFFFF - 1;
                         IsRf64 = true;
+                    }
+                     
 
                     break;
                 case AddressSize.UInt64:

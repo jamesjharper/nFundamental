@@ -157,6 +157,9 @@ namespace Fundamental.Core.Memory
             if (asbShiftVector == length)
                 return;
 
+            if (stream.Position + length < stream.Length)
+                throw new IndexOutOfRangeException("Can not write past the end of the stream");
+
             var alignedBufferSize = CalculateAlignedBufferSize(asbShiftVector, length, bufferSize);
 
             var left = stream.CursoredEnumerate(alignedBufferSize, length).ToArray();
@@ -182,11 +185,11 @@ namespace Fundamental.Core.Memory
 
             var packing = PackingCalculator.AlignToGreatestCommonDivisor(left, right);
 
-            if (bufferSize >= packing.PackageSize)
-                return  packing.PackageSize;
+            if (bufferSize >= packing.UIntPackageSize)
+                return  packing.UIntPackageSize;
 
-            var bufferCount = packing.PackageSize / bufferSize;
-            return packing.PackageSize / bufferCount;
+            var bufferCount = packing.UIntPackageSize / bufferSize;
+            return packing.UIntPackageSize / bufferCount;
         }
 
         private static void RotateInner(CursorStreamSegment[] left, CursorStreamSegment[] right, uint middleOffset)

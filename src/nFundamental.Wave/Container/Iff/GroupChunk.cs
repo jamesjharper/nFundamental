@@ -82,7 +82,7 @@ namespace Fundamental.Wave.Container.Iff
         /// <typeparam name="T"></typeparam>
         /// <param name="i">The i.</param>
         /// <returns></returns>
-        public T At<T>(int i) where T : Chunk, new()
+        public T At<T>(int i) where T : Chunk
         {
             return this[i] as T;
         }
@@ -143,10 +143,15 @@ namespace Fundamental.Wave.Container.Iff
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="standardStandard">Type of the chunk standard.</param>
-        /// <returns></returns>
         public new static GroupChunk FromStream(Stream stream, IffStandard standardStandard)
         {
             return FromStream<GroupChunk>(stream, standardStandard);
+        }
+
+        public new static T FromStream<T>(Stream stream, IffStandard standardStandard)
+            where T : GroupChunk, new()
+        {
+            return Chunk.FromStream<T>(stream, standardStandard);
         }
 
         /// <summary>
@@ -188,7 +193,7 @@ namespace Fundamental.Wave.Container.Iff
             if (typeIdBytes.Length != 4)
                 throw new FormatException("IFF type Id must be exactly 4 bytes long");
 
-            Write(typeIdBytes, 0, typeIdBytes.Length);
+            BaseStream.Write(typeIdBytes, 0, typeIdBytes.Length);
         }
 
         private void WriteLocalChunks()
@@ -214,25 +219,25 @@ namespace Fundamental.Wave.Container.Iff
         private void ReadTypeId()
         {
             var typeIdBytes = new byte[4];
-            Read(typeIdBytes, 0, 4);
+            BaseStream.Read(typeIdBytes, 0, 4);
             TypeId = Encoding.UTF8.GetString(typeIdBytes, 0, typeIdBytes.Length);
         }
 
 
         private IEnumerable<Chunk> ReadLocalChunks()
         {
-            while (Position < Length)
+            while (BaseStream.Position < EndLocation)
                 yield return ReadLocalChunk();
         }
 
         private Chunk ReadLocalChunk()
         {
-            var startLocation = Position;
-            var c = Chunk.FromStream(this, IffStandard);
+            var startLocation = BaseStream.Position;
+            var c = FromStream(this, IffStandard);
             c = ParseLocalChunk(c);
 
             // Seek to the byte aligned end of the chunk
-            Position = startLocation + c.PaddedDataByteSize + c.HeaderByteSize;
+            BaseStream.Position = startLocation + c.PaddedDataByteSize + c.HeaderByteSize;
             return c;
         }
 

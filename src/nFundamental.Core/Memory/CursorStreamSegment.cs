@@ -243,9 +243,14 @@ namespace Fundamental.Core.Memory
             if (bufferSize == 0)
                 throw new ArgumentException("Buffer size can not be equal to zero", nameof(bufferSize));
 
+            // Make sure we don't go past the end
+            var maxLength = System.Math.Min(startPosition + length, stream.Length);
+            length = maxLength - startPosition;
+
             if (length == 0)
                 yield break;
-            
+
+     
             var buffer = new byte[bufferSize];
 
             var endPosition = startPosition + length;
