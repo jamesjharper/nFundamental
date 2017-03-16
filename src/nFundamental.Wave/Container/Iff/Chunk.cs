@@ -10,17 +10,14 @@ namespace Fundamental.Wave.Container.Iff
 {
     public class Chunk 
     {
-        /// <summary>
-        /// Reads a chunk from a stream using the given standard.
-        /// </summary>
+        /// <summary> Reads a chunk from a stream using the given IFF standard.</summary>
         /// <param name="parent">The parent.</param>
-        /// <param name="standardStandard">Type of the chunk standard.</param>
-        /// <returns></returns>
-        public static Chunk FromStream(Chunk parent, IffStandard standardStandard)
+        /// <param name="standard">The IFF standard.</param>
+        public static Chunk FromStream(Chunk parent, IffStandard standard)
         {
             var chunk = new Chunk
             {
-                IffStandard = standardStandard,
+                IffStandard = standard,
                 BaseStream = parent.BaseStream,
                 ParentChunk = parent
             };
@@ -28,145 +25,107 @@ namespace Fundamental.Wave.Container.Iff
             return chunk;
         }
 
-        /// <summary>
-        /// Reads a chunk from a stream using the given standard.
-        /// </summary>
+        /// <summary> Reads a chunk from a stream using the given IFF standard. </summary>
         /// <param name="stream">The stream.</param>
-        /// <param name="standardStandard">Type of the chunk standard.</param>
-        /// <returns></returns>
-        public static Chunk FromStream(Stream stream, IffStandard standardStandard)
+        /// <param name="standard">The IFF standard.</param>
+        public static Chunk FromStream(Stream stream, IffStandard standard)
         {
-            var chunk = new Chunk
-            {
-                IffStandard = standardStandard,
-                BaseStream = stream,
-                ParentChunk = (stream as ChunkStreamAdapter)?.Chunk
-            };
-            chunk.ReadFromStream();
+            return FromStream<Chunk>(stream, standard);
+        }
+
+        /// <summary> Reads a chunk from a stream using the given IFF standard. </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="standard">The IFF standard.</param>
+        public static T FromStream<T>(Stream stream, IffStandard standard)
+            where T : Chunk, new()
+        {
+            var chunk = new T();
+            FromStream(chunk, stream, standard);
             return chunk;
         }
 
-        /// <summary>
-        /// Reads a chunk from a stream using the given standard.
-        /// </summary>
+        /// <summary> Reads a chunk from a stream using the given IFF standard. </summary>
+        /// <param name="chunk">The chunk.</param>
         /// <param name="stream">The stream.</param>
-        /// <param name="standardStandard">Type of the chunk standard.</param>
-        /// <returns></returns>
-        public static T FromStream<T>(Stream stream, IffStandard standardStandard)
-            where T : Chunk, new()
+        /// <param name="standard">The IFF standard.</param>
+        protected static void FromStream(Chunk chunk, Stream stream, IffStandard standard)
         {
-            var chunk = new T
-            {
-                IffStandard = standardStandard,
-                BaseStream = stream,
-                ParentChunk = (stream as ChunkStreamAdapter)?.Chunk
-            };
+            chunk.IffStandard = standard;
+            chunk.BaseStream = stream;
+            chunk.ParentChunk = (stream as ChunkStreamAdapter)?.Chunk;
             chunk.ReadFromStream();
-            return chunk;
         }
 
         /// <summary> Creates a value new chunk. </summary>
         /// <param name="id">The chunk identifier.</param>
         /// <param name="stream">The target stream .</param>
-        /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
-        public static Chunk Create(string id, Stream stream, IffStandard standardStandard)
+        /// <param name="standard">The IFF standard.</param>
+        public static Chunk ToStream(string id, Stream stream, IffStandard standard)
         {
-            return Create<Chunk>(id, stream, standardStandard);
+            return ToStream<Chunk>(id, stream, standard);
         }
 
         /// <summary> Creates a value new chunk. </summary>
         /// <param name="id">The chunk identifier.</param>
         /// <param name="stream">The target stream .</param>
-        /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
-        protected static T Create<T>(string id, Stream stream, IffStandard standardStandard)
+        /// <param name="standard">The IFF standard.</param>
+        protected static T ToStream<T>(string id, Stream stream, IffStandard standard)
             where T : Chunk, new()
         {
-            var chunk = new T
-            {
-                ChunkId = id,
-                IffStandard = standardStandard,
-                BaseStream = stream,
-                ParentChunk = (stream as ChunkStreamAdapter)?.Chunk
-            };
+            var chunk = new T();
+            ToStream(chunk, id, stream, standard);
             return chunk;
         }
 
-        /// <summary>
-        /// The header needs flushing
-        /// </summary>
+        /// <summary> Creates a value new chunk. </summary>
+        /// <param name="chunk">The chunk.</param>
+        /// <param name="id">The identifier.</param>
+        /// <param name="stream">The stream.</param>
+        /// <param name="standard">The IFF standard.</param>
+        protected static void ToStream(Chunk chunk, string id, Stream stream, IffStandard standard)
+        {
+            chunk.ChunkId = id;
+            chunk.IffStandard = standard;
+            chunk.BaseStream = stream;
+            chunk.ParentChunk = (stream as ChunkStreamAdapter)?.Chunk;
+            chunk.WriteToStream();
+        }
+
+        /// <summary> The header needs flushing </summary>
         private bool _headerNeedsFlushing = true;
 
-        /// <summary>
-        /// The packing
-        /// </summary>
+        /// <summary> The packing calculator </summary>
         private readonly PackingCalculator _packing = PackingCalculator.Int16;
 
-
-        /// <summary>
-        /// The pending initial write
-        /// </summary>
-        private bool _pendingInitialWrite = true;
-
-        /// <summary>
-        /// The base stream
-        /// </summary>
+        /// <summary> The base stream </summary>
         public Stream BaseStream { get; set; }
 
-        /// <summary>
-        /// The Parent chunk
-        /// </summary>
+        /// <summary> The Parent chunk </summary>
         protected Chunk ParentChunk { get; set; }
 
-        /// <summary>
-        /// Gets or sets the chunk identifier.
-        /// </summary>
-        /// <value>
-        /// The chunk identifier.
-        /// </value>
+        /// <summary> Gets or sets the chunk identifier. </summary>
         public string ChunkId { get; set; }
 
-        /// <summary>
-        /// Gets the information file format type settings.
-        /// </summary>
-        /// <value>
-        /// The information file format type settings.
-        /// </value>
+        /// <summary> Gets the information file format type settings. </summary>
         public IffStandard IffStandard { get; set;  }
 
-        /// <summary>
-        /// Gets a value indicating whether this instance is r F64.
-        /// </summary>
+        /// <summary>  Gets a value indicating whether this instance is RF64. </summary>
         /// <value>
-        ///   <c>true</c> if this instance is r F64; otherwise, <c>false</c>.
+        ///   <c>true</c> if this instance is RF64; otherwise, <c>false</c>.
         /// </value>
         public bool IsRf64 { get; private set; }
 
-        /// <summary>
-        /// The size of the padded content byte.
-        /// </summary>
-        /// <value>
-        /// The size of the padded content byte.
-        /// </value>
+        /// <summary> The size of the padded content byte. </summary>
         public Int64 PaddedDataByteSize => _packing.RoundUp(DataByteSize);
 
-        /// <summary>
-        /// The chunk content byte size
-        /// </summary>
+        /// <summary> The chunk content byte size </summary>
         public Int64 DataByteSize { get; set; }
 
-        /// <summary>
-        /// Gets the size of the header byte.
-        /// </summary>
-        /// <value>
-        /// The size of the header byte.
-        /// </value>
+        /// <summary> The size of the header byte. </summary>
         public Int64 HeaderByteSize => AddressByteSize + (sizeof(byte) * 4);
 
-        /// <summary>
-        /// Gets the size of the header byte.
-        /// </summary>
         /// <value>
-        /// The size of the header byte.
+        /// The address size.
         /// </value>
         public Int64 AddressByteSize
         {
@@ -186,20 +145,10 @@ namespace Fundamental.Wave.Container.Iff
             }
         }
 
-        /// <summary>
-        /// Gets the location.
-        /// </summary>
-        /// <value>
-        /// The location.
-        /// </value>
+        /// <summary> Gets the data segment location in the base stream </summary>
         public Int64 DataLocation => StartLocation + HeaderByteSize;
 
-        /// <summary>
-        /// Gets the start location.
-        /// </summary>
-        /// <value>
-        /// The start location.
-        /// </value>
+        /// <summary> Gets the start segment location in the base stream </summary>
         public Int64 StartLocation { get; set; }
 
         /// <summary>
@@ -207,33 +156,28 @@ namespace Fundamental.Wave.Container.Iff
         /// Note: EA IFF 85 Standard for Interchange Format Files states that
         /// chucks should be 16bit aligned 
         /// </summary>
-        /// <value>
-        /// The start location.
-        /// </value>
         public Int64 EndLocation => StartLocation + HeaderByteSize + PaddedDataByteSize;
 
-        /// <summary>
-        /// Invalidates this instance.
-        /// </summary>
+        /// <summary> Invalidates this instance. </summary>
         public virtual void FlagHeaderForFlush()
         {
             _headerNeedsFlushing = true;
+            var p = ParentChunk;
+            while (p != null)
+            {
+                p._headerNeedsFlushing = true;
+                p = p.ParentChunk;
+            }
         }
 
-        /// <summary>
-        /// Headers the require flush.
-        /// </summary>
-        /// <returns></returns>
-        public virtual bool HeaderRequireFlush()
+        /// <summary> Returns whether the chunk headers requires flushing or not. </summary>
+        public virtual bool HeaderRequiresFlush()
         {
             return _headerNeedsFlushing;
         }
 
-        /// <summary>
-        /// Serialize as.
-        /// </summary>
+        /// <summary> Casts the steam to the given type. </summary>
         /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         public T As<T>() where  T : Chunk, new()
         {
             var c = new T
@@ -245,7 +189,6 @@ namespace Fundamental.Wave.Container.Iff
                 IffStandard = IffStandard,
                 IsRf64 = IsRf64,
                 ParentChunk = ParentChunk,
-                _pendingInitialWrite = _pendingInitialWrite
             };
 
             BaseStream.Position = DataLocation;
@@ -254,9 +197,7 @@ namespace Fundamental.Wave.Container.Iff
             return c;
         }
 
-        /// <summary>
-        /// Sets the length.
-        /// </summary>
+        /// <summary> Sets the length of the chuck. </summary>
         /// <param name="value">The value.</param>
         public void SetLength(long value)
         {
@@ -268,46 +209,67 @@ namespace Fundamental.Wave.Container.Iff
             MoveChunkToEndOfStream();
 
             DataByteSize = value;
-            _headerNeedsFlushing = true;
+            FlagHeaderForFlush();
         }
 
 
-        /// <summary>
-        /// When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written to the underlying device.
-        /// </summary>
+        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header </summary>
         public void Flush()
         {
-            if(!HeaderRequireFlush())
+            FlushChildrenInner();
+
+            if (!HeaderRequiresFlush())
                 return;
-            
-            BaseStream.Position = StartLocation;
-            WriteToStream();
-            BaseStream.Flush();
+
+            FlushInner();
+            FlushParentInner();
         }
 
+        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header, and calls flush on the this chunks parent </summary>
+        public void FlushParent()
+        {
+            if (!HeaderRequiresFlush())
+            {
+                BaseStream.Flush(); 
+                return;
+            }
 
-        /// <summary>
-        /// Gets the byte size of the current content.
-        /// </summary>
-        /// <returns></returns>
-        public virtual long CaculateContentSize()
+            // Flush self
+            FlushInner();
+            FlushParentInner();
+        }
+
+        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header, and calls flush on the this chunks children </summary>
+        public virtual void FlushChildren()
+        {
+            FlushChildrenInner();
+
+            if (!HeaderRequiresFlush())
+                return;
+
+            // Flush self
+            FlushInner();
+        }
+
+        /// <summary> Calculate the byte size of the current content. </summary>
+        public virtual long CalculateContentSize()
         {
             return DataByteSize;
         }
 
-        /// <summary>
-        /// Gets the padded byte size of the current content.
-        /// </summary>
-        /// <returns></returns>
-        public virtual long CaculatePaddedContentSize()
+        /// <summary> Gets the padded byte size of the current content. </summary>
+        public virtual long CalculatePaddedContentSize()
         {
-            return _packing.RoundUp(CaculateContentSize());
+            return _packing.RoundUp(CalculateContentSize());
         }
 
-        /// <summary>
-        /// Calculates if this chunk is trailing.
-        /// </summary>
-        /// <returns></returns>
+        /// <summary> Calculates the end position. </summary>
+        public long CalculateEndPosition()
+        {
+            return StartLocation + HeaderByteSize + CalculatePaddedContentSize();
+        }
+
+        /// <summary> Calculates if this chunk is trailing. </summary>
         public bool CaculateIfTrailingChunk()
         {
             // If this chunk doesn't have parent,
@@ -329,8 +291,8 @@ namespace Fundamental.Wave.Container.Iff
         /// </summary>
         public void WriteToStream()
         {
+            DataByteSize = CalculateContentSize();
             StartLocation = BaseStream.Position;
-            DataByteSize = CaculateContentSize();
             WriteChunk();
 
             // writing the data context may result in another header flush 
@@ -342,9 +304,9 @@ namespace Fundamental.Wave.Container.Iff
 
             BaseStream.Position = EndLocation;
             _headerNeedsFlushing = false;
-            _pendingInitialWrite = false;
         }
- 
+
+
         /// <summary>
         /// Moves the chunk to end of stream.
         /// </summary>
@@ -357,18 +319,28 @@ namespace Fundamental.Wave.Container.Iff
  
 
         // Private methods
-   
 
-        protected T CreateChild<T>(string chunkId) where T : Chunk, new()
+        protected T CreateChild<T>(string chunkId, Int64 dataByteSize) where T : Chunk, new()
         {
-            return new T
-            {
-                ChunkId = chunkId,
-                BaseStream = BaseStream,
-                IffStandard = IffStandard,
-                ParentChunk =  this,
-                _pendingInitialWrite = true
-            };
+            var c = new T { ChunkId = chunkId, DataByteSize = dataByteSize };
+            CreateChild(c);
+            return c;
+        }
+
+        protected void CreateChild(Chunk chunk)
+        {
+            chunk.BaseStream = BaseStream;
+            chunk.IffStandard = IffStandard;
+            chunk.ParentChunk = this;
+
+            // As we are appending to the chunk, we have to make sure
+            // we are at the end of the stream
+            MoveChunkToEndOfStream();
+
+            // Move to the end of this chunk
+            BaseStream.Position = CalculateEndPosition();
+
+            chunk.WriteToStream();
         }
 
         protected void ReadFromStream()
@@ -376,7 +348,25 @@ namespace Fundamental.Wave.Container.Iff
             StartLocation = BaseStream.Position;
             ReadChunk();
             _headerNeedsFlushing = false;
-            _pendingInitialWrite = false;
+        }
+
+        protected void FlushParentInner()
+        {
+            if (ParentChunk != null)
+                ParentChunk.FlushParent();
+            else
+                BaseStream.Flush();
+        }
+
+        protected virtual void FlushChildrenInner()
+        {
+            // Do nothing, this can be overridden
+        }
+
+        protected virtual void FlushInner()
+        {
+            BaseStream.Position = StartLocation;
+            WriteToStream();
         }
 
 

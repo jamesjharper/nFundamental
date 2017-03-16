@@ -71,7 +71,7 @@ namespace Fundamental.Wave.Container.Iff
         /// Gets the byte size of the current content.
         /// </summary>
         /// <returns></returns>
-        public override long CaculateContentSize()
+        public override long CalculateContentSize()
         {
             return GetChunkByteSize();
         }
@@ -92,12 +92,15 @@ namespace Fundamental.Wave.Container.Iff
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="chunkId">The chunk identifier.</param>
+        /// <param name="dataByteSize">Size of the data byte.</param>
         /// <returns></returns>
-        public T Add<T>(string chunkId) where T : Chunk, new()
+        public T Add<T>(string chunkId, Int64 dataByteSize = 0) where T : Chunk, new()
         {
-            var c = CreateChild<T>(chunkId);
+            var c = CreateChild<T>(chunkId, dataByteSize);
             ParseLocalChunk(c);
             AddLocalChunkArray(c);
+
+            Flush();
             return c;
         }
 
@@ -110,10 +113,22 @@ namespace Fundamental.Wave.Container.Iff
         /// <returns></returns>
         public T AddGroup<T>(string chunkId, string typeId) where T : GroupChunk, new()
         {
-            var c = CreateChild<T>(chunkId);
-            c.TypeId = typeId;
+            // As we are appending to the chunk, we have to make sure
+            // we are at the end of the stream
+            MoveChunkToEndOfStream();
+
+            var c = new T
+            {
+                ChunkId = chunkId,
+                TypeId = typeId,
+                DataByteSize = /* Group header size */ 2 /* bytes */
+            };
+
+            CreateChild(c);
             ParseLocalChunk(c);
             AddLocalChunkArray(c);
+
+            Flush();
             return c;
         }
 
@@ -126,7 +141,7 @@ namespace Fundamental.Wave.Container.Iff
         /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
         /// <returns></returns>
         /// <exception cref="System.FormatException">Type Id must be exactly 4 chars long</exception>
-        public static GroupChunk Create(string chunkId, string typeId, Stream stream, IffStandard standardStandard)
+        public static GroupChunk ToStream(string chunkId, string typeId, Stream stream, IffStandard standardStandard)
         {
             var chunk = new GroupChunk
             {
@@ -135,6 +150,7 @@ namespace Fundamental.Wave.Container.Iff
                 IffStandard = standardStandard,
                 BaseStream = stream
             };
+            chunk.WriteToStream();
             return chunk;
         }
 
@@ -179,6 +195,13 @@ namespace Fundamental.Wave.Container.Iff
 
         // private methods
 
+        protected override void FlushChildrenInner()
+        {
+            foreach (var chunk in LocalChunks)
+                chunk.FlushChildren();
+        }
+
+
         #region Write Data
 
         protected override void WriteData()
@@ -199,11 +222,16 @@ namespace Fundamental.Wave.Container.Iff
         private void WriteLocalChunks()
         {
             foreach (var chunk in LocalChunks)
-                chunk.WriteToStream();
+            {
+                // Use flush instead of WriteData as it
+                // we be lazy if the content is already up to date
+                chunk.FlushChildren();
+            }
 
             // Update the byte size, just in case an chuck
             // didn't correctly calculate is size 
             DataByteSize = GetChunkByteSize();
+            BaseStream.Position = EndLocation;
         }
 
         #endregion
@@ -320,7 +348,7 @@ namespace Fundamental.Wave.Container.Iff
 
         private long GetLocalChunkByteSize()
         {
-            return LocalChunks.Sum(x => x.CaculatePaddedContentSize() + x.HeaderByteSize);
+            return LocalChunks.Sum(x => x.CalculatePaddedContentSize() + x.HeaderByteSize);
         }
 
         private long GetChunkByteSize()
@@ -328,9 +356,9 @@ namespace Fundamental.Wave.Container.Iff
             return GetLocalChunkByteSize() + (sizeof(byte) * 4); // Plus  the type Id bytes
         }
 
-        public override bool HeaderRequireFlush()
+        public override bool HeaderRequiresFlush()
         {
-            return base.HeaderRequireFlush() || LocalChunks.Any(localChunk => localChunk.HeaderRequireFlush());
+            return base.HeaderRequiresFlush() || LocalChunks.Any(localChunk => localChunk.HeaderRequiresFlush());
         }
     }
 }

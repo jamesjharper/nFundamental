@@ -217,7 +217,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = StreamChunk.Create("DATA", memoryStream, iffStandard);
+            var fixture = StreamChunk.ToStream("DATA", memoryStream, iffStandard);
             fixture.Flush();
 
             // -> ASSERT
@@ -240,7 +240,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = StreamChunk.Create("DATA", memoryStream, iffStandard);
+            var fixture = StreamChunk.ToStream("DATA", memoryStream, iffStandard);
 
             // Write a single byte. 
             fixture.Write(expectedChunkDataBytes);
@@ -268,7 +268,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = StreamChunk.Create("DATA", memoryStream, iffStandard);
+            var fixture = StreamChunk.ToStream("DATA", memoryStream, iffStandard);
 
             // Write a single byte. 
             fixture.Write(expectedChunkDataBytes);

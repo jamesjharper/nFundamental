@@ -17,7 +17,17 @@ namespace Fundamental.Core.Tests.Container.Riff
 
         public class TestDataChunk : ValueChunk
         {
-            public byte[] Data { get; set; }
+            private byte[] _data;
+
+            public byte[] Data 
+            {
+                get { return _data; }
+                set
+                {
+                    _data = value;
+                    FlagHeaderForFlush();
+                } 
+            }
 
             protected override byte[] GetValueBytes()
             {
@@ -428,7 +438,7 @@ namespace Fundamental.Core.Tests.Container.Riff
             var fixture = Chunk.FromStream<TestGroupChunk>(memoryStream, iffStandard);
 
             // -> ASSERT
-            Assert.AreEqual(expectedSubChunkData, fixture.At<TestDataChunk>(1).RawBytes);
+            Assert.AreEqual(expectedSubChunkData, fixture.At<TestDataChunk>(1).Data);
         }
 
         // Read nested sub chunk group
@@ -535,7 +545,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             //  -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
                (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -579,7 +589,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -643,7 +653,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -710,7 +720,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -772,7 +782,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -833,7 +843,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -897,7 +907,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -959,7 +969,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -1005,8 +1015,10 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(36, streamPosition);
         }
 
+        // Chunk order
+
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReOrderCenteredChunkStream(IffStandard iffStandard)
+        public void CanReOrderCenteredValueChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -1023,7 +1035,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -1071,7 +1083,74 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReOrderLeftLeaningChunkStream(IffStandard iffStandard)
+        public void CanReOrderCenteredStreamValue(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(28, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedChunk1Id = new byte[] { 0x53, 0x54, 0x52, 0x31 };
+            var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+            var expectedChunk2Id = new byte[] { 0x53, 0x54, 0x52, 0x32 };
+            var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk2Bytes = new byte[] { 0x05, 0x06, 0x07, 0x08 };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.ToStream
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<StreamChunk>("STR1");
+            dat1.Write(expectedChunk1Bytes);
+ 
+            var dat2 = fixture.Add<StreamChunk>("STR2");
+            dat2.Write(expectedChunk2Bytes);
+
+            // Move chunk to end of stream
+            dat1.MoveChunkToEndOfStream();
+
+            // Write to stream
+            fixture.Flush();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst2 chunk
+            Assert.AreEqual(expectedChunk2Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2Bytes, memoryStream.Read(4));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedChunk1Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1Bytes, memoryStream.Read(4));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual("STR2", fixture[0].ChunkId);
+
+            Assert.AreEqual(32, fixture[1].DataLocation);
+            Assert.AreEqual("STR1", fixture[1].ChunkId);
+            Assert.AreEqual(36, streamPosition);
+        }
+
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReOrderLeftLeaningValueChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -1088,7 +1167,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -1136,7 +1215,74 @@ namespace Fundamental.Core.Tests.Container.Riff
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
-        public void CanReOrderRightLeaningChunkStream(IffStandard iffStandard)
+        public void CanReOrderLeftLeaningStreamChunk(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedChunk1Id = new byte[] { 0x53, 0x54, 0x52, 0x31 };
+            var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+            var expectedChunk2Id = new byte[] { 0x53, 0x54, 0x52, 0x32 };
+            var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder);
+            var expectedChunk2Bytes = new byte[] { 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.ToStream
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<StreamChunk>("STR1");
+            dat1.Write(expectedChunk1Bytes);
+
+            var dat2 = fixture.Add<StreamChunk>("STR2");
+            dat2.Write(expectedChunk2Bytes);
+
+            // Move chunk to end of stream
+            dat1.MoveChunkToEndOfStream();
+
+            // Write to stream
+            fixture.Flush();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst2 chunk
+            Assert.AreEqual(expectedChunk2Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2Bytes, memoryStream.Read(6));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedChunk1Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1Bytes, memoryStream.Read(4));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual("STR2", fixture[0].ChunkId);
+
+            Assert.AreEqual(34, fixture[1].DataLocation);
+            Assert.AreEqual("STR1", fixture[1].ChunkId);
+            Assert.AreEqual(38, streamPosition);
+        }
+
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReOrderRightLeaningValueChunk(IffStandard iffStandard)
         {
             // -> ARRANGE:
             var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
@@ -1153,7 +1299,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = GroupChunk.Create
+            var fixture = GroupChunk.ToStream
             (
                    /* ChunkId  */ "RIFF",
                    /* TypeId   */ "mIwF",
@@ -1200,25 +1346,163 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(38, streamPosition);
         }
 
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanReOrderRightLeaningStreamChunk(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedChunk1Id = new byte[] { 0x53, 0x54, 0x52, 0x31 };
+            var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder);
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+
+            var expectedChunk2Id = new byte[] { 0x53, 0x54, 0x52, 0x32 };
+            var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk2Bytes = new byte[] { 0x07, 0x08, 0x09, 0x0a };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.ToStream
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<StreamChunk>("STR1");
+            dat1.Write(expectedChunk1Bytes);
+
+            var dat2 = fixture.Add<StreamChunk>("STR2");
+            dat2.Write(expectedChunk2Bytes);
+
+            // Write to stream
+            fixture.Flush();
+
+            // Move chunk to end of stream
+            dat1.MoveChunkToEndOfStream();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst2 chunk
+            Assert.AreEqual(expectedChunk2Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2Bytes, memoryStream.Read(4));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedChunk1Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1Bytes, memoryStream.Read(6));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual("STR2", fixture[0].ChunkId);
+
+            Assert.AreEqual(32, fixture[1].DataLocation);
+            Assert.AreEqual("STR1", fixture[1].ChunkId);
+            Assert.AreEqual(38, streamPosition);
+        }
+
+        [Test, TestCaseSource(nameof(Standard32Bit))]
+        public void CanAppendNonTrailingStreamChunk(IffStandard iffStandard)
+        {
+            // -> ARRANGE:
+            var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
+            var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder);
+            var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
+
+            var expectedChunk1Id = new byte[] { 0x53, 0x54, 0x52, 0x31 };
+            var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
+            var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+            var expectedChunk2Id = new byte[] { 0x53, 0x54, 0x52, 0x32 };
+            var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder);
+            var expectedChunk2Bytes = new byte[] { 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
+
+            // -> ACT
+            var memoryStream = new MemoryStream();
+            var fixture = GroupChunk.ToStream
+            (
+                   /* ChunkId  */ "RIFF",
+                   /* TypeId   */ "mIwF",
+                   /* Stream   */ memoryStream,
+                   /* standard */ iffStandard
+            );
+
+            var dat1 = fixture.Add<StreamChunk>("STR1");
+            dat1.Write(new byte[] { 0xff, 0xff });
+
+            var dat2 = fixture.Add<StreamChunk>("STR2");
+            dat2.Write(expectedChunk2Bytes);
+
+            // Write to stream
+            fixture.Flush();
+
+            // Move chunk to end of stream
+            var wasTrailing = dat1.CaculateIfTrailingChunk();
+            dat1.Position = 0;
+            dat1.Write(expectedChunk1Bytes);
+            fixture.Flush();
+
+            // -> ASSERT
+            var streamPosition = memoryStream.Position;
+            memoryStream.Position = 0;
+
+            // Read the written bytes
+            // Check group chunk
+            Assert.AreEqual(expectedChunkIdBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunckSizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedTypeIdBytes, memoryStream.Read(4));
+
+            // Check tst2 chunk
+            Assert.AreEqual(expectedChunk2Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk2Bytes, memoryStream.Read(6));
+
+            // Check tst1 chunk
+            Assert.AreEqual(expectedChunk1Id, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1SizeBytes, memoryStream.Read(4));
+            Assert.AreEqual(expectedChunk1Bytes, memoryStream.Read(4));
+
+            Assert.AreEqual(20, fixture[0].DataLocation);
+            Assert.AreEqual("STR2", fixture[0].ChunkId);
+
+            Assert.AreEqual(34, fixture[1].DataLocation);
+            Assert.AreEqual("STR1", fixture[1].ChunkId);
+            Assert.AreEqual(38, streamPosition);
+
+            Assert.AreEqual(false, wasTrailing);
+            Assert.AreEqual(true, dat1.CaculateIfTrailingChunk());
+        }
+
         //[Test, TestCaseSource(nameof(Standard32Bit))]
-        //public void CanAppendNonTrailingChunkStream(IffStandard iffStandard)
+        //public void CanAppendNonTrailingValueChunk(IffStandard iffStandard)
         //{
         //    // -> ARRANGE:
         //    var expectedChunkIdBytes = new byte[] { 0x52, 0x49, 0x46, 0x46 };
-        //    var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(28, iffStandard.ByteOrder); // EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder);
+        //    var expectedChunckSizeBytes = EndianHelpers.Int32Bytes(30, iffStandard.ByteOrder);
         //    var expectedTypeIdBytes = new byte[] { 0x6d, 0x49, 0x77, 0x46 };
 
-        //    var expectedChunk1Id = new byte[] { 0x44, 0x41, 0x54, 0x31 };
+        //    var expectedChunk1Id = new byte[] { 0x54, 0x53, 0x54, 0x31 };
         //    var expectedChunk1SizeBytes = EndianHelpers.Int32Bytes(4, iffStandard.ByteOrder);
         //    var expectedChunk1Bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
 
-        //    var expectedChunk2Id = new byte[] { 0x44, 0x41, 0x54, 0x32 };
+        //    var expectedChunk2Id = new byte[] { 0x54, 0x53, 0x54, 0x32 };
         //    var expectedChunk2SizeBytes = EndianHelpers.Int32Bytes(6, iffStandard.ByteOrder);
         //    var expectedChunk2Bytes = new byte[] { 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
 
         //    // -> ACT
         //    var memoryStream = new MemoryStream();
-        //    var fixture = GroupChunk.Create
+        //    var fixture = GroupChunk.ToStream
         //    (
         //           /* ChunkId  */ "RIFF",
         //           /* TypeId   */ "mIwF",
@@ -1226,20 +1510,18 @@ namespace Fundamental.Core.Tests.Container.Riff
         //           /* standard */ iffStandard
         //    );
 
-        //    var dat1 = fixture.Add<StreamChunk>("DAT1");
-        //    dat1.Write(new byte[] { 0xff, 0xff });
-        //    fixture.Flush();
+        //    var dat1 = fixture.Add<TestDataChunk>("TST1");
+        //    dat1.Data = new byte[] { 0xff, 0xff };
 
-        //    var dat2 = fixture.Add<StreamChunk>("DAT2");
-        //    dat2.Write(expectedChunk2Bytes);
+        //    var dat2 = fixture.Add<TestDataChunk>("TST2");
+        //    dat2.Data = expectedChunk2Bytes;
 
         //    // Write to stream
         //    fixture.Flush();
 
         //    // Move chunk to end of stream
         //    var wasTrailing = dat1.CaculateIfTrailingChunk();
-        //    dat1.Position = 0;
-        //    dat1.Write(expectedChunk1Bytes);
+        //    dat1.Data = expectedChunk1Bytes;
         //    fixture.Flush();
 
         //    // -> ASSERT

@@ -151,7 +151,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = Chunk.Create("DATA", memoryStream, iffStandard);
+            var fixture = Chunk.ToStream("DATA", memoryStream, iffStandard);
             fixture.Flush();
 
             // -> ASSERT

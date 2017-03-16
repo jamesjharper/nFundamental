@@ -46,15 +46,15 @@
 //        /// </summary>
 //        private WaveFileFormat()
 //        {
-//            Iff = InterchangeFileFormatGroupChunk.Create
+//            Iff = InterchangeFileFormatGroupChunk.ToStream
 //            (
 //                WaveChunkId,
 //                WaveSubChunkId,
-//                Chunk.Create
+//                Chunk.ToStream
 //                (
 //                    FormatSubChunkId
 //                ),
-//                Chunk.Create
+//                Chunk.ToStream
 //                (
 //                    AudioSubChunkId
 //                )
@@ -139,7 +139,7 @@
 //        /// <param name="stream">The stream.</param>
 //        /// <param name="endianness">The endianness (WAVE files by definition are little endian).</param>
 //        /// <returns></returns>
-//        public static WaveFileFormat Create(WaveFormat waveFormat, Stream stream, Endianness endianness = Endianness.Little)
+//        public static WaveFileFormat ToStream(WaveFormat waveFormat, Stream stream, Endianness endianness = Endianness.Little)
 //        {
 //            var wff = new WaveFileFormat { Format = waveFormat };
 

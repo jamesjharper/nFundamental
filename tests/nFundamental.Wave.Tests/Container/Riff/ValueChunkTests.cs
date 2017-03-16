@@ -17,7 +17,17 @@ namespace Fundamental.Core.Tests.Container.Riff
 
         public class TestDataChunk : ValueChunk
         {
-            public byte[] Data { get; set; }
+            private byte[] _data;
+
+            public byte[] Data
+            {
+                get { return _data; }
+                set
+                {
+                    _data = value;
+                    FlagHeaderForFlush();
+                }
+            }
 
             protected override byte[] GetValueBytes()
             {
@@ -146,7 +156,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = ValueChunk.Create<TestDataChunk>("DATA", memoryStream, iffStandard);
+            var fixture = ValueChunk.ToStream<TestDataChunk>("DATA", memoryStream, iffStandard);
             fixture.Flush();
 
             // -> ASSERT
@@ -169,7 +179,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = ValueChunk.Create<TestDataChunk>("DATA", memoryStream, iffStandard);
+            var fixture = ValueChunk.ToStream<TestDataChunk>("DATA", memoryStream, iffStandard);
 
             // Write a single byte. 
             fixture.Data = expectedChunkDataBytes;
@@ -197,7 +207,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = ValueChunk.Create<TestDataChunk>("DATA", memoryStream, iffStandard);
+            var fixture = ValueChunk.ToStream<TestDataChunk>("DATA", memoryStream, iffStandard);
 
             // Write a single byte. 
             fixture.Data = expectedChunkDataBytes;
@@ -232,7 +242,6 @@ namespace Fundamental.Core.Tests.Container.Riff
             // -> ACT
             var fixture = Chunk.FromStream<TestDataChunk>(memoryStream, iffStandard);
             fixture.Data = expectedChunkDataBytes;
-            fixture.FlagHeaderForFlush();
             fixture.Flush();
 
             // -> ASSERT
@@ -264,7 +273,6 @@ namespace Fundamental.Core.Tests.Container.Riff
             // -> ACT
             var fixture = Chunk.FromStream<TestDataChunk>(memoryStream, iffStandard);
             fixture.Data = expectedChunkDataBytes;
-            fixture.FlagHeaderForFlush();
             fixture.Flush();
 
             // -> ASSERT

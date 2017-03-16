@@ -7,19 +7,6 @@ namespace Fundamental.Wave.Container.Iff
     {
 
         /// <summary>
-        /// The data needs calculating
-        /// </summary>
-        private bool _dataNeedsCalculating = true;
-
-        /// <summary>
-        /// Gets the raw bytes which are written to the stream.
-        /// </summary>
-        /// <value>
-        /// The raw bytes.
-        /// </value>
-        public byte[] RawBytes { get; private set; } = {};
-
-        /// <summary>
         /// Gets the bytes which will be written to the stream.
         /// </summary>
         /// <returns></returns>
@@ -35,19 +22,17 @@ namespace Fundamental.Wave.Container.Iff
         /// Gets the byte size of the current content.
         /// </summary>
         /// <returns></returns>
-        public override long CaculateContentSize()
+        public override long CalculateContentSize()
         {
-            CalculateBytes();
-            return RawBytes.Length;
+            return GetValueBytes()?.Length ?? 0;
         }
-  
+
         /// <summary>
-        /// Flags the header for flush.
+        /// Returns whether the chunk headers requires flushing or not.
         /// </summary>
-        public override void FlagHeaderForFlush()
+        public override bool HeaderRequiresFlush()
         {
-            _dataNeedsCalculating = true;
-            base.FlagHeaderForFlush();
+            return base.HeaderRequiresFlush() || CalculateContentSize() != DataByteSize;
         }
 
         /// <summary> Reads a chunk from a stream using the given standard. </summary>
@@ -63,44 +48,36 @@ namespace Fundamental.Wave.Container.Iff
         /// <param name="id">The chunk identifier.</param>
         /// <param name="stream">The target stream .</param>
         /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
-        public new static T Create<T>(string id, Stream stream, IffStandard standardStandard)
+        public new static T ToStream<T>(string id, Stream stream, IffStandard standardStandard)
             where T : ValueChunk, new()
         {
-            return Chunk.Create<T>(id, stream, standardStandard);
+            return Chunk.ToStream<T>(id, stream, standardStandard);
         }
 
         // private methods
-
-        private void CalculateBytes()
-        {
-            if (_dataNeedsCalculating)
-                RawBytes = GetValueBytes();
-                
-            if(RawBytes == null)
-                RawBytes = new byte[] {};
-
-            _dataNeedsCalculating = false;
-        }
 
         // Write
 
         protected override void WriteData()
         {
-            CalculateBytes();
-            SetLength(RawBytes.Length);
-            BaseStream.Write(RawBytes, 0, RawBytes.Length);
+            var bytes = GetValueBytes();
+            if (bytes == null)
+            {
+                SetLength(0);
+                return;
+            }
+
+            SetLength(bytes.Length);
+            BaseStream.Write(bytes, 0, bytes.Length);
         }
 
         // Read
 
         protected override void ReadData()
         {
-            if(RawBytes.Length != DataByteSize)
-                RawBytes = new byte[DataByteSize];
-
-            BaseStream.Read(RawBytes, 0, (int)DataByteSize);
-            ReadValueBytes(RawBytes);
-            _dataNeedsCalculating = false;
+            var bytes = new byte[DataByteSize];
+            BaseStream.Read(bytes, 0, bytes.Length);
+            ReadValueBytes(bytes);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Fundamental.Wave.Container.Iff
         public ChunkStreamAdapter Stream => _adapter ?? (_adapter = new ChunkStreamAdapter(this));
 
         /// <summary>
-        /// When overridden in a derived class, sets the position within the current stream.
+        /// Sets the position within the current stream.
         /// </summary>
         /// <param name="offset">A byte offset relative to the <paramref name="origin" /> parameter.</param>
         /// <param name="origin">A value of type <see cref="T:System.IO.SeekOrigin" /> indicating the reference point used to obtain the new position.</param>
@@ -37,14 +37,11 @@ namespace Fundamental.Wave.Container.Iff
         public int Read(byte[] buffer, int offset, int count) => Stream.Read(buffer, offset, count);
 
         /// <summary> Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read. </summary>
-        /// <param name="buffer">An array of bytes. When this method returns, the buffer contains the specified byte array with the values between <paramref name="offset" /> and (<paramref name="offset" /> + <paramref name="count" /> - 1) replaced by the bytes read from the current source.</param>
-        /// <param name="offset">The zero-based byte offset in <paramref name="buffer" /> at which to begin storing the data read from the current stream.</param>
-        /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
+        /// <param name="buffer">An array of bytes.</param>
         /// <returns>
         /// The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.
         /// </returns>
         public int Read(byte[] buffer) => Stream.Read(buffer, 0, buffer.Length);
-
 
         /// <summary> Writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written. </summary>
         /// <param name="buffer">An array of bytes. This method copies <paramref name="count" /> bytes from <paramref name="buffer" /> to the current stream.</param>
@@ -58,7 +55,7 @@ namespace Fundamental.Wave.Container.Iff
         public void Write(byte[] buffer) => Stream.Write(buffer, 0, buffer.Length);
 
         /// <summary>
-        /// When overridden in a derived class, gets the length in bytes of the stream.
+        /// Gets the length in bytes of the stream.
         /// </summary>
         public long Length => Stream.Length;
 
@@ -82,9 +79,9 @@ namespace Fundamental.Wave.Container.Iff
         /// <param name="id">The chunk identifier.</param>
         /// <param name="stream">The target stream .</param>
         /// <param name="standardStandard">Type of the chunk standard chunk standard.</param>
-        public new static StreamChunk Create(string id, Stream stream, IffStandard standardStandard)
+        public new static StreamChunk ToStream(string id, Stream stream, IffStandard standardStandard)
         {
-            return Create<StreamChunk>(id, stream, standardStandard);
+            return ToStream<StreamChunk>(id, stream, standardStandard);
         }
     }
 }
