@@ -2,28 +2,494 @@
 
 using System;
 using System.IO;
-using System.Text;
-
-using Fundamental.Core.Memory;
+using Fundamental.Wave.Container.Iff.Headers;
 
 namespace Fundamental.Wave.Container.Iff
 {
-    public class Chunk 
+    
+
+    //public class ChunkFactory<T> where T : Chunk
+    //{
+    //    T Read(Stream stream, IffStandard standardStandard)
+    //    {
+            
+    //    }        
+    //}
+
+    public interface IChunkFactory
     {
-        /// <summary> Reads a chunk from a stream using the given IFF standard.</summary>
-        /// <param name="parent">The parent.</param>
-        /// <param name="standard">The IFF standard.</param>
-        public static Chunk FromStream(Chunk parent, IffStandard standard)
+        ChunkHeader CreateHeader();
+
+        Chunk CreateInstance();
+
+
+        HeaderMetaData WriteHeader(ChunkHeader chunkHeader, Stream stream, IffStandard standardStandard);
+
+        void WriteData(Chunk chunk);
+
+    }
+
+
+    public class ChunkBase
+    {
+        public ChunkHeader Header { get; set; } = new ChunkHeader();
+
+        public HeaderMetaData MetaData { get; set; }
+
+        // <summary> The base stream </summary>
+        public Stream BaseStream { get; set; }
+
+        /// <summary> Gets the information file format type settings. </summary>
+        public IffStandard IffStandard { get; set; }
+
+        /// <summary> The header needs flushing </summary>
+        private bool _headerNeedsFlushing = true;
+
+        /// <summary>
+        /// Gets the chunk identifier.
+        /// </summary>
+        /// <value>
+        /// The chunk identifier.
+        /// </value>
+        public string ChunkId => Header.ChunkId;
+
+        /// <summary> The Parent chunk </summary>
+        public ChunkBase ParentChunk { get; set; }
+
+        /// <summary> Invalidates this instance. </summary>
+        public void FlagHeaderForFlush()
         {
-            var chunk = new Chunk
+            _headerNeedsFlushing = true;
+            var p = ParentChunk;
+            while (p != null)
             {
-                IffStandard = standard,
-                BaseStream = parent.BaseStream,
-                ParentChunk = parent
-            };
-            chunk.ReadFromStream();
+                p._headerNeedsFlushing = true;
+                p = p.ParentChunk;
+            }
+        }
+
+        /// <summary> Returns whether the chunk headers requires flushing or not. </summary>
+        public virtual bool HeaderRequiresFlush()
+        {
+            return _headerNeedsFlushing;
+        }
+
+        /// <summary> Sets the length of the chuck. </summary>
+        /// <param name="value">The value.</param>
+        public void SetLength(long value)
+        {
+            if (Header.DataByteSize == value)
+                return;
+
+
+            // Make sure the chunk is at the end of the stream.
+            // NOTE: this could end up byte shifting the entire stream.
+            MoveChunkToEndOfStream();
+
+            Header.DataByteSize = value;
+            MetaData = MetaData?.AdjustLength(value);
+            FlagHeaderForFlush();
+        }
+
+
+        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header </summary>
+        public void Flush()
+        {
+            ForceFlushChildren();
+
+            if (!HeaderRequiresFlush())
+                return;
+
+            ForceFlushHeader();
+            ForceFlushParent();
+        }
+
+
+
+        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header, and calls flush on the this chunks children </summary>
+        public virtual void FlushChildren()
+        {
+            ForceFlushChildren();
+
+            if (!HeaderRequiresFlush())
+                return;
+
+            // Flush self
+            ForceFlushHeader();
+        }
+
+        /// <summary> Calculate the byte size of the current content. </summary>
+        public virtual long ContentSize => Header.DataByteSize;
+
+        /// <summary> Gets the padded byte size of the current content. </summary>
+        public long PaddedContentSize => HeaderMetaData.Packing.RoundUp(ContentSize);
+
+        public long StartPosition => MetaData.StartLocation;
+
+        public long EndPosition => MetaData.EndLocation;
+
+        /// <summary> Calculates if this chunk is trailing. </summary>
+        public bool CaculateIfTrailingChunk()
+        {
+            // If this chunk doesn't have parent,
+            // then it must be trailing.
+            if (ParentChunk == null)
+                return true;
+
+            // If is no meta data, then this chunk has never been written
+            if (MetaData == null)
+                return true;
+
+            var groupChunk = ParentChunk as GroupChunk;
+            if (groupChunk == null)
+                return ParentChunk.CaculateIfTrailingChunk();
+
+            if (!Equals(groupChunk.Last, this))
+                return false;
+            return ParentChunk.CaculateIfTrailingChunk();
+        }
+
+        public virtual void ShiftLocation(long vector)
+        {
+            MetaData = MetaData.ShiftLocation(vector);
+        }
+
+        /// <summary>
+        /// Writes to stream.
+        /// </summary>
+        public void WriteToStream()
+        {
+            var length = ContentSize;
+            SetLength(length);
+            WriteChunk();
+
+            // writing the data context may result in another header flush 
+            if (_headerNeedsFlushing)
+            {
+                BaseStream.Position = MetaData.StartLocation;
+                WriteHeader();
+            }
+
+            BaseStream.Position = MetaData.EndLocation;
+            _headerNeedsFlushing = false;
+        }
+
+
+        /// <summary>
+        /// Moves the chunk to end of stream.
+        /// </summary>
+        public bool MoveChunkToEndOfStream()
+        {
+            if (!MoveChunkToEndOfStreamInner())
+                return false;
+            BaseStream.Position = StartPosition;
+            return true;
+        }
+
+        public bool MoveChunkToEndOfStreamInner()
+        {
+            var baseGroupChunk = ParentChunk as GroupChunk;
+
+            var hasMovedParentChunk = false;
+            var hasMovedInGroupChunk = false;
+
+            if (baseGroupChunk != null)
+                hasMovedInGroupChunk = baseGroupChunk.MoveChunkToEndOfStream(this);
+
+            if (ParentChunk != null)
+                hasMovedParentChunk = ParentChunk.MoveChunkToEndOfStreamInner();
+
+            return hasMovedParentChunk || hasMovedInGroupChunk;
+        }
+
+
+        // Private methods
+
+        //protected T AppendChild<T>(string chunkId, long dataByteSize) where T : Chunk, new()
+        //{
+        //    var c = new T
+        //    {
+        //        Header =
+        //        {
+        //            ChunkId = chunkId,
+        //            DataByteSize = dataByteSize
+        //        }
+        //    };
+        //    AppendChild(c);
+        //    return c;
+        //}
+
+        protected void AppendChild(ChunkBase chunk)
+        {
+            chunk.BaseStream = BaseStream;
+            chunk.IffStandard = IffStandard;
+            chunk.ParentChunk = this;
+
+            // Flush out any pending changes
+            Flush();
+
+            // As we are appending to the chunk, we have to make sure
+            // we are at the end of the stream
+            MoveChunkToEndOfStream();
+
+            // Move to the end of this chunk
+            BaseStream.Position = CalculateNewEndPosition();
+
+            chunk.WriteHeader();
+            FlagHeaderForFlush();
+        }
+
+
+
+        private void FlushParent()
+        {
+            if (!HeaderRequiresFlush())
+            {
+                BaseStream.Flush();
+                return;
+            }
+
+            // Flush self
+            ForceFlushHeader();
+            ForceFlushParent();
+        }
+
+        protected void ForceFlushParent()
+        {
+            if (ParentChunk != null)
+                ParentChunk.FlushParent();
+            else
+                BaseStream.Flush();
+        }
+
+        protected virtual void ForceFlushChildren()
+        {
+            // Do nothing, this can be overridden
+        }
+
+        protected virtual void ForceFlushHeader()
+        {
+            BaseStream.Position = MetaData.StartLocation;
+            WriteToStream();
+        }
+
+
+        /// <summary> Calculates the end position. </summary>
+        private long CalculateNewEndPosition()
+        {
+            return MetaData.DataLocation + PaddedContentSize;
+        }
+
+        #region Write
+
+        protected virtual void WriteChunk()
+        {
+            WriteHeader();
+            WriteData();
+        }
+
+        private void WriteHeader()
+        {
+            MetaData = Header.Write(BaseStream, IffStandard);
+            _headerNeedsFlushing = false;
+        }
+
+
+        protected virtual void WriteData()
+        {
+
+        }
+
+        #endregion
+
+        #region Read
+
+        private void ReadFromStream()
+        {
+            ReadChunk();
+        }
+
+        private void ReadChunk()
+        {
+            ReadHeader();
+            ReadData();
+        }
+
+        private void ReadHeader()
+        {
+            MetaData = Header.Read(BaseStream, IffStandard);
+            _headerNeedsFlushing = false;
+        }
+
+
+        protected virtual void ReadData()
+        {
+        }
+
+        #endregion
+    }
+
+    public class Chunk : ChunkBase<Chunk>
+    {
+    }
+
+    public class ChunkBase<T> where T : ChunkBase
+    {
+
+        public class FactoryBase<TChunk> : IChunkFactory where TChunk : ChunkBase, new()
+        {
+
+            public string Id { get; set; } = "JUNK";
+            public long Size { get; set; }
+
+
+            ChunkHeader IChunkFactory.CreateHeader()
+            {
+                return new ChunkHeader
+                {
+                    ChunkId = Id,
+                    DataByteSize = Size
+                };
+            }
+
+            ChunkBase IChunkFactory.CreateInstance() 
+                => CreateInstance();
+           
+
+            HeaderMetaData IChunkFactory.WriteHeader(ChunkHeader chunkHeader, Stream stream, IffStandard standard) 
+                => chunkHeader.Write(stream, standard);
+            
+
+            void IChunkFactory.WriteData(ChunkBase chunk) 
+                => WriteData((T)chunk);
+
+            protected virtual T CreateInstance()
+                => new T();
+
+
+            protected virtual void WriteData(T chunk)
+                => chunk.WriteData();
+
+        }
+
+        public class Factory : FactoryBase<T> { }
+
+
+        #region static Factory methods
+
+
+
+        public static Chunk Write<T>(Chunk parent, Action<T> configure) where T : IChunkFactory, new()
+        {
+            var factory = new T();
+            configure.Invoke(factory);
+            return Write(parent, factory);
+        }
+
+        public static Chunk Write<T>(Stream stream, IffStandard standard, Action<T> configure) where T : IChunkFactory, new()
+        {
+            var factory = new T();
+            configure.Invoke(factory);
+            return Write(stream, standard, factory);
+        }
+
+
+        public static Chunk Write(Stream stream, IffStandard standard, Action<Factory> configure)
+        {
+            return Write<Factory>(stream, standard, configure);
+        }
+
+        public static Chunk Write(Chunk parent, IChunkFactory chunkFactory)
+        {
+            return WriteInner(parent.BaseStream, parent.IffStandard, chunkFactory, parent);
+        }
+
+
+        public static Chunk Write(Stream stream, IffStandard standard, IChunkFactory chunkFactory)
+        {
+            return WriteInner(stream, standard, chunkFactory, null);
+        }
+
+        private static Chunk WriteInner(Stream stream, IffStandard standard, IChunkFactory chunkFactory, Chunk parent)
+        {
+            var header = chunkFactory.CreateHeader();
+            var chunk = chunkFactory.CreateInstance();
+
+            var headerMetaData = chunkFactory.WriteHeader(header, stream, standard);
+            chunk.Header = header;
+            chunk.MetaData = headerMetaData;
+            chunk.IffStandard = standard;
+            chunk.BaseStream = stream;
+            chunk.ParentChunk = parent;
+            chunk._headerNeedsFlushing = false;
+            chunkFactory.WriteData(chunk);
+
             return chunk;
         }
+
+
+
+
+
+
+
+
+
+
+        public static Chunk FromStream(Chunk parent, Func<ChunkHeader, Type> resolveType)
+        {
+            var header = new ChunkHeader();
+            var headerMetaData = header.Read(parent.BaseStream, parent.IffStandard);
+            var type = resolveType(header);
+
+            var newInstance = Activator.CreateInstance(type) as Chunk;
+            if (newInstance == null)
+                throw new InvalidCastException($"{type} chunk types must inherit from type Chunk");
+
+            newInstance.Header = header;
+            newInstance.MetaData = headerMetaData;
+            newInstance.IffStandard = parent.IffStandard;
+            newInstance.BaseStream = parent.BaseStream;
+            newInstance.ParentChunk = parent;
+            newInstance._headerNeedsFlushing = false;
+            newInstance.ReadData();
+            return newInstance;
+        }
+
+
+        public static Chunk ToStream(Chunk parent, Func<ChunkHeader, Type> resolveType, string chunkId, long dataByteSize = 0)
+        {
+            var header = new ChunkHeader
+            {
+                ChunkId = chunkId,
+                DataByteSize = dataByteSize
+            };
+
+            var type = resolveType(header);
+            return ToStream(parent, type, chunkId, dataByteSize);
+        }
+
+        public static Chunk ToStream(Chunk parent, Type type, string chunkId, long dataByteSize = 0)
+        {
+            var newInstance = Activator.CreateInstance(type) as Chunk;
+            if (newInstance == null)
+                throw new InvalidCastException($"{type} chunk types must inherit from type Chunk");
+
+            newInstance.Header.ChunkId = chunkId;
+            newInstance.Header.DataByteSize = dataByteSize;
+
+            if(parent != null)
+                parent.AppendChild(newInstance);
+            else
+                newInstance.WriteToStream();
+
+            return newInstance;
+        }
+
+
+
+
+
 
         /// <summary> Reads a chunk from a stream using the given IFF standard. </summary>
         /// <param name="stream">The stream.</param>
@@ -84,409 +550,15 @@ namespace Fundamental.Wave.Container.Iff
         /// <param name="standard">The IFF standard.</param>
         protected static void ToStream(Chunk chunk, string id, Stream stream, IffStandard standard)
         {
-            chunk.ChunkId = id;
+            chunk.Header.ChunkId = id;
             chunk.IffStandard = standard;
             chunk.BaseStream = stream;
             chunk.ParentChunk = (stream as ChunkStreamAdapter)?.Chunk;
             chunk.WriteToStream();
         }
 
-        /// <summary> The header needs flushing </summary>
-        private bool _headerNeedsFlushing = true;
-
-        /// <summary> The packing calculator </summary>
-        private readonly PackingCalculator _packing = PackingCalculator.Int16;
-
-        /// <summary> The base stream </summary>
-        public Stream BaseStream { get; set; }
-
-        /// <summary> The Parent chunk </summary>
-        protected Chunk ParentChunk { get; set; }
-
-        /// <summary> Gets or sets the chunk identifier. </summary>
-        public string ChunkId { get; set; }
-
-        /// <summary> Gets the information file format type settings. </summary>
-        public IffStandard IffStandard { get; set;  }
-
-        /// <summary>  Gets a value indicating whether this instance is RF64. </summary>
-        /// <value>
-        ///   <c>true</c> if this instance is RF64; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsRf64 { get; private set; }
-
-        /// <summary> The size of the padded content byte. </summary>
-        public Int64 PaddedDataByteSize => _packing.RoundUp(DataByteSize);
-
-        /// <summary> The chunk content byte size </summary>
-        public Int64 DataByteSize { get; set; }
-
-        /// <summary> The size of the header byte. </summary>
-        public Int64 HeaderByteSize => AddressByteSize + (sizeof(byte) * 4);
-
-        /// <value>
-        /// The address size.
-        /// </value>
-        public Int64 AddressByteSize
-        {
-            get
-            {
-                switch (IffStandard.AddressSize)
-                {
-                    case AddressSize.UInt32:
-                        return sizeof(UInt32);
-                    case AddressSize.UInt64:
-                        return sizeof(UInt64);
-                    case AddressSize.UInt16:
-                        return sizeof(UInt16);
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
-        /// <summary> Gets the data segment location in the base stream </summary>
-        public Int64 DataLocation => StartLocation + HeaderByteSize;
-
-        /// <summary> Gets the start segment location in the base stream </summary>
-        public Int64 StartLocation { get; set; }
-
-        /// <summary>
-        /// Gets the end location.
-        /// Note: EA IFF 85 Standard for Interchange Format Files states that
-        /// chucks should be 16bit aligned 
-        /// </summary>
-        public Int64 EndLocation => StartLocation + HeaderByteSize + PaddedDataByteSize;
-
-        /// <summary> Invalidates this instance. </summary>
-        public virtual void FlagHeaderForFlush()
-        {
-            _headerNeedsFlushing = true;
-            var p = ParentChunk;
-            while (p != null)
-            {
-                p._headerNeedsFlushing = true;
-                p = p.ParentChunk;
-            }
-        }
-
-        /// <summary> Returns whether the chunk headers requires flushing or not. </summary>
-        public virtual bool HeaderRequiresFlush()
-        {
-            return _headerNeedsFlushing;
-        }
-
-        /// <summary> Casts the steam to the given type. </summary>
-        /// <typeparam name="T"></typeparam>
-        public T As<T>() where  T : Chunk, new()
-        {
-            var c = new T
-            {
-                StartLocation = StartLocation,
-                DataByteSize = DataByteSize,
-                ChunkId = ChunkId,
-                BaseStream = BaseStream,
-                IffStandard = IffStandard,
-                IsRf64 = IsRf64,
-                ParentChunk = ParentChunk,
-            };
-
-            BaseStream.Position = DataLocation;
-            c.ReadData();
-
-            return c;
-        }
-
-        /// <summary> Sets the length of the chuck. </summary>
-        /// <param name="value">The value.</param>
-        public void SetLength(long value)
-        {
-            if (DataByteSize == value)
-                return;
-
-            // Make sure the chunk is at the end of the stream.
-            // NOTE: this could end up byte shifting the entire stream.
-            MoveChunkToEndOfStream();
-
-            DataByteSize = value;
-            FlagHeaderForFlush();
-        }
-
-
-        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header </summary>
-        public void Flush()
-        {
-            FlushChildrenInner();
-
-            if (!HeaderRequiresFlush())
-                return;
-
-            FlushInner();
-            FlushParentInner();
-        }
-
-        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header, and calls flush on the this chunks parent </summary>
-        public void FlushParent()
-        {
-            if (!HeaderRequiresFlush())
-            {
-                BaseStream.Flush(); 
-                return;
-            }
-
-            // Flush self
-            FlushInner();
-            FlushParentInner();
-        }
-
-        /// <summary> Clears all buffers for this chunk, writes any changes to the chunk header, and calls flush on the this chunks children </summary>
-        public virtual void FlushChildren()
-        {
-            FlushChildrenInner();
-
-            if (!HeaderRequiresFlush())
-                return;
-
-            // Flush self
-            FlushInner();
-        }
-
-        /// <summary> Calculate the byte size of the current content. </summary>
-        public virtual long CalculateContentSize()
-        {
-            return DataByteSize;
-        }
-
-        /// <summary> Gets the padded byte size of the current content. </summary>
-        public virtual long CalculatePaddedContentSize()
-        {
-            return _packing.RoundUp(CalculateContentSize());
-        }
-
-        /// <summary> Calculates the end position. </summary>
-        public long CalculateEndPosition()
-        {
-            return StartLocation + HeaderByteSize + CalculatePaddedContentSize();
-        }
-
-        /// <summary> Calculates if this chunk is trailing. </summary>
-        public bool CaculateIfTrailingChunk()
-        {
-            // If this chunk doesn't have parent,
-            // then it must be trailing.
-            if (ParentChunk == null)
-                return true;
-
-            var groupChunk = ParentChunk as GroupChunk;
-
-            if (groupChunk == null)
-                return ParentChunk.CaculateIfTrailingChunk();
-
-            // Check if the chunk is the last in the list.
-            return groupChunk.Last == this;
-        }
-
-        /// <summary>
-        /// Writes to stream.
-        /// </summary>
-        public void WriteToStream()
-        {
-            DataByteSize = CalculateContentSize();
-            StartLocation = BaseStream.Position;
-            WriteChunk();
-
-            // writing the data context may result in another header flush 
-            if (_headerNeedsFlushing)
-            {
-                BaseStream.Position = StartLocation;
-                WriteHeader();
-            }
-
-            BaseStream.Position = EndLocation;
-            _headerNeedsFlushing = false;
-        }
-
-
-        /// <summary>
-        /// Moves the chunk to end of stream.
-        /// </summary>
-        public void MoveChunkToEndOfStream()
-        {
-            var baseGroupChunk = ParentChunk as GroupChunk;
-            baseGroupChunk?.MoveChunkToEndOfStream(this);
-            ParentChunk?.MoveChunkToEndOfStream();
-        }
- 
-
-        // Private methods
-
-        protected T CreateChild<T>(string chunkId, Int64 dataByteSize) where T : Chunk, new()
-        {
-            var c = new T { ChunkId = chunkId, DataByteSize = dataByteSize };
-            CreateChild(c);
-            return c;
-        }
-
-        protected void CreateChild(Chunk chunk)
-        {
-            chunk.BaseStream = BaseStream;
-            chunk.IffStandard = IffStandard;
-            chunk.ParentChunk = this;
-
-            // As we are appending to the chunk, we have to make sure
-            // we are at the end of the stream
-            MoveChunkToEndOfStream();
-
-            // Move to the end of this chunk
-            BaseStream.Position = CalculateEndPosition();
-
-            chunk.WriteToStream();
-        }
-
-        protected void ReadFromStream()
-        {
-            StartLocation = BaseStream.Position;
-            ReadChunk();
-            _headerNeedsFlushing = false;
-        }
-
-        protected void FlushParentInner()
-        {
-            if (ParentChunk != null)
-                ParentChunk.FlushParent();
-            else
-                BaseStream.Flush();
-        }
-
-        protected virtual void FlushChildrenInner()
-        {
-            // Do nothing, this can be overridden
-        }
-
-        protected virtual void FlushInner()
-        {
-            BaseStream.Position = StartLocation;
-            WriteToStream();
-        }
-
-
-        #region Write
-
-        protected virtual void WriteChunk()
-        {
-            WriteHeader();
-            WriteData();
-        }
-
-        private void WriteHeader()
-        {
-            WriteChunkId();
-            WriteDataSize();
-            _headerNeedsFlushing = false;
-        }
-
-        private void WriteChunkId()
-        {
-            var chunkIdBytes = Encoding.UTF8.GetBytes(ChunkId);
-            if (chunkIdBytes.Length != 4)
-                throw new FormatException("Chunk Id must be exactly 4 chars long");
-
-            BaseStream.Write(chunkIdBytes);
-        }
-
-        private void WriteDataSize()
-        {
-            var binaryWriter = BaseStream.AsEndianWriter(IffStandard.ByteOrder);
-
-            switch (IffStandard.AddressSize)
-            {
-                case AddressSize.UInt32:
-
-                    var uint32Address = (UInt32)Math.Min(UInt32.MaxValue, DataByteSize);
-                    binaryWriter.Write(uint32Address);
-
-                    // If we are supporting RF64 and the data size is equal to 0xFFFFFFFF
-                    // Then the actual length is save in another chunk external to this one
-                    if (IffStandard.Has64BitLookupChunk && uint32Address == UInt32.MaxValue)
-                        IsRf64 = true;
-
-                    break;
-                case AddressSize.UInt64:
-                    var uint64Address = (UInt64) DataByteSize;
-                    binaryWriter.Write(uint64Address);
-
-                    break;
-                case AddressSize.UInt16:
-                    var uint16Address = (UInt16)Math.Min(UInt16.MaxValue, DataByteSize);
-                    binaryWriter.Write(uint16Address);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        protected virtual void WriteData()
-        {
-
-        }
-
         #endregion
 
-        #region Read
-
-        private void ReadChunk()
-        {
-            ReadHeader();
-            ReadData();
-        }
-
-        private void ReadHeader()
-        {
-            ReadChunkId();
-            ReadDataSize();
-        }
-
-        private void ReadChunkId()
-        {
-            var chunkIdBytes = BaseStream.Read(4);
-            ChunkId = Encoding.UTF8.GetString(chunkIdBytes, 0, chunkIdBytes.Length);
-        }
-
-        private void ReadDataSize()
-        {
-            var binaryReader = BaseStream.AsEndianReader(IffStandard.ByteOrder);
-            switch (IffStandard.AddressSize)
-            {
-                case AddressSize.UInt32:
-                    DataByteSize = binaryReader.ReadUInt32();
-
-                    // If we are supporting RF64 and the data size is equal to 0xFFFFFFFF
-                    // Then the actual length is save in another chunk external to this one
-                    if (IffStandard.Has64BitLookupChunk && DataByteSize == 0xFFFFFFFF)
-                    {
-                        DataByteSize = 0xFFFFFFFF - 1;
-                        IsRf64 = true;
-                    }
-                     
-
-                    break;
-                case AddressSize.UInt64:
-                    // Truncate down to Int64.MaxValue as .net doesn't give native access to unsigned 64bit file cursors
-                    var dataSize = binaryReader.ReadUInt64();
-                    DataByteSize = (Int64) Math.Min(Int64.MaxValue, dataSize);
-                    break;
-                case AddressSize.UInt16:
-                    DataByteSize = binaryReader.ReadUInt16();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        protected virtual void ReadData()
-        {
-        }
-
-        #endregion
+        
     }
 }

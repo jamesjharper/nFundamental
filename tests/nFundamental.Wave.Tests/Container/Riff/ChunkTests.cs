@@ -29,12 +29,12 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA",     fixture.ChunkId);
-            Assert.AreEqual(124,        fixture.DataByteSize);
-            Assert.AreEqual(8,          fixture.HeaderByteSize);
-            Assert.AreEqual(8,          fixture.DataLocation);
-            Assert.AreEqual(0,          fixture.StartLocation);
-            Assert.AreEqual(124 + 8,    fixture.EndLocation);
-            Assert.AreEqual(false,      fixture.IsRf64);
+            Assert.AreEqual(124,        fixture.ContentSize);
+            Assert.AreEqual(8,          fixture.MetaData.HeaderByteSize);
+            Assert.AreEqual(8,          fixture.MetaData.DataLocation);
+            Assert.AreEqual(0,          fixture.MetaData.StartLocation);
+            Assert.AreEqual(124 + 8,    fixture.MetaData.EndLocation);
+            Assert.AreEqual(false,      fixture.MetaData.IsRf64);
         }
 
       
@@ -55,12 +55,13 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(0xFFFFFFFFL - 1, fixture.DataByteSize);
-            Assert.AreEqual(8, fixture.HeaderByteSize);
-            Assert.AreEqual(8, fixture.DataLocation);
-            Assert.AreEqual(0, fixture.StartLocation);
-            Assert.AreEqual(0xFFFFFFFFL - 1 + 8, fixture.EndLocation);
-            Assert.AreEqual(iffStandard.Has64BitLookupChunk, fixture.IsRf64);
+            Assert.AreEqual(0xFFFFFFFFL, fixture.ContentSize);
+            Assert.AreEqual(0xFFFFFFFFL -1 , fixture.MetaData.DataByteSize);
+            Assert.AreEqual(8, fixture.MetaData.HeaderByteSize);
+            Assert.AreEqual(8, fixture.MetaData.DataLocation);
+            Assert.AreEqual(0, fixture.MetaData.StartLocation);
+            Assert.AreEqual(0xFFFFFFFFL - 1 + 8, fixture.MetaData.EndLocation);
+            Assert.AreEqual(iffStandard.Supports64BitLookupHeaders, fixture.MetaData.IsRf64);
         }
 
         private static readonly object[] Standard32BitOnlyFormats = new [] { IffStandard.Iff, IffStandard.Riff };
@@ -80,12 +81,13 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(0xFFFFFFFFL, fixture.DataByteSize);
-            Assert.AreEqual(8, fixture.HeaderByteSize);
-            Assert.AreEqual(8, fixture.DataLocation);
-            Assert.AreEqual(0, fixture.StartLocation);
-            Assert.AreEqual(0xFFFFFFFFL  + 1 + 8, fixture.EndLocation);
-            Assert.AreEqual(iffStandard.Has64BitLookupChunk, fixture.IsRf64);
+            Assert.AreEqual(0xFFFFFFFFL, fixture.ContentSize);
+            Assert.AreEqual(0xFFFFFFFFL - 1, fixture.MetaData.DataByteSize);
+            Assert.AreEqual(8, fixture.MetaData.HeaderByteSize);
+            Assert.AreEqual(8, fixture.MetaData.DataLocation);
+            Assert.AreEqual(0, fixture.MetaData.StartLocation);
+            Assert.AreEqual(0xFFFFFFFFL - 1 + 8, fixture.MetaData.EndLocation);
+            Assert.AreEqual(iffStandard.Supports64BitLookupHeaders, fixture.MetaData.IsRf64);
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
@@ -103,11 +105,11 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(123, fixture.DataByteSize);
-            Assert.AreEqual(8, fixture.HeaderByteSize);
-            Assert.AreEqual(8, fixture.DataLocation);
-            Assert.AreEqual(0, fixture.StartLocation);
-            Assert.AreEqual(124 + 8, fixture.EndLocation);
+            Assert.AreEqual(123, fixture.ContentSize);
+            Assert.AreEqual(8, fixture.MetaData.HeaderByteSize);
+            Assert.AreEqual(8, fixture.MetaData.DataLocation);
+            Assert.AreEqual(0, fixture.MetaData.StartLocation);
+            Assert.AreEqual(124 + 8, fixture.MetaData.EndLocation);
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
@@ -130,12 +132,12 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(54,     fixture.DataByteSize);
-            Assert.AreEqual(8,      fixture.HeaderByteSize);
+            Assert.AreEqual(54,     fixture.ContentSize);
+            Assert.AreEqual(8,      fixture.MetaData.HeaderByteSize);
 
-            Assert.AreEqual(8 + offsetPosition,         fixture.DataLocation);
-            Assert.AreEqual(0 + offsetPosition,         fixture.StartLocation);
-            Assert.AreEqual(54 + 8 + offsetPosition,    fixture.EndLocation);
+            Assert.AreEqual(8 + offsetPosition,         fixture.MetaData.DataLocation);
+            Assert.AreEqual(0 + offsetPosition,         fixture.MetaData.StartLocation);
+            Assert.AreEqual(54 + 8 + offsetPosition,    fixture.MetaData.EndLocation);
 
         }
 
@@ -151,7 +153,7 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ACT
             var memoryStream = new MemoryStream();
-            var fixture = Chunk.ToStream("DATA", memoryStream, iffStandard);
+            var fixture = Chunk.Write(memoryStream, iffStandard, (f) =>  f.Id = "DATA");
             fixture.Flush();
 
             // -> ASSERT

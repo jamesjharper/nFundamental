@@ -6,6 +6,12 @@ namespace Fundamental.Wave.Container.Iff
     public abstract class ValueChunk : Chunk
     {
 
+        public new class FactoryBase<T> : Chunk.FactoryBase<T> where T : ValueChunk, new()
+        {
+
+        }
+
+
         /// <summary>
         /// Gets the bytes which will be written to the stream.
         /// </summary>
@@ -18,21 +24,13 @@ namespace Fundamental.Wave.Container.Iff
         /// <param name="data">The data.</param>
         protected abstract void ReadValueBytes(byte[] data);
 
-        /// <summary>
-        /// Gets the byte size of the current content.
-        /// </summary>
-        /// <returns></returns>
-        public override long CalculateContentSize()
-        {
-            return GetValueBytes()?.Length ?? 0;
-        }
+        /// <summary> Gets the byte size of the current content. </summary>
+        public override long ContentSize => GetValueBytes()?.Length ?? 0;
 
-        /// <summary>
-        /// Returns whether the chunk headers requires flushing or not.
-        /// </summary>
+        /// <summary> Returns whether the chunk headers requires flushing or not. </summary>
         public override bool HeaderRequiresFlush()
         {
-            return base.HeaderRequiresFlush() || CalculateContentSize() != DataByteSize;
+            return base.HeaderRequiresFlush() || ContentSize != base.ContentSize;
         }
 
         /// <summary> Reads a chunk from a stream using the given standard. </summary>
@@ -75,7 +73,7 @@ namespace Fundamental.Wave.Container.Iff
 
         protected override void ReadData()
         {
-            var bytes = new byte[DataByteSize];
+            var bytes = new byte[Header.DataByteSize];
             BaseStream.Read(bytes, 0, bytes.Length);
             ReadValueBytes(bytes);
         }

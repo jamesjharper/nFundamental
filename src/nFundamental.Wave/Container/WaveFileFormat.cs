@@ -111,7 +111,7 @@
 //        /// <exception cref="System.FormatException">Wave file header expects WAVE Type multimedia Id</exception>
 //        private void Read(Stream stream, Endianness endianness)
 //        {
-//            Iff = InterchangeFileFormatGroupChunk.FromStream
+//            Iff = InterchangeFileFormatGroupChunk.Read
 //            (
 //                stream,
 //                endianness,
@@ -125,7 +125,7 @@
 //        /// <param name="stream">The stream.</param>
 //        /// <param name="endianness">The endianness.</param>
 //        /// <returns></returns>
-//        public static WaveFileFormat FromStream(Stream stream, Endianness endianness = Endianness.Little)
+//        public static WaveFileFormat Read(Stream stream, Endianness endianness = Endianness.Little)
 //        {
 //            var wff = new WaveFileFormat();
 //            wff.Read(stream, endianness);

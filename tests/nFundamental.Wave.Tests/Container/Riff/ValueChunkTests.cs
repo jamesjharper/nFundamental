@@ -60,12 +60,12 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(124,    fixture.DataByteSize);
-            Assert.AreEqual(8, fixture.HeaderByteSize);
-            Assert.AreEqual(8, fixture.DataLocation);
-            Assert.AreEqual(0, fixture.StartLocation);
-            Assert.AreEqual(124 + 8, fixture.EndLocation);
-            Assert.AreEqual(false, fixture.IsRf64);
+            Assert.AreEqual(124,    fixture.ContentSize);
+            Assert.AreEqual(8, fixture.MetaData.HeaderByteSize);
+            Assert.AreEqual(8, fixture.MetaData.DataLocation);
+            Assert.AreEqual(0, fixture.MetaData.StartLocation);
+            Assert.AreEqual(124 + 8, fixture.MetaData.EndLocation);
+            Assert.AreEqual(false, fixture.MetaData.IsRf64);
         }
 
         [Test, TestCaseSource(nameof(Standard32Bit))]
@@ -109,13 +109,13 @@ namespace Fundamental.Core.Tests.Container.Riff
 
             // -> ASSERT
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(4, fixture.DataByteSize);
-            Assert.AreEqual(8, fixture.HeaderByteSize);
+            Assert.AreEqual(4, fixture.ContentSize);
+            Assert.AreEqual(8, fixture.MetaData.HeaderByteSize);
 
             Assert.AreEqual(expectedContent, fixture.Data);
-            Assert.AreEqual(8 + offsetPosition, fixture.DataLocation);
-            Assert.AreEqual(0 + offsetPosition, fixture.StartLocation);
-            Assert.AreEqual(12 + offsetPosition, fixture.EndLocation);
+            Assert.AreEqual(8 + offsetPosition, fixture.MetaData.DataLocation);
+            Assert.AreEqual(0 + offsetPosition, fixture.MetaData.StartLocation);
+            Assert.AreEqual(12 + offsetPosition, fixture.MetaData.EndLocation);
 
         }
 
@@ -138,11 +138,11 @@ namespace Fundamental.Core.Tests.Container.Riff
             Assert.AreEqual(expectedContent, fixture.Data);
 
             Assert.AreEqual("DATA", fixture.ChunkId);
-            Assert.AreEqual(5, fixture.DataByteSize);
-            Assert.AreEqual(8, fixture.HeaderByteSize);
-            Assert.AreEqual(8, fixture.DataLocation);
-            Assert.AreEqual(0, fixture.StartLocation);
-            Assert.AreEqual(6 + 8, fixture.EndLocation);
+            Assert.AreEqual(5, fixture.ContentSize);
+            Assert.AreEqual(8, fixture.MetaData.HeaderByteSize);
+            Assert.AreEqual(8, fixture.MetaData.DataLocation);
+            Assert.AreEqual(0, fixture.MetaData.StartLocation);
+            Assert.AreEqual(6 + 8, fixture.MetaData.EndLocation);
         }
 
         // Write

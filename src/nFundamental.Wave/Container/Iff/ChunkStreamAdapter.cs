@@ -42,9 +42,9 @@ namespace Fundamental.Wave.Container.Iff
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    return BaseStream.Seek(offset + Chunk.StartLocation, origin);
+                    return BaseStream.Seek(offset + Chunk.MetaData.StartLocation, origin);
                 case SeekOrigin.End:
-                    return BaseStream.Seek(Chunk.EndLocation - offset, SeekOrigin.Begin);
+                    return BaseStream.Seek(Chunk.MetaData.EndLocation - offset, SeekOrigin.Begin);
                 case SeekOrigin.Current:
                     return BaseStream.Seek(offset, SeekOrigin.Current);
                 default:
@@ -113,6 +113,7 @@ namespace Fundamental.Wave.Container.Iff
 
             BaseStream.Write(buffer, offset, count);
 
+
             // Sync up both cursor and position
             _cursor = ActualPosition;
         }
@@ -121,7 +122,7 @@ namespace Fundamental.Wave.Container.Iff
         /// <summary>
         /// When overridden in a derived class, gets the length in bytes of the stream.
         /// </summary>
-        public override long Length => (long)Chunk.DataByteSize;
+        public override long Length => Chunk.ContentSize;
 
 
         /// <summary>
@@ -133,7 +134,7 @@ namespace Fundamental.Wave.Container.Iff
             set
             {
                 _cursor = value;
-                BaseStream.Position = value + Chunk.DataLocation;
+                BaseStream.Position = value + Chunk.MetaData.DataLocation;
             }
         }
 
@@ -145,7 +146,7 @@ namespace Fundamental.Wave.Container.Iff
         /// </value>
         public long ActualPosition
         {
-            get { return BaseStream.Position - Chunk.DataLocation; }
+            get { return BaseStream.Position - Chunk.MetaData.DataLocation; }
             set { Position = value; }
         }
 
