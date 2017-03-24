@@ -78,7 +78,7 @@ namespace Fundamental.Wave.Container.Iff
         /// <value>
         /// <c>true</c> if this instance has external size; otherwise, <c>false</c>.
         /// </value>
-        public bool Has64BitLookupChunk { get; private set; }
+        public bool Supports64BitLookupHeaders { get; private set; }
 
         /// <summary>
         /// Gets the size of the address.
@@ -92,14 +92,14 @@ namespace Fundamental.Wave.Container.Iff
         /// Initializes a new instance of the <see cref="IffStandard"/> class.
         /// </summary>
         /// <param name="byteOrder">The byte order.</param>
-        /// <param name="has64BitLookupChunk">if set to <c>true</c> [RF64].</param>
+        /// <param name="supports64BitLookupHeaders">if set to <c>true</c> [RF64].</param>
         /// <param name="addressSize">Size of the address.</param>
         public IffStandard(Endianness byteOrder, 
-                                    bool has64BitLookupChunk, 
-                                    AddressSize addressSize)
+                           bool supports64BitLookupHeaders, 
+                           AddressSize addressSize)
         {
             ByteOrder = byteOrder;
-            Has64BitLookupChunk = has64BitLookupChunk;
+            Supports64BitLookupHeaders = supports64BitLookupHeaders;
             AddressSize = addressSize;
         }
     }

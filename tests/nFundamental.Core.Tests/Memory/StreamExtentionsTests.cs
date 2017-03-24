@@ -12,40 +12,398 @@ namespace Fundamental.Core.Tests.Memory
     public class StreamExtentionsTests
     {
 
-        private static readonly object[] BufferSizes = 
+
+       
+        private static readonly object[] CanSwapBytesDownMiddelTestCases =
         {
-            1
+            // 2 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x02, 0x01 },
+                /* shift       */ 1,
+                /* Buffer Size */ 1
+            },
+
+              // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x02, 0x01 },
+                /* shift       */ -1,
+                /* Buffer Size */ 1
+            },
+
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x02, 0x01 },
+                /* shift       */ 1,
+                /* Buffer Size */ 2
+            },
+
+            // 4 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ 2,
+                /* Buffer Size */ 1
+            },
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ -2,
+                /* Buffer Size */ 1
+            },
+
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ 2,
+                /* Buffer Size */ 2
+            },
+
+            // buffer size 3
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ 2,
+                /* Buffer Size */ 3
+            },
+
+            // buffer size 4
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ 2,
+                /* Buffer Size */ 4
+            },
+
+            // buffer size 5
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x01, 0x02 },
+                /* shift       */ 2,
+                /* Buffer Size */ 5
+            },
+
+            // 6 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x04, 0x05, 0x06, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 3,
+                /* Buffer Size */ 1
+            },
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x04, 0x05, 0x06, 0x01, 0x02, 0x03 }, 
+                /* shift       */ -3,
+                /* Buffer Size */ 1
+            },
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x04, 0x05, 0x06, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 3,
+                /* Buffer Size */ 2
+            },
+            // buffer size 10
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x04, 0x05, 0x06, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 3,
+                /* Buffer Size */ 10
+           },
         };
 
-        [Test, TestCaseSource(nameof(BufferSizes))]
-        public void CanSwapBytesDownMiddel(int bufferSize)
+        [Test, TestCaseSource(nameof(CanSwapBytesDownMiddelTestCases))]
+        public void CanSwapBytesDownMiddel(byte[] input, byte[] output, int shift, int bufferSize)
         {
             // -> ARRANGE:
-            var inputStream = new byte[] {0x01, 0x2, 0x03, 0x04};
-            var memoryStream = new MemoryStream(inputStream);
-            var expetedOutput = new byte[] { 0x03, 0x4, 0x01, 0x02 };
+            var memoryStream = new MemoryStream(input);
 
             // -> ACT
-            memoryStream.Swap(0, 2, 2, bufferSize);
+            memoryStream.Rotate(shift, input.Length, bufferSize);
 
             // -> ASSERT
-            Assert.AreEqual(expetedOutput, inputStream);
+            Assert.AreEqual(output, input);
 
         }
 
-        //[Test, TestCaseSource(nameof(BufferSizes))]
-        //public void CanSwapBytesLeftLeaning(int bufferSize)
-        //{
-        //    // -> ARRANGE:
-        //    var inputStream = new byte[] { 0x01, 0x2, 0x03, 0x04 };
-        //    var memoryStream = new MemoryStream(inputStream);
-        //    var expetedOutput = new byte[] { 0x04, 0x1, 0x02, 0x03 };
+        private static readonly object[] CanSwapBytesNonLeaningTestCases =
+       {
+            // 2 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x01, 0x02 },
+                /* shift       */ 0,
+                /* Buffer Size */ 1
+            },
 
-        //    // -> ACT
-        //    memoryStream.Swap(0, 1, 3, bufferSize);
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x01, 0x02 }, 
+                /* shift       */ 0,
+                /* Buffer Size */ 2
+            },
 
-        //    // -> ASSERT
-        //    Assert.AreEqual(expetedOutput, inputStream);
-        //}
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x01, 0x02 }, 
+                /* shift       */ 2,
+                /* Buffer Size */ 2
+            },
+             // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02 }, 
+                /* Output      */ new byte[] { 0x01, 0x02 }, 
+                /* shift       */ -2,
+                /* Buffer Size */ 2
+            }
+        };
+
+        [Test, TestCaseSource(nameof(CanSwapBytesNonLeaningTestCases))]
+        public void CanSwapBytesNonLeaning(byte[] input, byte[] output, int shift, int bufferSize)
+        {
+            // -> ARRANGE:
+            var memoryStream = new MemoryStream(input);
+
+            // -> ACT
+            memoryStream.Rotate(shift, input.Length, bufferSize);
+
+            // -> ASSERT
+            Assert.AreEqual(output, input);
+
+        }
+
+
+        private static readonly object[] CanSwapBytesLeftLeaningTestCases =
+        {           
+            // 4 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 1,
+                /* Buffer Size */ 1
+            },
+
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
+                /* shift       */ -3,
+                /* Buffer Size */ 1
+            },
+
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 1,
+                /* Buffer Size */ 2
+            },
+
+            // buffer size 3
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 1,
+                /* Buffer Size */ 3
+            },
+
+
+            // buffer size 5
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x04, 0x01, 0x02, 0x03 }, 
+                /* shift       */ 1,
+                /* Buffer Size */ 5
+            },
+
+            // 6 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x05, 0x06, 0x01, 0x02, 0x03, 0x04 }, 
+                /* shift       */ 2,
+                /* Buffer Size */ 1
+            },
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x05, 0x06, 0x01, 0x02, 0x03, 0x04 }, 
+                /* shift       */ -4,
+                /* Buffer Size */ 1
+            },
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x06, 0x01, 0x02, 0x03, 0x04, 0x05 },
+                /* shift       */ 1,
+                /* Buffer Size */ 1
+            },
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x05, 0x06, 0x01, 0x02, 0x03, 0x04 }, 
+                /* shift       */ 2,
+                /* Buffer Size */ 2
+            },
+            // buffer size 10
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x05, 0x06, 0x01, 0x02, 0x03, 0x04 }, 
+                /* shift       */ 2,
+                /* Buffer Size */ 10
+           },
+        };
+
+        [Test, TestCaseSource(nameof(CanSwapBytesLeftLeaningTestCases))]
+        public void CanSwapBytesLeftLeaning(byte[] input, byte[] output, int shift, int bufferSize)
+        {
+            // -> ARRANGE:
+            var memoryStream = new MemoryStream(input);
+
+            // -> ACT
+            memoryStream.Rotate(shift, input.Length, bufferSize);
+
+            // -> ASSERT
+            Assert.AreEqual(output, input);
+
+        }
+
+        private static readonly object[] CanSwapBytesRightLeaningTestCases =
+        {            
+            // 4 element
+            // -------------------------
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x01 }, 
+                /* shift       */ 3,
+                /* Buffer Size */ 1
+            },
+             new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x01 }, 
+                /* shift       */ -1,
+                /* Buffer Size */ 1
+            },
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x01 }, 
+                /* shift       */ 3,
+                /* Buffer Size */ 2
+            },
+
+            // buffer size 3
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x01 },  
+                /* shift       */ 3,
+                /* Buffer Size */ 3
+            },
+
+
+            // buffer size 5
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x01 }, 
+                /* shift       */ 3,
+                /* Buffer Size */ 5
+            },
+
+            // 6 element
+            // -------------------------
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x05, 0x06, 0x01, 0x02 }, 
+                /* shift       */ 4,
+                /* Buffer Size */ 1
+            },
+            // buffer size 1
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x02, 0x03, 0x04, 0x05, 0x06, 0x01  },  
+                /* shift       */ 5,
+                /* Buffer Size */ 1
+            },
+            // buffer size 2
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x05, 0x06, 0x01, 0x02 }, 
+                /* shift       */ 4,
+                /* Buffer Size */ 2
+            },
+            // buffer size 10
+            new object[]
+            {
+                /* Input       */ new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, 
+                /* Output      */ new byte[] { 0x03, 0x04, 0x05, 0x06, 0x01, 0x02 }, 
+                /* shift       */ 4,
+                /* Buffer Size */ 10
+           },
+        };
+
+        [Test, TestCaseSource(nameof(CanSwapBytesRightLeaningTestCases))]
+        public void CanSwapBytesRightLeaning(byte[] input, byte[] output, int shift, int bufferSize)
+        {
+            // -> ARRANGE:
+            var memoryStream = new MemoryStream(input);
+
+            // -> ACT
+            memoryStream.Rotate(shift, input.Length, bufferSize);
+
+            // -> ASSERT
+            Assert.AreEqual(output, input);
+
+        }
     }
 }

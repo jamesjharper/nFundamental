@@ -63,7 +63,6 @@ namespace Fundamental.Core.Memory
         /// </value>
         public int Order => _segment.Order;
 
-
         /// <summary>
         /// Swaps the specified other.
         /// </summary>
@@ -206,6 +205,19 @@ namespace Fundamental.Core.Memory
             return stream.CursoredEnumerate(bufferSize, stream.Position, stream.Length);
         }
 
+
+        /// <summary>
+        /// Gets a stream buffer enumerator.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="bufferSize">Size of the buffer.</param>
+        /// <param name="length">The length.</param>
+        /// <returns></returns>
+        public static IEnumerable<CursorStreamSegment> CursoredEnumerate(this Stream stream, long bufferSize, long length)
+        {
+            return stream.CursoredEnumerate(checked((int)bufferSize), stream.Position, length);
+        }
+
         /// <summary>
         /// Gets a stream buffer enumerator.
         /// </summary>
@@ -228,6 +240,17 @@ namespace Fundamental.Core.Memory
         /// <returns></returns>
         public static IEnumerable<CursorStreamSegment> CursoredEnumerate(this Stream stream, int bufferSize, long startPosition, long length)
         {
+            if (bufferSize == 0)
+                throw new ArgumentException("Buffer size can not be equal to zero", nameof(bufferSize));
+
+            // Make sure we don't go past the end
+            var maxLength = System.Math.Min(startPosition + length, stream.Length);
+            length = maxLength - startPosition;
+
+            if (length == 0)
+                yield break;
+
+     
             var buffer = new byte[bufferSize];
 
             var endPosition = startPosition + length;
